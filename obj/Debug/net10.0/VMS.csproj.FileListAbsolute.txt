@@ -1,0 +1,14 @@
+/home/cuthbert-dev/Desktop/VMS/VMS/bin/Debug/net10.0/VMS
+/home/cuthbert-dev/Desktop/VMS/VMS/bin/Debug/net10.0/VMS.deps.json
+/home/cuthbert-dev/Desktop/VMS/VMS/bin/Debug/net10.0/VMS.runtimeconfig.json
+/home/cuthbert-dev/Desktop/VMS/VMS/bin/Debug/net10.0/VMS.dll
+/home/cuthbert-dev/Desktop/VMS/VMS/bin/Debug/net10.0/VMS.pdb
+/home/cuthbert-dev/Desktop/VMS/VMS/obj/Debug/net10.0/VMS.GeneratedMSBuildEditorConfig.editorconfig
+/home/cuthbert-dev/Desktop/VMS/VMS/obj/Debug/net10.0/VMS.AssemblyInfoInputs.cache
+/home/cuthbert-dev/Desktop/VMS/VMS/obj/Debug/net10.0/VMS.AssemblyInfo.cs
+/home/cuthbert-dev/Desktop/VMS/VMS/obj/Debug/net10.0/VMS.csproj.CoreCompileInputs.cache
+/home/cuthbert-dev/Desktop/VMS/VMS/obj/Debug/net10.0/VMS.dll
+/home/cuthbert-dev/Desktop/VMS/VMS/obj/Debug/net10.0/refint/VMS.dll
+/home/cuthbert-dev/Desktop/VMS/VMS/obj/Debug/net10.0/VMS.pdb
+/home/cuthbert-dev/Desktop/VMS/VMS/obj/Debug/net10.0/VMS.genruntimeconfig.cache
+/home/cuthbert-dev/Desktop/VMS/VMS/obj/Debug/net10.0/ref/VMS.dll

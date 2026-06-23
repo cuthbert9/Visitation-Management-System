@@ -1,0 +1,11 @@
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Domain/bin/Debug/net10.0/VMS.Domain.deps.json
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Domain/bin/Debug/net10.0/VMS.Domain.dll
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Domain/bin/Debug/net10.0/VMS.Domain.pdb
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Domain/obj/Debug/net10.0/VMS.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Domain/obj/Debug/net10.0/VMS.Domain.AssemblyInfoInputs.cache
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Domain/obj/Debug/net10.0/VMS.Domain.AssemblyInfo.cs
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Domain/obj/Debug/net10.0/VMS.Domain.csproj.CoreCompileInputs.cache
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Domain/obj/Debug/net10.0/VMS.Domain.dll
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Domain/obj/Debug/net10.0/refint/VMS.Domain.dll
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Domain/obj/Debug/net10.0/VMS.Domain.pdb
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Domain/obj/Debug/net10.0/ref/VMS.Domain.dll

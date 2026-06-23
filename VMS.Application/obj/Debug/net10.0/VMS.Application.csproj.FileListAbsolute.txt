@@ -1,0 +1,15 @@
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Application/bin/Debug/net10.0/VMS.Application.deps.json
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Application/bin/Debug/net10.0/VMS.Application.dll
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Application/bin/Debug/net10.0/VMS.Application.pdb
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Application/bin/Debug/net10.0/VMS.Domain.dll
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Application/bin/Debug/net10.0/VMS.Domain.pdb
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Application/obj/Debug/net10.0/VMS.Application.csproj.AssemblyReference.cache
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Application/obj/Debug/net10.0/VMS.Application.GeneratedMSBuildEditorConfig.editorconfig
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Application/obj/Debug/net10.0/VMS.Application.AssemblyInfoInputs.cache
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Application/obj/Debug/net10.0/VMS.Application.AssemblyInfo.cs
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Application/obj/Debug/net10.0/VMS.Application.csproj.CoreCompileInputs.cache
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Application/obj/Debug/net10.0/VMS.Appl.28ABB883.Up2Date
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Application/obj/Debug/net10.0/VMS.Application.dll
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Application/obj/Debug/net10.0/refint/VMS.Application.dll
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Application/obj/Debug/net10.0/VMS.Application.pdb
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Application/obj/Debug/net10.0/ref/VMS.Application.dll
