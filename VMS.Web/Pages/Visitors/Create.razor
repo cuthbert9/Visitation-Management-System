@@ -1,0 +1,69 @@
+@page "/visitors/create"
+@inject VMS.Web.Services.IVisitorService VisitorService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create Visitor</PageTitle>
+
+<h1 class="mb-4">Create Visitor</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        <EditForm Model="request" OnValidSubmit="HandleSubmitAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-3">
+                <label class="form-label">Full Name</label>
+                <InputText class="form-control" @bind-Value="request.FullName" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Phone Number</label>
+                <InputText class="form-control" @bind-Value="request.PhoneNumber" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">National ID</label>
+                <InputText class="form-control" @bind-Value="request.NationalId" />
+            </div>
+
+            <button class="btn btn-primary" type="submit" disabled="@isSaving">
+                @(isSaving ? "Saving..." : "Create Visitor")
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private CreateVisitorDto request = new();
+    private bool isSaving;
+    private string? errorMessage;
+
+    private async Task HandleSubmitAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+
+        try
+        {
+            var created = await VisitorService.CreateVisitorAsync(request);
+            if (created is not null)
+            {
+                NavigationManager.NavigateTo($"/visitors/{created.Id}");
+            }
+        }
+        catch
+        {
+            errorMessage = "Failed to create visitor.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

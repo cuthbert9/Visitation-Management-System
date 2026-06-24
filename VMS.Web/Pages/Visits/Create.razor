@@ -1,0 +1,112 @@
+@page "/visits/create"
+@inject VMS.Web.Services.IVisitService VisitService
+@inject VMS.Web.Services.IVisitorService VisitorService
+@inject VMS.Web.Services.IOfficeService OfficeService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Schedule Visit</PageTitle>
+
+<h1 class="mb-4">Schedule Visit</h1>
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="alert alert-danger">@errorMessage</div>
+            }
+
+            <EditForm Model="request" OnValidSubmit="HandleSubmitAsync">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label class="form-label">Visitor</label>
+                    <InputSelect class="form-select" @bind-Value="request.VisitorId">
+                        <option value="0">Select visitor</option>
+                        @foreach (var visitor in visitors)
+                        {
+                            <option value="@visitor.Id">@visitor.FullName</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Office</label>
+                    <InputSelect class="form-select" @bind-Value="request.OfficeId">
+                        <option value="0">Select office</option>
+                        @foreach (var office in offices)
+                        {
+                            <option value="@office.Id">@office.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Visit Date</label>
+                    <InputDate class="form-control" @bind-Value="request.VisitDate" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Purpose</label>
+                    <InputTextArea class="form-control" @bind-Value="request.Purpose" />
+                </div>
+
+                <button class="btn btn-primary" type="submit" disabled="@isSaving">
+                    @(isSaving ? "Saving..." : "Create Visit")
+                </button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    private VisitCreateDto request = new() { VisitDate = DateTime.Today };
+    private List<VisitorDto> visitors = [];
+    private List<OfficeDto> offices = [];
+    private bool isLoading = true;
+    private bool isSaving;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            visitors = (await VisitorService.GetVisitorsAsync()).ToList();
+            offices = (await OfficeService.GetOfficesAsync()).ToList();
+        }
+        catch
+        {
+            errorMessage = "Failed to load form data.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+
+        try
+        {
+            await VisitService.CreateVisitAsync(request);
+            NavigationManager.NavigateTo("/visits");
+        }
+        catch
+        {
+            errorMessage = "Failed to create visit.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

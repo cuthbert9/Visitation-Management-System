@@ -1,0 +1,76 @@
+@page "/visits"
+@inject VMS.Web.Services.IVisitService VisitService
+
+<PageTitle>Visits</PageTitle>
+
+<h1 class="mb-4">Visits</h1>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="text-muted mb-0">Scheduled and completed visits.</p>
+    <a class="btn btn-primary" href="/visits/create">Schedule Visit</a>
+</div>
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (visits.Count == 0)
+{
+    <div class="alert alert-info">No visits found.</div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Visitor</th>
+                        <th>Office</th>
+                        <th>Visit Date</th>
+                        <th>Status</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var visit in visits)
+                {
+                    <tr>
+                        <td>@visit.Visitor.FullName</td>
+                        <td>@visit.Office.Name</td>
+                        <td>@visit.VisitDate.ToString("dd MMM yyyy HH:mm")</td>
+                        <td>@visit.Status</td>
+                        <td>@visit.Purpose</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    private List<VisitDto> visits = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            visits = (await VisitService.GetVisitsAsync()).ToList();
+        }
+        catch
+        {
+            errorMessage = "Failed to load visits.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

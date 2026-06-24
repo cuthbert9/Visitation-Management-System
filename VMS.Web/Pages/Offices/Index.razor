@@ -1,0 +1,67 @@
+@page "/offices"
+@inject VMS.Web.Services.IOfficeService OfficeService
+
+<PageTitle>Offices</PageTitle>
+
+<h1 class="mb-4">Offices</h1>
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (offices.Count == 0)
+{
+    <div class="alert alert-info">No offices found.</div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var office in offices)
+                {
+                    <tr>
+                        <td>@office.Name</td>
+                        <td>@office.Location</td>
+                        <td>@office.Status</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    private List<OfficeDto> offices = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            offices = (await OfficeService.GetOfficesAsync()).ToList();
+        }
+        catch
+        {
+            errorMessage = "Failed to load offices.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

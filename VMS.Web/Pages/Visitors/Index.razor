@@ -1,0 +1,76 @@
+@page "/visitors"
+@inject VMS.Web.Services.IVisitorService VisitorService
+
+<PageTitle>Visitors</PageTitle>
+
+<h1 class="mb-4">Visitors</h1>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="text-muted mb-0">All registered visitors.</p>
+    <a class="btn btn-primary" href="/visitors/create">New Visitor</a>
+</div>
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (visitors.Count == 0)
+{
+    <div class="alert alert-info">No visitors found.</div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>National ID</th>
+                        <th>Created</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var visitor in visitors)
+                {
+                    <tr>
+                        <td>@visitor.FullName</td>
+                        <td>@visitor.PhoneNumber</td>
+                        <td>@visitor.NationalId</td>
+                        <td>@visitor.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</td>
+                        <td><a class="btn btn-sm btn-outline-primary" href="/visitors/@visitor.Id">View</a></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    private List<VisitorDto> visitors = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            visitors = (await VisitorService.GetVisitorsAsync()).ToList();
+        }
+        catch
+        {
+            errorMessage = "Failed to load visitors.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

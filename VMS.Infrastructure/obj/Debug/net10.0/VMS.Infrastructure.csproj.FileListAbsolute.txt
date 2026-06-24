@@ -17,3 +17,4 @@
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Infrastructure/obj/Debug/net10.0/VMS.Infrastructure.pdb
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Infrastructure/obj/Debug/net10.0/VMS.Infrastructure.genruntimeconfig.cache
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Infrastructure/obj/Debug/net10.0/ref/VMS.Infrastructure.dll
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Infrastructure/obj/Debug/net10.0/VMS.Infrastructure.sourcelink.json

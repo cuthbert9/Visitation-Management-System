@@ -1,0 +1,12 @@
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Shared/bin/Debug/net10.0/VMS.Shared.deps.json
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Shared/bin/Debug/net10.0/VMS.Shared.dll
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Shared/bin/Debug/net10.0/VMS.Shared.pdb
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Shared/obj/Debug/net10.0/VMS.Shared.GeneratedMSBuildEditorConfig.editorconfig
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Shared/obj/Debug/net10.0/VMS.Shared.AssemblyInfoInputs.cache
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Shared/obj/Debug/net10.0/VMS.Shared.AssemblyInfo.cs
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Shared/obj/Debug/net10.0/VMS.Shared.csproj.CoreCompileInputs.cache
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Shared/obj/Debug/net10.0/VMS.Shared.sourcelink.json
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Shared/obj/Debug/net10.0/VMS.Shared.dll
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Shared/obj/Debug/net10.0/refint/VMS.Shared.dll
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Shared/obj/Debug/net10.0/VMS.Shared.pdb
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Shared/obj/Debug/net10.0/ref/VMS.Shared.dll

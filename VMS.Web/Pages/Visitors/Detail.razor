@@ -1,0 +1,66 @@
+@page "/visitors/{Id:int}"
+@inject VMS.Web.Services.IVisitorService VisitorService
+
+<PageTitle>Visitor Details</PageTitle>
+
+<h1 class="mb-4">Visitor Details</h1>
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (visitor is null)
+{
+    <div class="alert alert-warning">Visitor not found.</div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Full Name</dt>
+                <dd class="col-sm-9">@visitor.FullName</dd>
+
+                <dt class="col-sm-3">Phone Number</dt>
+                <dd class="col-sm-9">@visitor.PhoneNumber</dd>
+
+                <dt class="col-sm-3">National ID</dt>
+                <dd class="col-sm-9">@visitor.NationalId</dd>
+
+                <dt class="col-sm-3">Created At</dt>
+                <dd class="col-sm-9">@visitor.CreatedAt.ToLocalTime().ToString("f")</dd>
+            </dl>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private VisitorDto? visitor;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            visitor = await VisitorService.GetVisitorByIdAsync(Id);
+        }
+        catch
+        {
+            errorMessage = "Failed to load visitor details.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

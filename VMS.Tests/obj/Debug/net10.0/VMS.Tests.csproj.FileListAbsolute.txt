@@ -140,3 +140,4 @@
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Tests/obj/Debug/net10.0/VMS.Tests.pdb
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Tests/obj/Debug/net10.0/VMS.Tests.genruntimeconfig.cache
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Tests/obj/Debug/net10.0/ref/VMS.Tests.dll
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Tests/obj/Debug/net10.0/VMS.Tests.sourcelink.json

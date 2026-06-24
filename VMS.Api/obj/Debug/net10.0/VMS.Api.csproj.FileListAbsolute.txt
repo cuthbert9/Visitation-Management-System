@@ -148,3 +148,4 @@
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Api/bin/Debug/net10.0/tr/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Api/bin/Debug/net10.0/zh-Hans/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Api/bin/Debug/net10.0/zh-Hant/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Api/obj/Debug/net10.0/VMS.Api.sourcelink.json
