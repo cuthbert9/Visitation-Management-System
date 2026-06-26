@@ -1,0 +1,117 @@
+@page "/offices/{Id:int}/edit"
+@inject VMS.Web.Services.IOfficeService OfficeService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit Office</PageTitle>
+
+<h1 class="mb-4">Edit Office</h1>
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (request is null)
+{
+    <div class="alert alert-warning">Office not found.</div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="alert alert-danger">@errorMessage</div>
+            }
+
+            <EditForm Model="request" OnValidSubmit="HandleSubmitAsync">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    <InputText class="form-control" @bind-Value="request.Name" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Location</label>
+                    <InputText class="form-control" @bind-Value="request.Location" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <InputSelect class="form-select" @bind-Value="request.Status">
+                        @foreach (var status in Enum.GetValues<OfficeStatus>())
+                        {
+                            <option value="@status">@status</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <button class="btn btn-primary" type="submit" disabled="@isSaving">
+                    @(isSaving ? "Saving..." : "Save Changes")
+                </button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private UpdateOfficeDto? request;
+    private bool isLoading = true;
+    private bool isSaving;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var office = await OfficeService.GetOfficeByIdAsync(Id);
+            request = office is null
+                ? null
+                : new UpdateOfficeDto
+                {
+                    Name = office.Name,
+                    Location = office.Location,
+                    Status = office.Status
+                };
+        }
+        catch
+        {
+            errorMessage = "Failed to load office.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        if (request is null)
+        {
+            return;
+        }
+
+        isSaving = true;
+        errorMessage = null;
+
+        try
+        {
+            await OfficeService.UpdateOfficeAsync(Id, request);
+            NavigationManager.NavigateTo($"/offices/{Id}");
+        }
+        catch
+        {
+            errorMessage = "Failed to update office.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

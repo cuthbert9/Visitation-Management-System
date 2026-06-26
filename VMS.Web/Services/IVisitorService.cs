@@ -7,4 +7,7 @@ public interface IVisitorService
     Task<IReadOnlyList<VisitorDto>> GetVisitorsAsync();
     Task<VisitorDto?> GetVisitorByIdAsync(int id);
     Task<VisitorDto?> CreateVisitorAsync(CreateVisitorDto request);
+    Task<VisitorDto?> UpdateVisitorAsync(int id, UpdateVisitorDto request);
+    Task DeleteVisitorAsync(int id);
+    Task<IReadOnlyList<VisitDto>> GetVisitorVisitsAsync(int id);
 }

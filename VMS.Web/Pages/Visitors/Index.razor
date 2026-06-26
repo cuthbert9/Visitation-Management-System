@@ -33,7 +33,7 @@ else
                         <th>Phone</th>
                         <th>National ID</th>
                         <th>Created</th>
-                        <th></th>
+                        <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -44,7 +44,12 @@ else
                         <td>@visitor.PhoneNumber</td>
                         <td>@visitor.NationalId</td>
                         <td>@visitor.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</td>
-                        <td><a class="btn btn-sm btn-outline-primary" href="/visitors/@visitor.Id">View</a></td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a class="btn btn-outline-primary" href="/visitors/@visitor.Id">View</a>
+                                <a class="btn btn-outline-secondary" href="/visitors/@visitor.Id/edit">Edit</a>
+                            </div>
+                        </td>
                     </tr>
                 }
                 </tbody>

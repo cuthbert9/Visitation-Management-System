@@ -18,3 +18,11 @@ public class CreateVisitorDto
     public string? PhoneNumber { get; set; }
     public string? NationalId { get; set; }
 }
+
+public class UpdateVisitorDto
+{
+    [Required]
+    public string FullName { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
+    public string? NationalId { get; set; }
+}

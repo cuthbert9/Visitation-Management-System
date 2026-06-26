@@ -34,6 +34,7 @@ else
                         <th>Visit Date</th>
                         <th>Status</th>
                         <th>Purpose</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -42,9 +43,10 @@ else
                     <tr>
                         <td>@visit.Visitor.FullName</td>
                         <td>@visit.Office.Name</td>
-                        <td>@visit.VisitDate.ToString("dd MMM yyyy HH:mm")</td>
+                        <td>@visit.VisitDate.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
                         <td>@visit.Status</td>
                         <td>@visit.Purpose</td>
+                        <td><a class="btn btn-sm btn-outline-primary" href="/visits/@visit.Id">View</a></td>
                     </tr>
                 }
                 </tbody>

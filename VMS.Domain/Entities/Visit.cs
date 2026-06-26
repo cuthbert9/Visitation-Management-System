@@ -17,3 +17,5 @@ public class Visit
     public Visitor Visitor { get; set; } = null!;
     public Office Office { get; set; } = null!;
 }
+
+

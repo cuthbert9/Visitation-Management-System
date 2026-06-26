@@ -195,10 +195,6 @@
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Xml.XmlDocument.7obbgjtztj.wasm
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Xml.XmlSerializer.vgjr3kbu2b.wasm
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.bv0vfagjd5.wasm
-/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Shared.j7u6f1y9q6.pdb
-/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Shared.lo6suaqq4c.wasm
-/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Web.8jkn3ke86e.wasm
-/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Web.hu83k4m8rf.pdb
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/WindowsBase.fin39dxgo4.wasm
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/blazor.webassembly.js
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/dotnet.js
@@ -243,7 +239,6 @@
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/dotnet.native.ikrs475e5v.js.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Text.Json.t2y3tht3ok.wasm.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Net.Mail.533n6ks0cq.wasm.gz
-/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Web.hu83k4m8rf.pdb.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/icudt_no_CJK.lfu7j35m59.dat.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.IO.Pipes.AccessControl.ddt7du9svb.wasm.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Security.AccessControl.3nwl7fw3mc.wasm.gz
@@ -257,7 +252,6 @@
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Reflection.DispatchProxy.uhng0i33yv.wasm.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Runtime.CompilerServices.VisualC.lzt2t2jx25.wasm.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Diagnostics.DiagnosticSource.h063kza90u.wasm.gz
-/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Web.8jkn3ke86e.wasm.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Net.WebSockets.Client.x9i7zul9bw.wasm.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Net.Security.xlqynrdyot.wasm.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/Microsoft.Extensions.Diagnostics.refdoc5eqj.wasm.gz
@@ -291,7 +285,6 @@
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Threading.AccessControl.9ykh0d964r.wasm.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Runtime.Extensions.bllnsrspwd.wasm.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Threading.Tasks.Dataflow.gsdu90uund.wasm.gz
-/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Shared.j7u6f1y9q6.pdb.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Runtime.Serialization.sl1f80ke8z.wasm.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.IO.Compression.ZipFile.hq70g0m5k0.wasm.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Reflection.Primitives.td0lyduqh2.wasm.gz
@@ -335,7 +328,6 @@
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/Microsoft.JSInterop.WebAssembly.ktwcwt6yk1.wasm.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Data.s403jyj13x.wasm.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/Microsoft.Extensions.Primitives.dk3kgvcw99.wasm.gz
-/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Shared.lo6suaqq4c.wasm.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Formats.Tar.9uzzbcwdi8.wasm.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Reflection.TypeExtensions.bw6raolkdi.wasm.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Private.Xml.Linq.6ndmellwxq.wasm.gz
@@ -1068,11 +1060,6 @@
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/obj/Debug/net10.0/compressed/n341ymf9pd-{0}-tjcz0u77k5-tjcz0u77k5.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/obj/Debug/net10.0/compressed/8n67gjtmqb-{0}-tptq2av103-tptq2av103.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/obj/Debug/net10.0/compressed/55zatunnrs-{0}-lfu7j35m59-lfu7j35m59.gz
-/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/obj/Debug/net10.0/compressed/kv8s68544h-{0}-lo6suaqq4c-lo6suaqq4c.gz
-/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/obj/Debug/net10.0/compressed/cp9z1zy72n-{0}-j7u6f1y9q6-j7u6f1y9q6.gz
-/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/obj/Debug/net10.0/compressed/7jlbfv3bvq-{0}-8jkn3ke86e-8jkn3ke86e.gz
-/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/obj/Debug/net10.0/compressed/4ktvhfm3cp-{0}-hu83k4m8rf-hu83k4m8rf.gz
-/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/obj/Debug/net10.0/compressed/oknhew2jd0-{0}-uazu5a0qe0-uazu5a0qe0.gz
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/obj/Debug/net10.0/staticwebassets.build.json
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/obj/Debug/net10.0/staticwebassets.build.json.cache
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/obj/Debug/net10.0/staticwebassets.development.json
@@ -1084,3 +1071,16 @@
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/obj/Debug/net10.0/VMS.Web.pdb
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/obj/Debug/net10.0/ref/VMS.Web.dll
 /home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/obj/Debug/net10.0/compressed/9klbkvyeh4-{0}-hp80gbab2u-hp80gbab2u.gz
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Shared.0n3swnqy84.wasm
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Shared.0vv8yza2k4.pdb
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Shared.0vv8yza2k4.pdb.gz
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Shared.0n3swnqy84.wasm.gz
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/obj/Debug/net10.0/compressed/kv8s68544h-{0}-0n3swnqy84-0n3swnqy84.gz
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/obj/Debug/net10.0/compressed/cp9z1zy72n-{0}-0vv8yza2k4-0vv8yza2k4.gz
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Web.4m6j51w9xr.pdb
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Web.e6af5ighm4.wasm
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Web.4m6j51w9xr.pdb.gz
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Web.e6af5ighm4.wasm.gz
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/obj/Debug/net10.0/compressed/7jlbfv3bvq-{0}-e6af5ighm4-e6af5ighm4.gz
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/obj/Debug/net10.0/compressed/4ktvhfm3cp-{0}-4m6j51w9xr-4m6j51w9xr.gz
+/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/obj/Debug/net10.0/compressed/oknhew2jd0-{0}-yvtlo43n6e-yvtlo43n6e.gz

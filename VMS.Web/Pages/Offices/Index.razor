@@ -5,6 +5,11 @@
 
 <h1 class="mb-4">Offices</h1>
 
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="text-muted mb-0">Available offices and their status.</p>
+    <a class="btn btn-primary" href="/offices/create">New Office</a>
+</div>
+
 @if (isLoading)
 {
     <LoadingSpinner />
@@ -27,6 +32,7 @@ else
                         <th>Name</th>
                         <th>Location</th>
                         <th>Status</th>
+                        <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -36,6 +42,12 @@ else
                         <td>@office.Name</td>
                         <td>@office.Location</td>
                         <td>@office.Status</td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a class="btn btn-outline-primary" href="/offices/@office.Id">View</a>
+                                <a class="btn btn-outline-secondary" href="/offices/@office.Id/edit">Edit</a>
+                            </div>
+                        </td>
                     </tr>
                 }
                 </tbody>

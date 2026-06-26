@@ -1,0 +1,149 @@
+@baseUrl = http://localhost:5207
+
+### Visitors - Get all
+GET {{baseUrl}}/api/visitors
+Accept: application/json
+
+###
+
+### Visitors - Get by id
+GET {{baseUrl}}/api/visitors/1
+Accept: application/json
+
+###
+
+### Visitors - Create
+POST {{baseUrl}}/api/visitors
+Content-Type: application/json
+Accept: application/json
+
+{
+  "fullName": "ANother Visitor",
+  "phoneNumber": "0799993999",
+  "nationalId": "NIDA-123456782"
+}
+
+###
+
+### Visitors - Update
+PUT {{baseUrl}}/api/visitors/1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "fullName": "John Doe Updated",
+  "phoneNumber": "0788888888",
+  "nationalId": "NIDA-987654321"
+}
+
+###
+
+### Visitors - Delete
+DELETE {{baseUrl}}/api/visitors/1
+Accept: application/json
+
+###
+
+### Visitors - Get all visits for one visitor
+GET {{baseUrl}}/api/visitors/1/visits
+Accept: application/json
+
+###
+
+### Offices - Get all
+GET {{baseUrl}}/api/offices
+Accept: application/json
+
+###
+
+### Offices - Get by id
+GET {{baseUrl}}/api/offices/1
+Accept: application/json
+
+###
+
+### Offices - Create
+POST {{baseUrl}}/api/offices
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Block 2C Office ",
+  "location": "Block A",
+  "status": 1
+}
+
+###
+
+### Offices - Update
+PUT {{baseUrl}}/api/offices/1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Records Office Updated",
+  "location": "Block B",
+  "status": 2
+}
+
+###
+
+### Offices - Delete
+DELETE {{baseUrl}}/api/offices/1
+Accept: application/json
+
+###
+
+### Offices - Get all visits for one office
+GET {{baseUrl}}/api/offices/1/visits
+Accept: application/json
+
+###
+
+### Visits - Get all
+GET {{baseUrl}}/api/visits
+Accept: application/json
+
+###
+
+### Visits - Get by id
+GET {{baseUrl}}/api/visits/1
+Accept: application/json
+
+###
+
+### Visits - Create (starts as Pending)
+POST {{baseUrl}}/api/visits
+Content-Type: application/json
+Accept: application/json
+
+{
+  "visitorId": 2,
+  "officeId": 1,
+  "visitDate": "2026-06-24T10:00:00Z",
+  "purpose": "Document follow-up"
+}
+
+###
+
+### Visits - Approve
+PUT {{baseUrl}}/api/visits/1/approve
+Accept: application/json
+
+###
+
+### Visits - Reject
+PUT {{baseUrl}}/api/visits/1/reject
+Accept: application/json
+
+###
+
+### Visits - Check in (only if Approved)
+PUT {{baseUrl}}/api/visits/1/checkin
+Accept: application/json
+
+###
+
+### Visits - Check out (only after check-in)
+PUT {{baseUrl}}/api/visits/1/checkout
+Accept: application/json

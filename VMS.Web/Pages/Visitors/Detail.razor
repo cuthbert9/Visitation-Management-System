@@ -1,5 +1,6 @@
 @page "/visitors/{Id:int}"
 @inject VMS.Web.Services.IVisitorService VisitorService
+@inject NavigationManager NavigationManager
 
 <PageTitle>Visitor Details</PageTitle>
 
@@ -19,7 +20,17 @@ else if (visitor is null)
 }
 else
 {
-    <div class="card shadow-sm">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <p class="text-muted mb-0">Profile and visit history.</p>
+        <div class="btn-group">
+            <a class="btn btn-outline-secondary" href="/visitors/@visitor.Id/edit">Edit</a>
+            <button class="btn btn-outline-danger" @onclick="DeleteVisitorAsync" disabled="@isDeleting">
+                @(isDeleting ? "Deleting..." : "Delete")
+            </button>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
         <div class="card-body">
             <dl class="row mb-0">
                 <dt class="col-sm-3">Full Name</dt>
@@ -36,13 +47,52 @@ else
             </dl>
         </div>
     </div>
+
+    <h2 class="h4 mb-3">Visits</h2>
+
+    @if (visits.Count == 0)
+    {
+        <div class="alert alert-info">This visitor has no visits yet.</div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>Office</th>
+                            <th>Visit Date</th>
+                            <th>Status</th>
+                            <th>Purpose</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var visit in visits)
+                    {
+                        <tr>
+                            <td>@visit.Office.Name</td>
+                            <td>@visit.VisitDate.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                            <td>@visit.Status</td>
+                            <td>@visit.Purpose</td>
+                            <td><a class="btn btn-sm btn-outline-primary" href="/visits/@visit.Id">View</a></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
 }
 
 @code {
     [Parameter] public int Id { get; set; }
 
     private VisitorDto? visitor;
+    private List<VisitDto> visits = [];
     private bool isLoading = true;
+    private bool isDeleting;
     private string? errorMessage;
 
     protected override async Task OnParametersSetAsync()
@@ -53,6 +103,7 @@ else
         try
         {
             visitor = await VisitorService.GetVisitorByIdAsync(Id);
+            visits = visitor is null ? [] : (await VisitorService.GetVisitorVisitsAsync(Id)).ToList();
         }
         catch
         {
@@ -61,6 +112,31 @@ else
         finally
         {
             isLoading = false;
+        }
+    }
+
+    private async Task DeleteVisitorAsync()
+    {
+        if (visitor is null)
+        {
+            return;
+        }
+
+        isDeleting = true;
+        errorMessage = null;
+
+        try
+        {
+            await VisitorService.DeleteVisitorAsync(visitor.Id);
+            NavigationManager.NavigateTo("/visitors");
+        }
+        catch
+        {
+            errorMessage = "Failed to delete visitor. They may still have visits attached.";
+        }
+        finally
+        {
+            isDeleting = false;
         }
     }
 }

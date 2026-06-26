@@ -1,0 +1,117 @@
+@page "/visits/{Id:int}"
+@inject VMS.Web.Services.IVisitService VisitService
+
+<PageTitle>Visit Details</PageTitle>
+
+<h1 class="mb-4 ">Visit Information </h1>
+-
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (visit is null)
+{
+    <div class="alert alert-warning">Visit not found.</div>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-start mb-3 gap-2 flex-wrap">
+        <p class="text-muted mb-0">Manage the current visit status.</p>
+        <div class="btn-group">
+            <button class="btn btn-outline-success" @onclick='() => ApplyActionAsync("approve")' disabled="@(isActing || visit.Status != VisitStatus.Pending)">Approve</button>
+            <button class="btn btn-outline-danger" @onclick='() => ApplyActionAsync("reject")' disabled="@(isActing || visit.Status != VisitStatus.Pending)">Reject</button>
+            <button class="btn btn-outline-primary" @onclick='() => ApplyActionAsync("checkin")' disabled="@(isActing || visit.Status != VisitStatus.Approved)">Check In</button>
+            <button class="btn btn-outline-secondary" @onclick='() => ApplyActionAsync("checkout")' disabled="@(isActing || !visit.CheckInTime.HasValue || visit.Status == VisitStatus.Completed)">Check Out</button>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Visitor</dt>
+                <dd class="col-sm-9">@visit.Visitor.FullName</dd>
+
+                <dt class="col-sm-3">Office</dt>
+                <dd class="col-sm-9">@visit.Office.Name</dd>
+
+                <dt class="col-sm-3">Visit Date</dt>
+                <dd class="col-sm-9">@visit.VisitDate.ToLocalTime().ToString("f")</dd>
+
+                <dt class="col-sm-3">Status</dt>
+                <dd class="col-sm-9">@visit.Status</dd>
+
+                <dt class="col-sm-3">Purpose</dt>
+                <dd class="col-sm-9">@visit.Purpose</dd>
+
+                <dt class="col-sm-3">Check In</dt>
+                <dd class="col-sm-9">@(visit.CheckInTime?.ToLocalTime().ToString("f") ?? "Not checked in")</dd>
+
+                <dt class="col-sm-3">Check Out</dt>
+                <dd class="col-sm-9">@(visit.CheckOutTime?.ToLocalTime().ToString("f") ?? "Not checked out")</dd>
+            </dl>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private VisitDto? visit;
+    private bool isLoading = true;
+    private bool isActing;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadVisitAsync();
+    }
+
+    private async Task LoadVisitAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            visit = await VisitService.GetVisitByIdAsync(Id);
+        }
+        catch
+        {
+            errorMessage = "Failed to load visit details.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task ApplyActionAsync(string action)
+    {
+        isActing = true;
+        errorMessage = null;
+
+        try
+        {
+            visit = action switch
+            {
+                "approve" => await VisitService.ApproveVisitAsync(Id),
+                "reject" => await VisitService.RejectVisitAsync(Id),
+                "checkin" => await VisitService.CheckInVisitAsync(Id),
+                "checkout" => await VisitService.CheckOutVisitAsync(Id),
+                _ => visit
+            };
+        }
+        catch
+        {
+            errorMessage = "Failed to update visit status.";
+        }
+        finally
+        {
+            isActing = false;
+        }
+    }
+}

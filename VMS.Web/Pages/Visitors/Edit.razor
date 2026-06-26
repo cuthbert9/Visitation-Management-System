@@ -1,0 +1,112 @@
+@page "/visitors/{Id:int}/edit"
+@inject VMS.Web.Services.IVisitorService VisitorService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit Visitor</PageTitle>
+
+<h1 class="mb-4">Edit Visitor</h1>
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (request is null)
+{
+    <div class="alert alert-warning">Visitor not found.</div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="alert alert-danger">@errorMessage</div>
+            }
+
+            <EditForm Model="request" OnValidSubmit="HandleSubmitAsync">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <InputText class="form-control" @bind-Value="request.FullName" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Phone Number</label>
+                    <InputText class="form-control" @bind-Value="request.PhoneNumber" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">National ID</label>
+                    <InputText class="form-control" @bind-Value="request.NationalId" />
+                </div>
+
+                <button class="btn btn-primary" type="submit" disabled="@isSaving">
+                    @(isSaving ? "Saving..." : "Save Changes")
+                </button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private UpdateVisitorDto? request;
+    private bool isLoading = true;
+    private bool isSaving;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var visitor = await VisitorService.GetVisitorByIdAsync(Id);
+            request = visitor is null
+                ? null
+                : new UpdateVisitorDto
+                {
+                    FullName = visitor.FullName,
+                    PhoneNumber = visitor.PhoneNumber,
+                    NationalId = visitor.NationalId
+                };
+        }
+        catch
+        {
+            errorMessage = "Failed to load visitor.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        if (request is null)
+        {
+            return;
+        }
+
+        isSaving = true;
+        errorMessage = null;
+
+        try
+        {
+            await VisitorService.UpdateVisitorAsync(Id, request);
+            NavigationManager.NavigateTo($"/visitors/{Id}");
+        }
+        catch
+        {
+            errorMessage = "Failed to update visitor.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}
