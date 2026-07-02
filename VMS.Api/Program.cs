@@ -13,6 +13,10 @@ builder.Services.AddCors(options =>
             .WithOrigins(
                 "http://localhost:5000",
                 "http://127.0.0.1:5000",
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+                "https://localhost:5173",
+                "https://127.0.0.1:5173",
                 "http://localhost:5100",
                 "http://127.0.0.1:5100")
             .AllowAnyHeader()
@@ -48,6 +52,27 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 var app = builder.Build();
+
+// if (args.Length > 0 && string.Equals(args[0], "seed-admin", StringComparison.OrdinalIgnoreCase))
+// {
+//     using var scope = app.Services.CreateScope();
+//     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+//     const string adminFullName = "System Admin";
+//     const string adminEmail = "admin@vms.local";
+//     const string adminPassword = "Admin@123";
+
+//     var adminUserId = await AdminSeedRunner.SeedSingleAdminAsync(
+//         context,
+//         adminFullName,
+//         adminEmail,
+//         adminPassword);
+
+//     Console.WriteLine($"Admin user ready. UserId={adminUserId}, Email={adminEmail}");
+//     return;
+// }
+
+
 
 app.UseCors("WebClient");
 app.UseAuthorization();

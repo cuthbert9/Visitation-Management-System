@@ -20,11 +20,15 @@ public class OfficesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<OfficeDto>> Create([FromBody] CreateOfficeDto request)
     {
+        var now = DateTime.UtcNow;
+
         var office = new Office
         {
             Name = request.Name,
-            Location = request.Location,
-            Status = request.Status
+            Floor = request.Floor,
+            OfficeCode = request.OfficeCode,
+            CreatedAt = now,
+            UpdatedAt = now
         };
 
         _context.Offices.Add(office);
@@ -38,8 +42,8 @@ public class OfficesController : ControllerBase
     {
         var offices = await _context.Offices
             .AsNoTracking()
-            .OrderByDescending(o => o.Id)
-            .Select(o => ToOfficeDto(o))
+            .OrderByDescending(office => office.Id)
+            .Select(office => ToOfficeDto(office))
             .ToListAsync();
 
         return Ok(offices);
@@ -55,7 +59,7 @@ public class OfficesController : ControllerBase
     [HttpGet("{id:int}/visits")]
     public async Task<ActionResult<IEnumerable<VisitDto>>> GetOfficeVisits(int id)
     {
-        var officeExists = await _context.Offices.AnyAsync(o => o.Id == id);
+        var officeExists = await _context.Offices.AnyAsync(office => office.Id == id);
         if (!officeExists)
         {
             return NotFound();
@@ -63,11 +67,13 @@ public class OfficesController : ControllerBase
 
         var visits = await _context.Visits
             .AsNoTracking()
-            .Include(v => v.Visitor)
-            .Include(v => v.Office)
-            .Where(v => v.OfficeId == id)
-            .OrderByDescending(v => v.VisitDate)
-            .Select(v => VisitMappings.ToVisitDto(v))
+            .Include(visit => visit.Visitor)
+            .Include(visit => visit.Office)
+            .Include(visit => visit.CheckIns)
+            .Include(visit => visit.CheckOuts)
+            .Where(visit => visit.OfficeId == id)
+            .OrderByDescending(visit => visit.VisitDate)
+            .Select(visit => VisitMappings.ToVisitDto(visit))
             .ToListAsync();
 
         return Ok(visits);
@@ -76,15 +82,16 @@ public class OfficesController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<ActionResult<OfficeDto>> Update(int id, [FromBody] UpdateOfficeDto request)
     {
-        var office = await _context.Offices.FirstOrDefaultAsync(o => o.Id == id);
+        var office = await _context.Offices.FirstOrDefaultAsync(existingOffice => existingOffice.Id == id);
         if (office is null)
         {
             return NotFound();
         }
 
         office.Name = request.Name;
-        office.Location = request.Location;
-        office.Status = request.Status;
+        office.Floor = request.Floor;
+        office.OfficeCode = request.OfficeCode;
+        office.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
         return Ok(ToOfficeDto(office));
@@ -93,16 +100,17 @@ public class OfficesController : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var office = await _context.Offices.FirstOrDefaultAsync(o => o.Id == id);
+        var office = await _context.Offices.FirstOrDefaultAsync(existingOffice => existingOffice.Id == id);
         if (office is null)
         {
             return NotFound();
         }
 
-        var hasVisits = await _context.Visits.AnyAsync(v => v.OfficeId == id);
-        if (hasVisits)
+        var hasVisits = await _context.Visits.AnyAsync(visit => visit.OfficeId == id);
+        var hasDepartments = await _context.Departments.AnyAsync(department => department.OfficeId == id);
+        if (hasVisits || hasDepartments)
         {
-            return Conflict(new { message = "Cannot delete office with existing visits." });
+            return Conflict(new { message = "Cannot delete office with related visits or departments." });
         }
 
         _context.Offices.Remove(office);
@@ -114,7 +122,9 @@ public class OfficesController : ControllerBase
     {
         Id = office.Id,
         Name = office.Name,
-        Location = office.Location,
-        Status = office.Status
+        Floor = office.Floor,
+        OfficeCode = office.OfficeCode,
+        CreatedAt = office.CreatedAt,
+        UpdatedAt = office.UpdatedAt
     };
 }

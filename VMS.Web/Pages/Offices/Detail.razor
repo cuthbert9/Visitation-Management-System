@@ -1,6 +1,9 @@
 @page "/offices/{Id:int}"
 @inject VMS.Web.Services.IOfficeService OfficeService
+@inject VMS.Web.Auth.MockAuthService MockAuth
 @inject NavigationManager NavigationManager
+
+@using VMS.Web.Auth
 
 <PageTitle>Office Details</PageTitle>
 
@@ -22,12 +25,15 @@ else
 {
     <div class="d-flex justify-content-between align-items-start mb-3">
         <p class="text-muted mb-0">Office profile and visit history.</p>
-        <div class="btn-group">
-            <a class="btn btn-outline-secondary" href="/offices/@office.Id/edit">Edit</a>
-            <button class="btn btn-outline-danger" @onclick="DeleteOfficeAsync" disabled="@isDeleting">
-                @(isDeleting ? "Deleting..." : "Delete")
-            </button>
-        </div>
+        @if (MockAuth.HasPermission(DemoPermissions.OfficesManage))
+        {
+            <div class="btn-group">
+                <a class="btn btn-outline-secondary" href="/offices/@office.Id/edit">Edit</a>
+                <button class="btn btn-outline-danger" @onclick="DeleteOfficeAsync" disabled="@isDeleting">
+                    @(isDeleting ? "Deleting..." : "Delete")
+                </button>
+            </div>
+        }
     </div>
 
     <div class="card shadow-sm mb-4">
@@ -36,11 +42,11 @@ else
                 <dt class="col-sm-3">Name</dt>
                 <dd class="col-sm-9">@office.Name</dd>
 
-                <dt class="col-sm-3">Location</dt>
-                <dd class="col-sm-9">@office.Location</dd>
+                <dt class="col-sm-3">Floor</dt>
+                <dd class="col-sm-9">@office.Floor</dd>
 
-                <dt class="col-sm-3">Status</dt>
-                <dd class="col-sm-9">@office.Status</dd>
+                <dt class="col-sm-3">Office Code</dt>
+                <dd class="col-sm-9">@office.OfficeCode</dd>
             </dl>
         </div>
     </div>
@@ -94,6 +100,7 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
+        await MockAuth.InitializeAsync();
         isLoading = true;
         errorMessage = null;
 
@@ -129,7 +136,7 @@ else
         }
         catch
         {
-            errorMessage = "Failed to delete office. It may still have visits attached.";
+            errorMessage = "Failed to delete office. It may still have visits or departments attached.";
         }
         finally
         {

@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using VisitorManagementSystem.Domain.Enums;
 
 namespace VisitorManagementSystem.Api.Models;
 
@@ -7,22 +6,26 @@ public class OfficeDto
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
-    public string? Location { get; set; }
-    public OfficeStatus Status { get; set; }
+    public string? Floor { get; set; }
+    public string? OfficeCode { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }
 
 public class CreateOfficeDto
 {
     [Required]
     public string Name { get; set; } = string.Empty;
-    public string? Location { get; set; }
-    public OfficeStatus Status { get; set; } = OfficeStatus.Active;
+
+    public string? Floor { get; set; }
+    public string? OfficeCode { get; set; }
 }
 
 public class UpdateOfficeDto
 {
     [Required]
     public string Name { get; set; } = string.Empty;
-    public string? Location { get; set; }
-    public OfficeStatus Status { get; set; }
+
+    public string? Floor { get; set; }
+    public string? OfficeCode { get; set; }
 }

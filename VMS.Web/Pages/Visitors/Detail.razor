@@ -1,5 +1,6 @@
 @page "/visitors/{Id:int}"
 @inject VMS.Web.Services.IVisitorService VisitorService
+@inject VMS.Web.Auth.MockAuthService MockAuth
 @inject NavigationManager NavigationManager
 
 <PageTitle>Visitor Details</PageTitle>
@@ -21,13 +22,16 @@ else if (visitor is null)
 else
 {
     <div class="d-flex justify-content-between align-items-start mb-3">
-        <p class="text-muted mb-0">Profile and visit history.</p>
-        <div class="btn-group">
-            <a class="btn btn-outline-secondary" href="/visitors/@visitor.Id/edit">Edit</a>
-            <button class="btn btn-outline-danger" @onclick="DeleteVisitorAsync" disabled="@isDeleting">
-                @(isDeleting ? "Deleting..." : "Delete")
-            </button>
-        </div>
+        <p class="text-muted mb-0">Visitor profile and visit history.</p>
+        @if (MockAuth.HasPermission(DemoPermissions.VisitorsEdit))
+        {
+            <div class="btn-group">
+                <a class="btn btn-outline-secondary" href="/visitors/@visitor.Id/edit">Edit</a>
+                <button class="btn btn-outline-danger" @onclick="DeleteVisitorAsync" disabled="@isDeleting">
+                    @(isDeleting ? "Deleting..." : "Delete")
+                </button>
+            </div>
+        }
     </div>
 
     <div class="card shadow-sm mb-4">
@@ -36,14 +40,20 @@ else
                 <dt class="col-sm-3">Full Name</dt>
                 <dd class="col-sm-9">@visitor.FullName</dd>
 
-                <dt class="col-sm-3">Phone Number</dt>
-                <dd class="col-sm-9">@visitor.PhoneNumber</dd>
+                <dt class="col-sm-3">Phone</dt>
+                <dd class="col-sm-9">@visitor.Phone</dd>
 
                 <dt class="col-sm-3">National ID</dt>
                 <dd class="col-sm-9">@visitor.NationalId</dd>
 
-                <dt class="col-sm-3">Created At</dt>
-                <dd class="col-sm-9">@visitor.CreatedAt.ToLocalTime().ToString("f")</dd>
+                <dt class="col-sm-3">Company</dt>
+                <dd class="col-sm-9">@visitor.Company</dd>
+
+                <dt class="col-sm-3">Vehicle Plate</dt>
+                <dd class="col-sm-9">@visitor.VehiclePlate</dd>
+
+                <dt class="col-sm-3">Photo URL</dt>
+                <dd class="col-sm-9">@visitor.PhotoUrl</dd>
             </dl>
         </div>
     </div>
@@ -97,6 +107,7 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
+        await MockAuth.InitializeAsync();
         isLoading = true;
         errorMessage = null;
 
@@ -132,7 +143,7 @@ else
         }
         catch
         {
-            errorMessage = "Failed to delete visitor. They may still have visits attached.";
+            errorMessage = "Failed to delete visitor. It may still have visits attached.";
         }
         finally
         {

@@ -1,12 +1,17 @@
 @page "/offices/{Id:int}/edit"
 @inject VMS.Web.Services.IOfficeService OfficeService
+@inject VMS.Web.Auth.MockAuthService MockAuth
 @inject NavigationManager NavigationManager
 
 <PageTitle>Edit Office</PageTitle>
 
 <h1 class="mb-4">Edit Office</h1>
 
-@if (isLoading)
+@if (!MockAuth.HasPermission(DemoPermissions.OfficesManage))
+{
+    <div class="alert alert-warning">Your current demo role cannot edit offices.</div>
+}
+else if (isLoading)
 {
     <LoadingSpinner />
 }
@@ -33,18 +38,13 @@ else
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Location</label>
-                    <InputText class="form-control" @bind-Value="request.Location" />
+                    <label class="form-label">Floor</label>
+                    <InputText class="form-control" @bind-Value="request.Floor" />
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Status</label>
-                    <InputSelect class="form-select" @bind-Value="request.Status">
-                        @foreach (var status in Enum.GetValues<OfficeStatus>())
-                        {
-                            <option value="@status">@status</option>
-                        }
-                    </InputSelect>
+                    <label class="form-label">Office Code</label>
+                    <InputText class="form-control" @bind-Value="request.OfficeCode" />
                 </div>
 
                 <button class="btn btn-primary" type="submit" disabled="@isSaving">
@@ -65,6 +65,7 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
+        await MockAuth.InitializeAsync();
         isLoading = true;
         errorMessage = null;
 
@@ -76,8 +77,8 @@ else
                 : new UpdateOfficeDto
                 {
                     Name = office.Name,
-                    Location = office.Location,
-                    Status = office.Status
+                    Floor = office.Floor,
+                    OfficeCode = office.OfficeCode
                 };
         }
         catch

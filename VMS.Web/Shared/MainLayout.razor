@@ -1,10 +1,62 @@
 @inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@inject VMS.Web.Auth.MockAuthService MockAuth
 
 <div class="d-flex min-vh-100">
-    <NavMenu />
+    @if (MockAuth.IsAuthenticated)
+    {
+        <NavMenu />
+    }
+
     <main class="flex-grow-1 bg-light">
         <div class="container py-4">
             @Body
         </div>
     </main>
 </div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        MockAuth.AuthenticationStateChanged += OnAuthenticationStateChanged;
+        await MockAuth.InitializeAsync();
+        EnsureRouteAccess();
+    }
+
+    protected override void OnParametersSet()
+    {
+        EnsureRouteAccess();
+    }
+
+    private void OnAuthenticationStateChanged()
+    {
+        EnsureRouteAccess();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void EnsureRouteAccess()
+    {
+        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        var route = string.IsNullOrWhiteSpace(relativePath) ? "/" : $"/{relativePath.Split('?')[0]}";
+
+        if (!MockAuth.IsAuthenticated)
+        {
+            if (route != "/")
+            {
+                NavigationManager.NavigateTo("/");
+            }
+
+            return;
+        }
+
+        if (route == "/")
+        {
+            NavigationManager.NavigateTo("/visits");
+        }
+    }
+
+    public void Dispose()
+    {
+        MockAuth.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+    }
+}

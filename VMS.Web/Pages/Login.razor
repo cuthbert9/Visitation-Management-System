@@ -1,0 +1,45 @@
+@page "/"
+@inject NavigationManager NavigationManager
+@inject VMS.Web.Auth.MockAuthService MockAuth
+
+@using VMS.Web.Auth
+
+<PageTitle>Login</PageTitle>
+
+<div class="row justify-content-center align-items-center min-vh-100">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-lg border-0">
+            <div class="card-body p-5 text-center">
+                <h3 class="mb-3">Visitation Management System</h3>
+                <p class="text-muted mb-4">Choose Role to simulate the system Flow.</p>
+                <div class="d-grid gap-3">
+                    <button class="btn btn-outline-primary btn-lg" @onclick="() => SelectRoleAsync(DemoRole.Security)">
+                        Continue as Security
+                    </button>
+                    <button class="btn btn-outline-success btn-lg" @onclick="() => SelectRoleAsync(DemoRole.Receptionist)">
+                        Continue as Receptionist
+                    </button>
+                    <button class="btn btn-dark btn-lg" @onclick="() => SelectRoleAsync(DemoRole.Admin)">
+                        Continue as Admin
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await MockAuth.InitializeAsync();
+        if (MockAuth.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo("/visits");
+        }
+    }
+
+    private async Task SelectRoleAsync(DemoRole role)
+    {
+        await MockAuth.LoginAsAsync(role);
+        NavigationManager.NavigateTo("/visits");
+    }
+}

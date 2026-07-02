@@ -20,12 +20,18 @@ public class VisitorsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<VisitorDto>> Create([FromBody] CreateVisitorDto request)
     {
+        var now = DateTime.UtcNow;
+
         var visitor = new Visitor
         {
             FullName = request.FullName,
-            PhoneNumber = request.PhoneNumber,
+            Phone = request.Phone,
             NationalId = request.NationalId,
-            CreatedAt = DateTime.UtcNow
+            Company = request.Company,
+            VehiclePlate = request.VehiclePlate,
+            PhotoUrl = request.PhotoUrl,
+            CreatedAt = now,
+            UpdatedAt = now
         };
 
         _context.Visitors.Add(visitor);
@@ -39,8 +45,8 @@ public class VisitorsController : ControllerBase
     {
         var visitors = await _context.Visitors
             .AsNoTracking()
-            .OrderByDescending(v => v.Id)
-            .Select(v => ToVisitorDto(v))
+            .OrderByDescending(visitor => visitor.Id)
+            .Select(visitor => ToVisitorDto(visitor))
             .ToListAsync();
 
         return Ok(visitors);
@@ -49,14 +55,14 @@ public class VisitorsController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<VisitorDto>> GetById(int id)
     {
-        var visitor = await _context.Visitors.AsNoTracking().FirstOrDefaultAsync(v => v.Id == id);
+        var visitor = await _context.Visitors.AsNoTracking().FirstOrDefaultAsync(existingVisitor => existingVisitor.Id == id);
         return visitor is null ? NotFound() : Ok(ToVisitorDto(visitor));
     }
 
     [HttpGet("{id:int}/visits")]
     public async Task<ActionResult<IEnumerable<VisitDto>>> GetVisitorVisits(int id)
     {
-        var visitorExists = await _context.Visitors.AnyAsync(v => v.Id == id);
+        var visitorExists = await _context.Visitors.AnyAsync(visitor => visitor.Id == id);
         if (!visitorExists)
         {
             return NotFound();
@@ -64,11 +70,13 @@ public class VisitorsController : ControllerBase
 
         var visits = await _context.Visits
             .AsNoTracking()
-            .Include(v => v.Visitor)
-            .Include(v => v.Office)
-            .Where(v => v.VisitorId == id)
-            .OrderByDescending(v => v.VisitDate)
-            .Select(v => VisitMappings.ToVisitDto(v))
+            .Include(visit => visit.Visitor)
+            .Include(visit => visit.Office)
+            .Include(visit => visit.CheckIns)
+            .Include(visit => visit.CheckOuts)
+            .Where(visit => visit.VisitorId == id)
+            .OrderByDescending(visit => visit.VisitDate)
+            .Select(visit => VisitMappings.ToVisitDto(visit))
             .ToListAsync();
 
         return Ok(visits);
@@ -77,15 +85,19 @@ public class VisitorsController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<ActionResult<VisitorDto>> Update(int id, [FromBody] UpdateVisitorDto request)
     {
-        var visitor = await _context.Visitors.FirstOrDefaultAsync(v => v.Id == id);
+        var visitor = await _context.Visitors.FirstOrDefaultAsync(existingVisitor => existingVisitor.Id == id);
         if (visitor is null)
         {
             return NotFound();
         }
 
         visitor.FullName = request.FullName;
-        visitor.PhoneNumber = request.PhoneNumber;
+        visitor.Phone = request.Phone;
         visitor.NationalId = request.NationalId;
+        visitor.Company = request.Company;
+        visitor.VehiclePlate = request.VehiclePlate;
+        visitor.PhotoUrl = request.PhotoUrl;
+        visitor.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
         return Ok(ToVisitorDto(visitor));
@@ -94,13 +106,13 @@ public class VisitorsController : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var visitor = await _context.Visitors.FirstOrDefaultAsync(v => v.Id == id);
+        var visitor = await _context.Visitors.FirstOrDefaultAsync(existingVisitor => existingVisitor.Id == id);
         if (visitor is null)
         {
             return NotFound();
         }
 
-        var hasVisits = await _context.Visits.AnyAsync(v => v.VisitorId == id);
+        var hasVisits = await _context.Visits.AnyAsync(visit => visit.VisitorId == id);
         if (hasVisits)
         {
             return Conflict(new { message = "Cannot delete visitor with existing visits." });
@@ -115,8 +127,12 @@ public class VisitorsController : ControllerBase
     {
         Id = visitor.Id,
         FullName = visitor.FullName,
-        PhoneNumber = visitor.PhoneNumber,
+        Phone = visitor.Phone,
         NationalId = visitor.NationalId,
-        CreatedAt = visitor.CreatedAt
+        Company = visitor.Company,
+        VehiclePlate = visitor.VehiclePlate,
+        PhotoUrl = visitor.PhotoUrl,
+        CreatedAt = visitor.CreatedAt,
+        UpdatedAt = visitor.UpdatedAt
     };
 }

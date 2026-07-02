@@ -1,4 +1,34 @@
 @baseUrl = http://localhost:5207
+@receptionistId = 1
+@securityId = 2
+@adminId = 3
+
+### ---------------------------------
+### Users / Actors Setup
+### ---------------------------------
+### NOTE:
+### The current backend requires user IDs in visit actions:
+### - createdById
+### - approvedById
+### - checkedInById
+### - checkedOutById
+### But there are NO /api/users endpoints implemented yet.
+### So these IDs must already exist in the database.
+### Expected mock/demo IDs used by the frontend and HTTP file:
+### - Receptionist -> 1
+### - Security     -> 2
+### - Admin        -> 3
+###
+### If your DB does not contain these users, visit create/approve/check-in/check-out will fail.
+### Once UsersController exists, replace this section with real POST /api/users calls.
+
+### Users - Expected demo actor ids
+GET {{baseUrl}}/api/visits
+Accept: application/json
+
+### ---------------------------------
+### Visitors
+### ---------------------------------
 
 ### Visitors - Get all
 GET {{baseUrl}}/api/visitors
@@ -18,9 +48,12 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "fullName": "ANother Visitor",
-  "phoneNumber": "0799993999",
-  "nationalId": "NIDA-123456782"
+  "fullName": "Jane Visitor",
+  "phone": "0799993999",
+  "nationalId": "NIDA-123456782",
+  "company": "Acme Logistics",
+  "vehiclePlate": "T123ABC",
+  "photoUrl": "https://example.com/photos/jane-visitor.jpg"
 }
 
 ###
@@ -31,9 +64,12 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "fullName": "John Doe Updated",
-  "phoneNumber": "0788888888",
-  "nationalId": "NIDA-987654321"
+  "fullName": "Jane Visitor Updated",
+  "phone": "0788888888",
+  "nationalId": "NIDA-987654321",
+  "company": "Acme Logistics",
+  "vehiclePlate": "T456DEF",
+  "photoUrl": "https://example.com/photos/jane-visitor-updated.jpg"
 }
 
 ###
@@ -48,7 +84,9 @@ Accept: application/json
 GET {{baseUrl}}/api/visitors/1/visits
 Accept: application/json
 
-###
+### ---------------------------------
+### Offices
+### ---------------------------------
 
 ### Offices - Get all
 GET {{baseUrl}}/api/offices
@@ -68,9 +106,9 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "name": "Block 2C Office ",
-  "location": "Block A",
-  "status": 1
+  "name": "Records Office",
+  "floor": "First Floor",
+  "officeCode": "REC-01"
 }
 
 ###
@@ -82,8 +120,8 @@ Accept: application/json
 
 {
   "name": "Records Office Updated",
-  "location": "Block B",
-  "status": 2
+  "floor": "Second Floor",
+  "officeCode": "REC-02"
 }
 
 ###
@@ -98,7 +136,61 @@ Accept: application/json
 GET {{baseUrl}}/api/offices/1/visits
 Accept: application/json
 
+### ---------------------------------
+### Departments
+### ---------------------------------
+
+### Departments - Get all
+GET {{baseUrl}}/api/departments
+Accept: application/json
+
 ###
+
+### Departments - Get by id
+GET {{baseUrl}}/api/departments/1
+Accept: application/json
+
+###
+
+### Departments - Get by office
+GET {{baseUrl}}/api/departments/office/1
+Accept: application/json
+
+###
+
+### Departments - Create
+POST {{baseUrl}}/api/departments
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Reception",
+  "description": "Front desk and guest handling",
+  "officeId": 1
+}
+
+###
+
+### Departments - Update
+PUT {{baseUrl}}/api/departments/1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Reception Updated",
+  "description": "Front desk, guest handling and bookings",
+  "officeId": 1
+}
+
+###
+
+### Departments - Delete
+DELETE {{baseUrl}}/api/departments/1
+Accept: application/json
+
+### ---------------------------------
+### Visits
+### ---------------------------------
 
 ### Visits - Get all
 GET {{baseUrl}}/api/visits
@@ -112,38 +204,176 @@ Accept: application/json
 
 ###
 
-### Visits - Create (starts as Pending)
+### Visits - Create (starts as Pending, requires existing user id)
 POST {{baseUrl}}/api/visits
 Content-Type: application/json
 Accept: application/json
 
 {
-  "visitorId": 2,
+  "visitorId": 1,
   "officeId": 1,
-  "visitDate": "2026-06-24T10:00:00Z",
-  "purpose": "Document follow-up"
+  "createdById": {{receptionistId}},
+  "visitDate": "2026-07-29T10:00:00Z",
+  "expectedArrival": "2026-06-29T09:45:00Z",
+  "purpose": "Intern follow-up",
+  "attachmentUrl": "https://example.com/files/invitation.pdf"
 }
 
 ###
 
-### Visits - Approve
+### Visits - Approve (requires existing user id)
 PUT {{baseUrl}}/api/visits/1/approve
+Content-Type: application/json
 Accept: application/json
+
+{
+  "approvedById": {{receptionistId}}
+}
 
 ###
 
-### Visits - Reject
+### Visits - Reject (requires existing user id)
 PUT {{baseUrl}}/api/visits/1/reject
+Content-Type: application/json
 Accept: application/json
+
+{
+  "approvedById": {{receptionistId}}
+}
 
 ###
 
-### Visits - Check in (only if Approved)
+### Visits - Check in (requires existing user id)
 PUT {{baseUrl}}/api/visits/1/checkin
+Content-Type: application/json
+Accept: application/json
+
+{
+  "checkedInById": {{securityId}},
+  "gate": "Main Gate",
+  "badgeNumber": "BG-001"
+}
+
+###
+
+### Visits - Check out (requires existing user id)
+PUT {{baseUrl}}/api/visits/1/checkout
+Content-Type: application/json
+Accept: application/json
+
+{
+  "checkedOutById": {{securityId}},
+  "remarks": "Visitor exited successfully"
+}
+
+### ---------------------------------
+### Parking Slots
+### ---------------------------------
+
+### Parking Slots - Get all
+GET {{baseUrl}}/api/parkingslots
 Accept: application/json
 
 ###
 
-### Visits - Check out (only after check-in)
-PUT {{baseUrl}}/api/visits/1/checkout
+### Parking Slots - Get by id
+GET {{baseUrl}}/api/parkingslots/1
+Accept: application/json
+
+###
+
+### Parking Slots - Create
+POST {{baseUrl}}/api/parkingslots
+Content-Type: application/json
+Accept: application/json
+
+{
+  "code": "A-01",
+  "zone": "Zone A",
+  "status": 1
+}
+
+###
+
+### Parking Slots - Update
+PUT {{baseUrl}}/api/parkingslots/1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "code": "A-01",
+  "zone": "Zone A",
+  "status": 2
+}
+
+###
+
+### Parking Slots - Delete
+DELETE {{baseUrl}}/api/parkingslots/1
+Accept: application/json
+
+### ---------------------------------
+### Parking Reservations
+### ---------------------------------
+
+### Parking Reservations - Get all
+GET {{baseUrl}}/api/parkingreservations
+Accept: application/json
+
+###
+
+### Parking Reservations - Get by id
+GET {{baseUrl}}/api/parkingreservations/1
+Accept: application/json
+
+###
+
+### Parking Reservations - Create
+POST {{baseUrl}}/api/parkingreservations
+Content-Type: application/json
+Accept: application/json
+
+{
+  "visitId": 1,
+  "slotId": 1,
+  "vehiclePlate": "T123ABC"
+}
+
+###
+
+### Parking Reservations - Update
+PUT {{baseUrl}}/api/parkingreservations/1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "slotId": 1,
+  "vehiclePlate": "T123ABC",
+  "status": 2
+}
+
+###
+
+### Parking Reservations - Release
+PUT {{baseUrl}}/api/parkingreservations/1/release
+Content-Type: application/json
+Accept: application/json
+
+{
+  "releasedAt": "2026-06-29T12:30:00Z"
+}
+
+###
+
+### Parking Reservations - Cancel
+PUT {{baseUrl}}/api/parkingreservations/1/cancel
+Content-Type: application/json
+Accept: application/json
+
+{}
+
+###
+
+### Parking Reservations - Delete
+DELETE {{baseUrl}}/api/parkingreservations/1
 Accept: application/json

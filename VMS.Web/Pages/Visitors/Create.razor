@@ -1,48 +1,76 @@
 @page "/visitors/create"
 @inject VMS.Web.Services.IVisitorService VisitorService
+@inject VMS.Web.Auth.MockAuthService MockAuth
 @inject NavigationManager NavigationManager
 
 <PageTitle>Create Visitor</PageTitle>
 
 <h1 class="mb-4">Create Visitor</h1>
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        @if (!string.IsNullOrWhiteSpace(errorMessage))
-        {
-            <div class="alert alert-danger">@errorMessage</div>
-        }
+@if (!MockAuth.HasPermission(DemoPermissions.VisitorsCreate))
+{
+    <div class="alert alert-warning">Your current demo role cannot create visitors.</div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="alert alert-danger">@errorMessage</div>
+            }
 
-        <EditForm Model="request" OnValidSubmit="HandleSubmitAsync">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
+            <EditForm Model="request" OnValidSubmit="HandleSubmitAsync">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
 
-            <div class="mb-3">
-                <label class="form-label">Full Name</label>
-                <InputText class="form-control" @bind-Value="request.FullName" />
-            </div>
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <InputText class="form-control" @bind-Value="request.FullName" />
+                </div>
 
-            <div class="mb-3">
-                <label class="form-label">Phone Number</label>
-                <InputText class="form-control" @bind-Value="request.PhoneNumber" />
-            </div>
+                <div class="mb-3">
+                    <label class="form-label">Phone</label>
+                    <InputText class="form-control" @bind-Value="request.Phone" />
+                </div>
 
-            <div class="mb-3">
-                <label class="form-label">National ID</label>
-                <InputText class="form-control" @bind-Value="request.NationalId" />
-            </div>
+                <div class="mb-3">
+                    <label class="form-label">National ID</label>
+                    <InputText class="form-control" @bind-Value="request.NationalId" />
+                </div>
 
-            <button class="btn btn-primary" type="submit" disabled="@isSaving">
-                @(isSaving ? "Saving..." : "Create Visitor")
-            </button>
-        </EditForm>
+                <div class="mb-3">
+                    <label class="form-label">Company</label>
+                    <InputText class="form-control" @bind-Value="request.Company" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Vehicle Plate</label>
+                    <InputText class="form-control" @bind-Value="request.VehiclePlate" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Photo URL</label>
+                    <InputText class="form-control" @bind-Value="request.PhotoUrl" />
+                </div>
+
+                <button class="btn btn-primary" type="submit" disabled="@isSaving">
+                    @(isSaving ? "Saving..." : "Create Visitor")
+                </button>
+            </EditForm>
+        </div>
     </div>
-</div>
+}
 
 @code {
     private CreateVisitorDto request = new();
     private bool isSaving;
     private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await MockAuth.InitializeAsync();
+    }
 
     private async Task HandleSubmitAsync()
     {

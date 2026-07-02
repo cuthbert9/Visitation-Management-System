@@ -1,12 +1,17 @@
 @page "/visitors/{Id:int}/edit"
 @inject VMS.Web.Services.IVisitorService VisitorService
+@inject VMS.Web.Auth.MockAuthService MockAuth
 @inject NavigationManager NavigationManager
 
 <PageTitle>Edit Visitor</PageTitle>
 
 <h1 class="mb-4">Edit Visitor</h1>
 
-@if (isLoading)
+@if (!MockAuth.HasPermission(DemoPermissions.VisitorsEdit))
+{
+    <div class="alert alert-warning">Your current demo role cannot edit visitors.</div>
+}
+else if (isLoading)
 {
     <LoadingSpinner />
 }
@@ -33,13 +38,28 @@ else
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Phone Number</label>
-                    <InputText class="form-control" @bind-Value="request.PhoneNumber" />
+                    <label class="form-label">Phone</label>
+                    <InputText class="form-control" @bind-Value="request.Phone" />
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">National ID</label>
                     <InputText class="form-control" @bind-Value="request.NationalId" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Company</label>
+                    <InputText class="form-control" @bind-Value="request.Company" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Vehicle Plate</label>
+                    <InputText class="form-control" @bind-Value="request.VehiclePlate" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Photo URL</label>
+                    <InputText class="form-control" @bind-Value="request.PhotoUrl" />
                 </div>
 
                 <button class="btn btn-primary" type="submit" disabled="@isSaving">
@@ -60,6 +80,7 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
+        await MockAuth.InitializeAsync();
         isLoading = true;
         errorMessage = null;
 
@@ -71,8 +92,11 @@ else
                 : new UpdateVisitorDto
                 {
                     FullName = visitor.FullName,
-                    PhoneNumber = visitor.PhoneNumber,
-                    NationalId = visitor.NationalId
+                    Phone = visitor.Phone,
+                    NationalId = visitor.NationalId,
+                    Company = visitor.Company,
+                    VehiclePlate = visitor.VehiclePlate,
+                    PhotoUrl = visitor.PhotoUrl
                 };
         }
         catch

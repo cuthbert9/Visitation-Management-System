@@ -1,13 +1,17 @@
 @page "/offices"
 @inject VMS.Web.Services.IOfficeService OfficeService
+@inject VMS.Web.Auth.MockAuthService MockAuth
 
 <PageTitle>Offices</PageTitle>
 
 <h1 class="mb-4">Offices</h1>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <p class="text-muted mb-0">Available offices and their status.</p>
-    <a class="btn btn-primary" href="/offices/create">New Office</a>
+    <p class="text-muted mb-0">Available offices in the system.</p>
+    @if (MockAuth.HasPermission(DemoPermissions.OfficesManage))
+    {
+        <a class="btn btn-primary" href="/offices/create">New Office</a>
+    }
 </div>
 
 @if (isLoading)
@@ -30,8 +34,8 @@ else
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th>Location</th>
-                        <th>Status</th>
+                        <th>Floor</th>
+                        <th>Office Code</th>
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
@@ -40,12 +44,15 @@ else
                 {
                     <tr>
                         <td>@office.Name</td>
-                        <td>@office.Location</td>
-                        <td>@office.Status</td>
+                        <td>@office.Floor</td>
+                        <td>@office.OfficeCode</td>
                         <td class="text-end">
                             <div class="btn-group btn-group-sm" role="group">
                                 <a class="btn btn-outline-primary" href="/offices/@office.Id">View</a>
-                                <a class="btn btn-outline-secondary" href="/offices/@office.Id/edit">Edit</a>
+                                @if (MockAuth.HasPermission(DemoPermissions.OfficesManage))
+                                {
+                                    <a class="btn btn-outline-secondary" href="/offices/@office.Id/edit">Edit</a>
+                                }
                             </div>
                         </td>
                     </tr>
@@ -63,6 +70,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        await MockAuth.InitializeAsync();
+
         try
         {
             offices = (await OfficeService.GetOfficesAsync()).ToList();

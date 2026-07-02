@@ -32,6 +32,10 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/Pages/Login.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTG9naW4ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Web/Pages/Offices/Create.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXMvT2ZmaWNlcy9DcmVhdGUucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 

@@ -2,7 +2,9 @@
 @inject VMS.Web.Services.IVisitService VisitService
 @inject VMS.Web.Services.IVisitorService VisitorService
 @inject VMS.Web.Services.IOfficeService OfficeService
+@inject VMS.Web.Auth.MockAuthService MockAuth
 @inject NavigationManager NavigationManager
+@using System.Text.Json
 
 <PageTitle>Schedule Visit</PageTitle>
 
@@ -11,6 +13,10 @@
 @if (isLoading)
 {
     <LoadingSpinner />
+}
+else if (!MockAuth.HasPermission(DemoPermissions.VisitsCreate))
+{
+    <div class="alert alert-warning">Your current demo role cannot schedule visits.</div>
 }
 else
 {
@@ -42,19 +48,29 @@ else
                         <option value="0">Select office</option>
                         @foreach (var office in offices)
                         {
-                            <option value="@office.Id">@office.Name</option>
+                            <option value="@office.Id">@office.Name (@office.OfficeCode)</option>
                         }
                     </InputSelect>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Visit Date</label>
-                    <InputDate class="form-control" @bind-Value="request.VisitDate" />
+                    <InputDate  class="form-control" @bind-Value="request.VisitDate" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Expected Arrival</label>
+                    <InputDate class="form-control" @bind-Value="expectedArrivalDate" />
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Purpose</label>
                     <InputTextArea class="form-control" @bind-Value="request.Purpose" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Attachment URL</label>
+                    <InputText class="form-control" @bind-Value="request.AttachmentUrl" />
                 </div>
 
                 <button class="btn btn-primary" type="submit" disabled="@isSaving">
@@ -67,6 +83,7 @@ else
 
 @code {
     private VisitCreateDto request = new() { VisitDate = DateTime.Today };
+    private DateTime? expectedArrivalDate = DateTime.Today;
     private List<VisitorDto> visitors = [];
     private List<OfficeDto> offices = [];
     private bool isLoading = true;
@@ -75,6 +92,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        await MockAuth.InitializeAsync();
+
         try
         {
             visitors = (await VisitorService.GetVisitorsAsync()).ToList();
@@ -97,16 +116,41 @@ else
 
         try
         {
+            request.CreatedById = null;
+            request.ExpectedArrival = expectedArrivalDate;
             await VisitService.CreateVisitAsync(request);
             NavigationManager.NavigateTo("/visits");
         }
-        catch
+        catch (HttpRequestException ex)
         {
-            errorMessage = "Failed to create visit.";
+            errorMessage = TryExtractMessage(ex.Message) ?? "Failed to create visit.";
         }
         finally
         {
             isSaving = false;
         }
+    }
+
+    private static string? TryExtractMessage(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return null;
+        }
+
+        try
+        {
+            var payload = JsonSerializer.Deserialize<ApiErrorResponse>(raw);
+            return string.IsNullOrWhiteSpace(payload?.Message) ? raw : payload.Message;
+        }
+        catch
+        {
+            return raw;
+        }
+    }
+
+    private sealed class ApiErrorResponse
+    {
+        public string? Message { get; set; }
     }
 }

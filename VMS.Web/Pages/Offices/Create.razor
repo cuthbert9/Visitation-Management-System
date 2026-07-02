@@ -1,53 +1,64 @@
 @page "/offices/create"
 @inject VMS.Web.Services.IOfficeService OfficeService
+@inject VMS.Web.Auth.MockAuthService MockAuth
 @inject NavigationManager NavigationManager
+
+
+@using VMS.Web.Auth
 
 <PageTitle>Create Office</PageTitle>
 
 <h1 class="mb-4">Create Office</h1>
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        @if (!string.IsNullOrWhiteSpace(errorMessage))
-        {
-            <div class="alert alert-danger">@errorMessage</div>
-        }
+@if (!MockAuth.HasPermission(DemoPermissions.OfficesManage))
+{
+    <div class="alert alert-warning">Your current demo role cannot create offices.</div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="alert alert-danger">@errorMessage</div>
+            }
 
-        <EditForm Model="request" OnValidSubmit="HandleSubmitAsync">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
+            <EditForm Model="request" OnValidSubmit="HandleSubmitAsync">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
 
-            <div class="mb-3">
-                <label class="form-label">Name</label>
-                <InputText class="form-control" @bind-Value="request.Name" />
-            </div>
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    <InputText class="form-control" @bind-Value="request.Name" />
+                </div>
 
-            <div class="mb-3">
-                <label class="form-label">Location</label>
-                <InputText class="form-control" @bind-Value="request.Location" />
-            </div>
+                <div class="mb-3">
+                    <label class="form-label">Floor</label>
+                    <InputText class="form-control" @bind-Value="request.Floor" />
+                </div>
 
-            <div class="mb-3">
-                <label class="form-label">Status</label>
-                <InputSelect class="form-select" @bind-Value="request.Status">
-                    @foreach (var status in Enum.GetValues<OfficeStatus>())
-                    {
-                        <option value="@status">@status</option>
-                    }
-                </InputSelect>
-            </div>
+                <div class="mb-3">
+                    <label class="form-label">Office Code</label>
+                    <InputText class="form-control" @bind-Value="request.OfficeCode" />
+                </div>
 
-            <button class="btn btn-primary" type="submit" disabled="@isSaving">
-                @(isSaving ? "Saving..." : "Create Office")
-            </button>
-        </EditForm>
+                <button class="btn btn-primary" type="submit" disabled="@isSaving">
+                    @(isSaving ? "Saving..." : "Create Office")
+                </button>
+            </EditForm>
+        </div>
     </div>
-</div>
+}
 
 @code {
     private CreateOfficeDto request = new();
     private bool isSaving;
     private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await MockAuth.InitializeAsync();
+    }
 
     private async Task HandleSubmitAsync()
     {
@@ -56,8 +67,11 @@
 
         try
         {
-            await OfficeService.CreateOfficeAsync(request);
-            NavigationManager.NavigateTo("/offices");
+            var created = await OfficeService.CreateOfficeAsync(request);
+            if (created is not null)
+            {
+                NavigationManager.NavigateTo($"/offices/{created.Id}");
+            }
         }
         catch
         {
