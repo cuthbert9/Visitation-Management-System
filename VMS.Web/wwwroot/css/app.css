@@ -5,4 +5,6 @@ html, body {
 a.nav-link.active {
     background-color: rgba(255, 255, 255, 0.15);
     border-radius: 0.375rem;
+    scale: 1.05;
+    transition: all 0.3s ease-in-out;
 }

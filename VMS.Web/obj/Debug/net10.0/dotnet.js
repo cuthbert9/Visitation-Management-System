@@ -5,7 +5,7 @@ var e=!1;const t=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,
   "mainAssemblyName": "VMS.Web",
   "applicationEnvironment": "Development",
   "resources": {
-    "hash": "sha256-j/9rzMA/hM/YCA7J4BpHuKDCVflVvf35guWAiwSecas=",
+    "hash": "sha256-40WsR52VDJaXP8Q0waorYVzHIkLrVhTigKQOZ4yV3UQ=",
     "jsModuleNative": [
       {
         "name": "dotnet.native.ikrs475e5v.js"
@@ -209,6 +209,36 @@ var e=!1;const t=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,
         "cache": "force-cache"
       },
       {
+        "virtualPath": "Microsoft.IdentityModel.Abstractions.wasm",
+        "name": "Microsoft.IdentityModel.Abstractions.vg1dlou7sp.wasm",
+        "hash": "sha256-r30Ky+kD+BZxaTAr8P7/M02xkxtvL1VfBlH9T38ATAs=",
+        "cache": "force-cache"
+      },
+      {
+        "virtualPath": "Microsoft.IdentityModel.JsonWebTokens.wasm",
+        "name": "Microsoft.IdentityModel.JsonWebTokens.do6a07o59u.wasm",
+        "hash": "sha256-s4PcUGVsWd3RawK+erm+TTtlaW7lKCGUikybScse+Fs=",
+        "cache": "force-cache"
+      },
+      {
+        "virtualPath": "Microsoft.IdentityModel.Logging.wasm",
+        "name": "Microsoft.IdentityModel.Logging.6je01mzmwq.wasm",
+        "hash": "sha256-bk17ZiVjOp+pT6v/BFZNCIl+pGqg//GEggIebJN4x2A=",
+        "cache": "force-cache"
+      },
+      {
+        "virtualPath": "Microsoft.IdentityModel.Tokens.wasm",
+        "name": "Microsoft.IdentityModel.Tokens.tgxjdpx9cv.wasm",
+        "hash": "sha256-007xuDnm4v+hMpJrxaWzOijbGgrD3RuurnF/l4ibZEQ=",
+        "cache": "force-cache"
+      },
+      {
+        "virtualPath": "Microsoft.IO.RecyclableMemoryStream.wasm",
+        "name": "Microsoft.IO.RecyclableMemoryStream.yxkatvvqoa.wasm",
+        "hash": "sha256-hhE+p8W36Xt5rxWVHZKZwIPWrKuVoVC5qqRxOCvdPtY=",
+        "cache": "force-cache"
+      },
+      {
         "virtualPath": "Microsoft.JSInterop.wasm",
         "name": "Microsoft.JSInterop.r4r6qk2dw1.wasm",
         "hash": "sha256-21hvucvGYEBvGb5yPID5maLxLgrqytgfTDHmdfk51pc=",
@@ -218,6 +248,78 @@ var e=!1;const t=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,
         "virtualPath": "Microsoft.JSInterop.WebAssembly.wasm",
         "name": "Microsoft.JSInterop.WebAssembly.ktwcwt6yk1.wasm",
         "hash": "sha256-2Dr3C/9l1UamOvQ4VHNNfxnV1MqXmAiQ28IYg54Gkn0=",
+        "cache": "force-cache"
+      },
+      {
+        "virtualPath": "MimeMapping.wasm",
+        "name": "MimeMapping.gmxjevqz69.wasm",
+        "hash": "sha256-CMXcRIg84k7AstbhcD8rbnPKy2wa/gmsBD8gBgZP1c8=",
+        "cache": "force-cache"
+      },
+      {
+        "virtualPath": "Newtonsoft.Json.wasm",
+        "name": "Newtonsoft.Json.qkbufwhni2.wasm",
+        "hash": "sha256-GlXMWKvDs45M2pACoR3Y4Qh8mcrOZGljqmvJY+6JZ5s=",
+        "cache": "force-cache"
+      },
+      {
+        "virtualPath": "Supabase.wasm",
+        "name": "Supabase.qyt6qogdl5.wasm",
+        "hash": "sha256-zig+I7dVOmC5X90UX+XkfblaDBDqC28AFjl2khOCN/s=",
+        "cache": "force-cache"
+      },
+      {
+        "virtualPath": "Supabase.Core.wasm",
+        "name": "Supabase.Core.zcuz262cdn.wasm",
+        "hash": "sha256-jUEh1mM6mkGdyQrEwowAbpQ8R148PZIAUIOXn0mrgIA=",
+        "cache": "force-cache"
+      },
+      {
+        "virtualPath": "Supabase.Functions.wasm",
+        "name": "Supabase.Functions.das9utiwul.wasm",
+        "hash": "sha256-i3baKTpUA4voBHgpG1KCEXhOQom7BsRz3N4FCywsZ6k=",
+        "cache": "force-cache"
+      },
+      {
+        "virtualPath": "Supabase.Gotrue.wasm",
+        "name": "Supabase.Gotrue.kcc8v0x814.wasm",
+        "hash": "sha256-fIDLwe2YAl/vphQoUtljCM5aRD5nbL3EXYlszJRLyfw=",
+        "cache": "force-cache"
+      },
+      {
+        "virtualPath": "Supabase.Postgrest.wasm",
+        "name": "Supabase.Postgrest.c2dibacbnw.wasm",
+        "hash": "sha256-XBrmcfBn9P/tWxdOP8BZzt+Er2JFu2K3zhAWYTFDah0=",
+        "cache": "force-cache"
+      },
+      {
+        "virtualPath": "Supabase.Realtime.wasm",
+        "name": "Supabase.Realtime.r7rezo8ln8.wasm",
+        "hash": "sha256-uVv6E6kYwaHrayuVaV9LCt6rkkyLzb8yruwLcdoZP3o=",
+        "cache": "force-cache"
+      },
+      {
+        "virtualPath": "Supabase.Storage.wasm",
+        "name": "Supabase.Storage.rox9ole9mr.wasm",
+        "hash": "sha256-y76yu8B80Dx0eKBpLW7a6YC2em2J/O6ww8+m80LzhXE=",
+        "cache": "force-cache"
+      },
+      {
+        "virtualPath": "System.IdentityModel.Tokens.Jwt.wasm",
+        "name": "System.IdentityModel.Tokens.Jwt.8p36zpd3sm.wasm",
+        "hash": "sha256-PO+x96C/PkZ0SBbU+a9mIaUKvAK79n200oqZ/t+TxrE=",
+        "cache": "force-cache"
+      },
+      {
+        "virtualPath": "System.Reactive.wasm",
+        "name": "System.Reactive.c15raio1t6.wasm",
+        "hash": "sha256-QOQPFitCA3l0ZnlO+zVuhIG+xXDVH9CHyrfN2bXZkT8=",
+        "cache": "force-cache"
+      },
+      {
+        "virtualPath": "Websocket.Client.wasm",
+        "name": "Websocket.Client.sntjl98ana.wasm",
+        "hash": "sha256-6BUeDh+wN+tE97n/xZ5FpCYyaVYitXH44JLzRcssrz8=",
         "cache": "force-cache"
       },
       {
@@ -1242,28 +1344,28 @@ var e=!1;const t=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,
       },
       {
         "virtualPath": "VMS.Shared.wasm",
-        "name": "VMS.Shared.mihwjtj5xr.wasm",
-        "hash": "sha256-rheVDxqsBbRhDZpI5xktxqAIhmlEqK2VZCQonSehFLg=",
+        "name": "VMS.Shared.3pofp65nbp.wasm",
+        "hash": "sha256-OTTS703czuKIxevjyEnEBsIC+IQvI4VFH2teur6pIsw=",
         "cache": "force-cache"
       },
       {
         "virtualPath": "VMS.Web.wasm",
-        "name": "VMS.Web.wjl368mrm2.wasm",
-        "hash": "sha256-JGr0n6uqJ32Vy2nmIzlyh71WK5ftc4wvFf106WhI/tc=",
+        "name": "VMS.Web.syzz7cfrg1.wasm",
+        "hash": "sha256-1GejZHO09OlDoz+bR1TRKk+tKQnWeyD1AbiO6h5yK+E=",
         "cache": "force-cache"
       }
     ],
     "pdb": [
       {
         "virtualPath": "VMS.Shared.pdb",
-        "name": "VMS.Shared.g3x7r6dyws.pdb",
-        "hash": "sha256-TMbBNhMotEIDZA6WvjD/yrLoXvehDdTs1VaHlVV1zQk=",
+        "name": "VMS.Shared.ggf22acvaa.pdb",
+        "hash": "sha256-wOQ/ZHr7KXBrmIv28nVDtIiNLjRyyxyLBEUdHWGJtHk=",
         "cache": "force-cache"
       },
       {
         "virtualPath": "VMS.Web.pdb",
-        "name": "VMS.Web.fphykz3fib.pdb",
-        "hash": "sha256-3YHxcy4lKS2J2g9eqiJzttzmCJpMHQ1AlPd5yekQEz4=",
+        "name": "VMS.Web.bb5dnzz40v.pdb",
+        "hash": "sha256-J29P2qlJbXE870ULEDPXKOad/7hJ3MRRJNeeekhUKkw=",
         "cache": "force-cache"
       }
     ],

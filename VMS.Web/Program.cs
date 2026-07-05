@@ -19,5 +19,6 @@ builder.Services.AddScoped<MockAuthService>();
 builder.Services.AddScoped<IVisitorService, VisitorService>();
 builder.Services.AddScoped<IVisitService, VisitService>();
 builder.Services.AddScoped<IOfficeService, OfficeService>();
+builder.Services.AddScoped<IStorageService, SupabaseStorageService>();
 
 await builder.Build().RunAsync();

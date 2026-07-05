@@ -66,7 +66,22 @@ else
                 <dd class="col-sm-9">@visit.Purpose</dd>
 
                 <dt class="col-sm-3">Attachment</dt>
-                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(visit.AttachmentUrl) ? "No attachment" : visit.AttachmentUrl)</dd>
+                <dd class="col-sm-9">
+                    @if (string.IsNullOrWhiteSpace(visit.AttachmentUrl))
+                    {
+                        <span>No attachment</span>
+                    }
+                    else if (HasValidAttachmentUrl(visit.AttachmentUrl))
+                    {
+                        <a class="btn btn-sm btn-outline-primary me-2" href="@visit.AttachmentUrl" target="_blank" rel="noopener noreferrer">View</a>
+                        <a class="btn btn-sm btn-outline-secondary" href="@visit.AttachmentUrl" download>Download</a>
+                    }
+                    else
+                    {
+                        <span>Attachment unavailable</span>
+                    }
+                </dd>
+                
 
                 <dt class="col-sm-3">Check In</dt>
                 <dd class="col-sm-9">@(visit.LatestCheckIn?.CheckInTime.ToLocalTime().ToString("f") ?? "Not checked in")</dd>
@@ -152,5 +167,11 @@ else
         {
             isActing = false;
         }
+    }
+
+    private static bool HasValidAttachmentUrl(string? url)
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
     }
 }

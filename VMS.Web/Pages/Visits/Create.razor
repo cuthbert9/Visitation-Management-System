@@ -2,8 +2,10 @@
 @inject VMS.Web.Services.IVisitService VisitService
 @inject VMS.Web.Services.IVisitorService VisitorService
 @inject VMS.Web.Services.IOfficeService OfficeService
+@inject VMS.Web.Services.IStorageService StorageService
 @inject VMS.Web.Auth.MockAuthService MockAuth
 @inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Components.Forms
 @using System.Text.Json
 
 <PageTitle>Schedule Visit</PageTitle>
@@ -69,12 +71,16 @@ else
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Attachment URL</label>
-                    <InputText class="form-control" @bind-Value="request.AttachmentUrl" />
+                    <label class="form-label">Attachment</label>
+                    <InputFile class="form-control" OnChange="HandleFileSelected" />
+                    @if (selectedFile is not null)
+                    {
+                        <div class="form-text">Selected file: @selectedFile.Name</div>
+                    }
                 </div>
 
                 <button class="btn btn-primary" type="submit" disabled="@isSaving">
-                    @(isSaving ? "Saving..." : "Create Visit")
+                    @(isSaving ? (isUploadingFile ? "Uploading attachment..." : "Saving...") : "Create Visit")
                 </button>
             </EditForm>
         </div>
@@ -86,8 +92,10 @@ else
     private DateTime? expectedArrivalDate = DateTime.Today;
     private List<VisitorDto> visitors = [];
     private List<OfficeDto> offices = [];
+    private IBrowserFile? selectedFile;
     private bool isLoading = true;
     private bool isSaving;
+    private bool isUploadingFile;
     private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
@@ -109,15 +117,29 @@ else
         }
     }
 
+    private void HandleFileSelected(InputFileChangeEventArgs args)
+    {
+        selectedFile = args.File;
+    }
+
     private async Task HandleSubmitAsync()
     {
         isSaving = true;
+        isUploadingFile = false;
         errorMessage = null;
 
         try
         {
             request.CreatedById = null;
             request.ExpectedArrival = expectedArrivalDate;
+
+            if (selectedFile is not null)
+            {
+                isUploadingFile = true;
+                request.AttachmentUrl = await StorageService.UploadAsync(selectedFile);
+                isUploadingFile = false;
+            }
+
             await VisitService.CreateVisitAsync(request);
             NavigationManager.NavigateTo("/visits");
         }
@@ -125,9 +147,16 @@ else
         {
             errorMessage = TryExtractMessage(ex.Message) ?? "Failed to create visit.";
         }
+        catch (Exception ex)
+        {
+            errorMessage = string.IsNullOrWhiteSpace(ex.Message)
+                ? "Failed to upload attachment."
+                : ex.Message;
+        }
         finally
         {
             isSaving = false;
+            isUploadingFile = false;
         }
     }
 
