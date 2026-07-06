@@ -45,7 +45,7 @@ public static class MockRoleCatalog
             DemoRole.Security => new MockSession
             {
                 Role = role,
-                DisplayName = "Demo Security",
+                DisplayName = " Security",
                 ActorId = 2,
                 Permissions =
                 [
@@ -59,7 +59,7 @@ public static class MockRoleCatalog
             DemoRole.Receptionist => new MockSession
             {
                 Role = role,
-                DisplayName = "Demo Receptionist",
+                DisplayName = " Receptionist",
                 ActorId = 1,
                 Permissions =
                 [
@@ -82,7 +82,7 @@ public static class MockRoleCatalog
             _ => new MockSession
             {
                 Role = DemoRole.Admin,
-                DisplayName = "Demo Admin",
+                DisplayName = " Admin",
                 ActorId = 3,
                 Permissions =
                 [
