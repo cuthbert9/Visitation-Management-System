@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Models;
+using VisitorManagementSystem.Api.Services;
 using VisitorManagementSystem.Domain.Entities;
 using VisitorManagementSystem.Infrastructure.Data;
 
@@ -11,10 +12,14 @@ namespace VisitorManagementSystem.Api.Controllers;
 public class VisitorsController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IEmailService _emailService;
+    private readonly ILogger<VisitorsController> _logger;
 
-    public VisitorsController(AppDbContext context)
+    public VisitorsController(AppDbContext context, IEmailService emailService, ILogger<VisitorsController> logger)
     {
         _context = context;
+        _emailService = emailService;
+        _logger = logger;
     }
 
     [HttpPost]
@@ -36,6 +41,23 @@ public class VisitorsController : ControllerBase
 
         _context.Visitors.Add(visitor);
         await _context.SaveChangesAsync();
+
+        try
+        {
+            var subject = "Visitor registration successful"; 
+            var body = $"""
+                <p> {visitor.FullName}, Thank You, for using our VMS</p>
+                <p>Your visitor registration was completed successfully.</p>
+                <p><strong>Registration ID:</strong> {visitor.Id}</p>
+                <p><strong>Registered At (UTC):</strong> {visitor.CreatedAt:yyyy-MM-dd HH:mm:ss}</p>
+            """;
+
+            await _emailService.SendEmailAsync(visitor.FullName, subject, body);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Failed to send registration email for visitor {VisitorId} to {Recipient}.", visitor.Id, visitor.FullName);
+        }
 
         return CreatedAtAction(nameof(GetById), new { id = visitor.Id }, ToVisitorDto(visitor));
     }

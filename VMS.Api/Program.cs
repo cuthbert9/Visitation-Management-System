@@ -1,10 +1,14 @@
 using System.IO;
 using Microsoft.EntityFrameworkCore;
+using VisitorManagementSystem.Api.Configuration;
+using VisitorManagementSystem.Api.Services;
 using VisitorManagementSystem.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("WebClient", policy =>
