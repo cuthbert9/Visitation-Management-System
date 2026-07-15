@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("VMS.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+60ebd3b43b2bc1216c11ce3461cd57124269ede9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+98aacaa6daec620975acae2aedfb385085d0135b")]
 [assembly: System.Reflection.AssemblyProductAttribute("VMS.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("VMS.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
