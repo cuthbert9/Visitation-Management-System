@@ -46,10 +46,40 @@ public class VisitorsController : ControllerBase
         {
             var subject = "Visitor registration successful"; 
             var body = $"""
-                <p> {visitor.FullName}, Thank You, for using our VMS</p>
-                <p>Your visitor registration was completed successfully.</p>
-                <p><strong>Registration ID:</strong> {visitor.Id}</p>
-                <p><strong>Registered At (UTC):</strong> {visitor.CreatedAt:yyyy-MM-dd HH:mm:ss}</p>
+                <div style="margin:0;padding:0;background-color:#f4f7fb;font-family:Arial,Helvetica,sans-serif;">
+                    <div style="max-width:600px;margin:30px auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.06);">
+                        <div style="background-color:#0f4c81;padding:20px 24px;color:#ffffff;">
+                            <h2 style="margin:0;font-size:24px;">Visitor Registration Successful</h2>
+                        </div>
+
+                        <div style="padding:24px;color:#1f2937;line-height:1.6;">
+                            <p style="margin:0 0 16px 0;font-size:16px;">
+                                <strong>{visitor.FullName}</strong>, Thank you for using our VMS.
+                            </p>
+
+                            <p style="margin:0 0 20px 0;font-size:15px;color:#4b5563;">
+                                Your visitor registration was completed successfully. Below are your Registration details:
+                            </p>
+
+                            <div style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin-bottom:20px;">
+                                <p style="margin:0 0 10px 0;font-size:15px;">
+                                    <strong>Registration ID:</strong> {visitor.Id}
+                                </p>
+                                <p style="margin:0;font-size:15px;">
+                                    <strong>Registered At (UTC):</strong> {visitor.CreatedAt:yyyy-MM-dd HH:mm:ss}
+                                </p>
+                            </div>
+
+                            <p style="margin:0;font-size:14px;color:#6b7280;">
+                                Please keep this information for your reference. If you need any assistance, contact the administrator.
+                            </p>
+                        </div>
+
+                        <div style="padding:16px 24px;background-color:#f9fafb;border-top:1px solid #e5e7eb;font-size:13px;color:#6b7280;text-align:center;">
+                            Visitor Management System
+                        </div>
+                    </div>
+                </div>
             """;
 
             await _emailService.SendEmailAsync(visitor.FullName, subject, body);
