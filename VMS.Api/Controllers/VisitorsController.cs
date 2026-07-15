@@ -25,7 +25,8 @@ public class VisitorsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<VisitorDto>> Create([FromBody] CreateVisitorDto request)
     {
-        var now = DateTime.UtcNow;
+        var eastAfricaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Africa/Nairobi");
+        var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, eastAfricaTimeZone);
 
         var visitor = new Visitor
         {
@@ -45,38 +46,41 @@ public class VisitorsController : ControllerBase
         try
         {
             var subject = "Visitor registration successful"; 
+        
             var body = $"""
-                <div style="margin:0;padding:0;background-color:#f4f7fb;font-family:Arial,Helvetica,sans-serif;">
-                    <div style="max-width:600px;margin:30px auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.06);">
-                        <div style="background-color:#0f4c81;padding:20px 24px;color:#ffffff;">
-                            <h2 style="margin:0;font-size:24px;">Visitor Registration Successful</h2>
+                <div style="margin:0;padding:32px 16px;background-color:#f4f7fb;font-family:Arial,Helvetica,sans-serif;">
+                    <div style="max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(15,76,129,0.08);">
+                        <div style="padding:28px 24px 18px 24px;text-align:center;background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);border-bottom:1px solid #eef2f7;">
+                            <img src="https://zdqixwcixanigsaucwek.supabase.co/storage/v1/object/public/Attachments/magerp-logo.svg" alt="MagERP Logo" style="max-width:160px;width:100%;height:auto;display:block;margin:0 auto 16px auto;" />
+                            <div style="font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:#0f4c81;font-weight:700;">MagERP VMS</div>
+                            <h2 style="margin:10px 0 0 0;font-size:24px;line-height:1.3;color:#111827;">Visitor Registration Successful</h2>
                         </div>
 
-                        <div style="padding:24px;color:#1f2937;line-height:1.6;">
-                            <p style="margin:0 0 16px 0;font-size:16px;">
-                                <strong>{visitor.FullName}</strong>, Thank you for using our VMS.
+                        <div style="padding:28px 24px;color:#1f2937;line-height:1.7;">
+                            <p style="margin:0 0 14px 0;font-size:16px;color:#111827;">
+                                <strong>{visitor.FullName}</strong>, Thank you for using MagERP.
                             </p>
 
-                            <p style="margin:0 0 20px 0;font-size:15px;color:#4b5563;">
-                                Your visitor registration was completed successfully. Below are your Registration details:
+                            <p style="margin:0 0 22px 0;font-size:15px;color:#4b5563;">
+                                Your visitor registration was completed successfully. Please find your registration details below.
                             </p>
 
-                            <div style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin-bottom:20px;">
-                                <p style="margin:0 0 10px 0;font-size:15px;">
-                                    <strong>Registration ID:</strong> {visitor.Id}
+                            <div style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:18px 16px;margin-bottom:22px;">
+                                <p style="margin:0 0 12px 0;font-size:15px;color:#374151;">
+                                    <strong style="color:#111827;">Registration ID:</strong> {visitor.Id}
                                 </p>
-                                <p style="margin:0;font-size:15px;">
-                                    <strong>Registered At (UTC):</strong> {visitor.CreatedAt:yyyy-MM-dd HH:mm:ss}
+                                <p style="margin:0;font-size:15px;color:#374151;">
+                                    <strong style="color:#111827;">Registered At :</strong> {visitor.CreatedAt:yyyy-MM-dd HH:mm:ss}
                                 </p>
                             </div>
 
                             <p style="margin:0;font-size:14px;color:#6b7280;">
-                                Please keep this information for your reference. If you need any assistance, contact the administrator.
+                                Please keep this email for your records. If you need any assistance, kindly contact the administrator.
                             </p>
                         </div>
 
-                        <div style="padding:16px 24px;background-color:#f9fafb;border-top:1px solid #e5e7eb;font-size:13px;color:#6b7280;text-align:center;">
-                            Visitor Management System
+                        <div style="padding:16px 24px;background-color:#f9fafb;border-top:1px solid #e5e7eb;text-align:center;">
+                            <p style="margin:0;font-size:13px;color:#6b7280;">Powered by <strong style="color:#0f4c81;">MagERP VMS</strong></p>
                         </div>
                     </div>
                 </div>
