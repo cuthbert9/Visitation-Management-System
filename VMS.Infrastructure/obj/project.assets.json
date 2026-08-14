@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "targets": {
     "net10.0": {
       "Humanizer.Core/2.14.1": {
@@ -2953,36 +2953,36 @@
     ]
   },
   "packageFolders": {
-    "/home/cuthbert-dev/.nuget/packages/": {}
+    "/Users/cuthbertjohnson/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Infrastructure/VMS.Infrastructure.csproj",
+      "projectUniqueName": "/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Infrastructure/VMS.Infrastructure.csproj",
       "projectName": "VMS.Infrastructure",
-      "projectPath": "/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Infrastructure/VMS.Infrastructure.csproj",
-      "packagesPath": "/home/cuthbert-dev/.nuget/packages/",
-      "outputPath": "/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Infrastructure/obj/",
+      "projectPath": "/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Infrastructure/VMS.Infrastructure.csproj",
+      "packagesPath": "/Users/cuthbertjohnson/.nuget/packages/",
+      "outputPath": "/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Infrastructure/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/cuthbert-dev/.nuget/NuGet/NuGet.Config"
+        "/Users/cuthbertjohnson/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
       ],
       "sources": {
-        "/usr/lib/dotnet/library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net10.0": {
+          "framework": "net10.0",
           "targetAlias": "net10.0",
           "projectReferences": {
-            "/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Application/VMS.Application.csproj": {
-              "projectPath": "/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Application/VMS.Application.csproj"
+            "/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Application/VMS.Application.csproj": {
+              "projectPath": "/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Application/VMS.Application.csproj"
             },
-            "/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Domain/VMS.Domain.csproj": {
-              "projectPath": "/home/cuthbert-dev/Desktop/VMS/VMS/VMS.Domain/VMS.Domain.csproj"
+            "/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Domain/VMS.Domain.csproj": {
+              "projectPath": "/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Domain/VMS.Domain.csproj"
             }
           }
         }
@@ -2997,10 +2997,11 @@
         "auditLevel": "low",
         "auditMode": "all"
       },
-      "SdkAnalysisLevel": "10.0.100"
+      "SdkAnalysisLevel": "10.0.300"
     },
     "frameworks": {
       "net10.0": {
+        "framework": "net10.0",
         "targetAlias": "net10.0",
         "dependencies": {
           "Microsoft.EntityFrameworkCore": {
@@ -3034,7 +3035,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/10.0.109/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.301/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.CSharp": "(,4.7.32767]",
           "Microsoft.VisualBasic": "(,10.4.32767]",

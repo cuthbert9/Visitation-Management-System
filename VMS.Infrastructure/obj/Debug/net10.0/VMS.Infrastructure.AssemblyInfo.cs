@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("VMS.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+98aacaa6daec620975acae2aedfb385085d0135b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+18e1477193e317a254999d9a35d16392f065778b")]
 [assembly: System.Reflection.AssemblyProductAttribute("VMS.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("VMS.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
