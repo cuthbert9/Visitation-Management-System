@@ -8,10 +8,10 @@
 ### ---------------------------------
 ### NOTE:
 ### The current backend requires user IDs in visit actions:
-### - createdById
-### - approvedById
-### - checkedInById
-### - checkedOutById
+### - checkedInById      (required at registration - POST /api/visits)
+### - checkedOutById     (required at checkout)
+### - changedByUserId    (required for notify-host / host-acknowledge / deny /
+###                        mark-attended / host-complete / close / cancel)
 ### But there are NO /api/users endpoints implemented yet.
 ### So these IDs must already exist in the database.
 ### Expected mock/demo IDs used by the frontend and HTTP file:
@@ -19,7 +19,7 @@
 ### - Security     -> 2
 ### - Admin        -> 3
 ###
-### If your DB does not contain these users, visit create/approve/check-in/check-out will fail.
+### If your DB does not contain these users, visit registration/status actions will fail.
 ### Once UsersController exists, replace this section with real POST /api/users calls.
 
 ### Users - Expected demo actor ids
@@ -29,6 +29,7 @@ Accept: application/json
 ### ---------------------------------
 ### Visitors
 ### ---------------------------------
+### IdentificationType legend: 1=NationalId 2=Passport 3=DriverLicense 4=Other
 
 ### Visitors - Get all
 GET {{baseUrl}}/api/visitors
@@ -42,6 +43,12 @@ Accept: application/json
 
 ###
 
+### Visitors - Get all visits for one visitor
+GET {{baseUrl}}/api/visitors/1/visits
+Accept: application/json
+
+###
+
 ### Visitors - Create
 POST {{baseUrl}}/api/visitors
 Content-Type: application/json
@@ -49,10 +56,11 @@ Accept: application/json
 
 {
   "fullName": "Jane Visitor",
-  "phone": "0799993999",
-  "nationalId": "NIDA-123456782",
-  "company": "Acme Logistics",
-  "vehiclePlate": "T123ABC",
+  "phoneNumber": "0799993999",
+  "email": "jane.visitor@example.com",
+  "identificationType": 1,
+  "identificationNumber": "NIDA-123456782",
+  "organization": "Acme Logistics",
   "photoUrl": "https://example.com/photos/jane-visitor.jpg"
 }
 
@@ -65,75 +73,19 @@ Accept: application/json
 
 {
   "fullName": "Jane Visitor Updated",
-  "phone": "0788888888",
-  "nationalId": "NIDA-987654321",
-  "company": "Acme Logistics",
-  "vehiclePlate": "T456DEF",
-  "photoUrl": "https://example.com/photos/jane-visitor-updated.jpg"
+  "phoneNumber": "0788888888",
+  "email": "jane.visitor@example.com",
+  "identificationType": 1,
+  "identificationNumber": "NIDA-987654321",
+  "organization": "Acme Logistics",
+  "photoUrl": "https://example.com/photos/jane-visitor-updated.jpg",
+  "isActive": true
 }
 
 ###
 
 ### Visitors - Delete
 DELETE {{baseUrl}}/api/visitors/1
-Accept: application/json
-
-###
-
-### Visitors - Get all visits for one visitor
-GET {{baseUrl}}/api/visitors/1/visits
-Accept: application/json
-
-### ---------------------------------
-### Offices
-### ---------------------------------
-
-### Offices - Get all
-GET {{baseUrl}}/api/offices
-Accept: application/json
-
-###
-
-### Offices - Get by id
-GET {{baseUrl}}/api/offices/1
-Accept: application/json
-
-###
-
-### Offices - Create
-POST {{baseUrl}}/api/offices
-Content-Type: application/json
-Accept: application/json
-
-{
-  "name": "Records Office",
-  "floor": "First Floor",
-  "officeCode": "REC-01"
-}
-
-###
-
-### Offices - Update
-PUT {{baseUrl}}/api/offices/1
-Content-Type: application/json
-Accept: application/json
-
-{
-  "name": "Records Office Updated",
-  "floor": "Second Floor",
-  "officeCode": "REC-02"
-}
-
-###
-
-### Offices - Delete
-DELETE {{baseUrl}}/api/offices/1
-Accept: application/json
-
-###
-
-### Offices - Get all visits for one office
-GET {{baseUrl}}/api/offices/1/visits
 Accept: application/json
 
 ### ---------------------------------
@@ -152,21 +104,15 @@ Accept: application/json
 
 ###
 
-### Departments - Get by office
-GET {{baseUrl}}/api/departments/office/1
-Accept: application/json
-
-###
-
 ### Departments - Create
 POST {{baseUrl}}/api/departments
 Content-Type: application/json
 Accept: application/json
 
 {
+  "code": "REC-01",
   "name": "Reception",
-  "description": "Front desk and guest handling",
-  "officeId": 1
+  "description": "Front desk and guest handling"
 }
 
 ###
@@ -177,9 +123,10 @@ Content-Type: application/json
 Accept: application/json
 
 {
+  "code": "REC-01",
   "name": "Reception Updated",
   "description": "Front desk, guest handling and bookings",
-  "officeId": 1
+  "isActive": true
 }
 
 ###
@@ -189,8 +136,78 @@ DELETE {{baseUrl}}/api/departments/1
 Accept: application/json
 
 ### ---------------------------------
+### Employees
+### ---------------------------------
+
+### Employees - Get all
+GET {{baseUrl}}/api/employees
+Accept: application/json
+
+###
+
+### Employees - Get by id
+GET {{baseUrl}}/api/employees/1
+Accept: application/json
+
+###
+
+### Employees - Get by department
+GET {{baseUrl}}/api/employees/department/1
+Accept: application/json
+
+###
+
+### Employees - Create
+POST {{baseUrl}}/api/employees
+Content-Type: application/json
+Accept: application/json
+
+{
+  "employeeNumber": "EMP-001",
+  "fullName": "John Host",
+  "email": "john.host@example.com",
+  "phoneNumber": "0700111222",
+  "position": "Operations Manager",
+  "departmentId": 1
+}
+
+###
+
+### Employees - Update
+PUT {{baseUrl}}/api/employees/1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "employeeNumber": "EMP-001",
+  "fullName": "John Host Updated",
+  "email": "john.host@example.com",
+  "phoneNumber": "0700111333",
+  "position": "Senior Operations Manager",
+  "departmentId": 1,
+  "isActive": true
+}
+
+###
+
+### Employees - Delete
+DELETE {{baseUrl}}/api/employees/1
+Accept: application/json
+
+### ---------------------------------
 ### Visits
 ### ---------------------------------
+### Status legend: 1=Registered 2=WaitingForHost 3=HostAcknowledged 4=Attended
+###                5=AwaitingExit 6=Completed 7=Closed 8=Cancelled 9=Denied
+### Purpose legend: 1=Meeting 2=Interview 3=Delivery 4=Maintenance 5=OfficialBusiness
+###                 6=Training 7=ContractorWork 8=Personal 9=Other
+### StaffAvailabilityStatus legend: 1=Unknown 2=Available 3=Busy 4=Unavailable 5=OutOfOffice
+###
+### The happy-path flow below runs top to bottom:
+### Create -> Notify Host -> Host Acknowledge -> Mark Attended -> Host Complete -> Check Out -> Close
+### "Deny" and "Cancel" near the bottom are ALTERNATE branches (not part of the happy path) -
+### running them after Host Acknowledge / Close will 409 because the visit is no longer in a
+### state that allows them.
 
 ### Visits - Get all
 GET {{baseUrl}}/api/visits
@@ -204,71 +221,268 @@ Accept: application/json
 
 ###
 
-### Visits - Create (starts as Pending, requires existing user id)
+### Visits - Get status history
+GET {{baseUrl}}/api/visits/1/history
+Accept: application/json
+
+###
+
+### Visits - Create (registers and checks in the visitor in one step; starts as Registered)
 POST {{baseUrl}}/api/visits
 Content-Type: application/json
 Accept: application/json
 
 {
   "visitorId": 1,
-  "officeId": 1,
-  "createdById": {{receptionistId}},
-  "visitDate": "2026-07-29T10:00:00Z",
-  "expectedArrival": "2026-06-29T09:45:00Z",
-  "purpose": "Intern follow-up",
+  "hostEmployeeId": 1,
+  "departmentId": 1,
+  "checkedInById":{{receptionistId}} ,
+  "purpose": 1,
+  "purposeDescription": "Quarterly review meeting",
+  "expectedDepartureTime": "2026-06-29T12:00:00Z",
+  "vehicleModel": "Toyota Corolla",
+  "vehiclePlateNumber": "T123ABC",
+  "badgeNumber": "BG-001",
   "attachmentUrl": "https://example.com/files/invitation.pdf"
 }
 
 ###
 
-### Visits - Approve (requires existing user id)
-PUT {{baseUrl}}/api/visits/1/approve
+### Visits - Notify host (Registered -> WaitingForHost)
+PUT {{baseUrl}}/api/visits/1/notify-host
 Content-Type: application/json
 Accept: application/json
 
 {
-  "approvedById": {{receptionistId}}
+  "changedByUserId": {{receptionistId}}
 }
 
 ###
 
-### Visits - Reject (requires existing user id)
-PUT {{baseUrl}}/api/visits/1/reject
+### Visits - Host acknowledge (WaitingForHost -> HostAcknowledged)
+PUT {{baseUrl}}/api/visits/1/host-acknowledge
 Content-Type: application/json
 Accept: application/json
 
 {
-  "approvedById": {{receptionistId}}
+  "changedByUserId": {{receptionistId}},
+  "staffAvailabilityStatus": 2
 }
 
 ###
 
-### Visits - Check in (requires existing user id)
-PUT {{baseUrl}}/api/visits/1/checkin
+### Visits - Mark attended (HostAcknowledged -> Attended)
+PUT {{baseUrl}}/api/visits/1/mark-attended
 Content-Type: application/json
 Accept: application/json
 
 {
-  "checkedInById": {{securityId}},
-  "gate": "Main Gate",
-  "badgeNumber": "BG-001"
+  "changedByUserId": {{receptionistId}}
 }
 
 ###
 
-### Visits - Check out (requires existing user id)
+### Visits - Host complete (Attended -> AwaitingExit)
+PUT {{baseUrl}}/api/visits/1/host-complete
+Content-Type: application/json
+Accept: application/json
+
+{
+  "changedByUserId": {{receptionistId}}
+}
+
+###
+
+### Visits - Check out (AwaitingExit -> Completed)
 PUT {{baseUrl}}/api/visits/1/checkout
 Content-Type: application/json
 Accept: application/json
 
 {
   "checkedOutById": {{securityId}},
+  "badgeReturned": true,
+  "exitSignatureReference": "https://example.com/signatures/visit-1.png",
   "remarks": "Visitor exited successfully"
 }
+
+###
+
+### Visits - Close (Completed -> Closed)
+PUT {{baseUrl}}/api/visits/1/close
+Content-Type: application/json
+Accept: application/json
+
+{
+  "changedByUserId": {{receptionistId}}
+}
+
+###
+
+### Visits - Deny (ALTERNATE branch - only valid from WaitingForHost, instead of Host Acknowledge)
+PUT {{baseUrl}}/api/visits/1/deny
+Content-Type: application/json
+Accept: application/json
+
+{
+  "changedByUserId": {{receptionistId}},
+  "remarks": "Host unavailable for the rest of the day"
+}
+
+###
+
+### Visits - Cancel (ALTERNATE branch - only valid from Registered/WaitingForHost/HostAcknowledged/Attended)
+PUT {{baseUrl}}/api/visits/1/cancel
+Content-Type: application/json
+Accept: application/json
+
+{
+  "changedByUserId": {{receptionistId}},
+  "remarks": "Visitor cancelled the appointment"
+}
+
+### ---------------------------------
+### Visit Items
+### ---------------------------------
+### ItemType legend: 1=Personal 2=Equipment 3=Delivery 4=Tool 5=ElectronicDevice 6=Document 7=Other
+### MovementType legend: 1=BroughtIn 2=Delivered 3=TakenOut
+
+### Visit Items - Get all
+GET {{baseUrl}}/api/visititems
+Accept: application/json
+
+###
+
+### Visit Items - Get by id
+GET {{baseUrl}}/api/visititems/1
+Accept: application/json
+
+###
+
+### Visit Items - Get by visit
+GET {{baseUrl}}/api/visititems/visit/1
+Accept: application/json
+
+###
+
+### Visit Items - Create
+POST {{baseUrl}}/api/visititems
+Content-Type: application/json
+Accept: application/json
+
+{
+  "visitId": 1,
+  "itemName": "Laptop",
+  "itemType": 5,
+  "movementType": 1,
+  "description": "Dell XPS 13",
+  "serialNumber": "SN-998877",
+  "quantity": 1,
+  "remarks": "Logged at security desk"
+}
+
+###
+
+### Visit Items - Update
+PUT {{baseUrl}}/api/visititems/1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "itemName": "Laptop",
+  "itemType": 5,
+  "movementType": 3,
+  "description": "Dell XPS 13",
+  "serialNumber": "SN-998877",
+  "quantity": 1,
+  "remarks": "Taken out at checkout"
+}
+
+###
+
+### Visit Items - Delete
+DELETE {{baseUrl}}/api/visititems/1
+Accept: application/json
+
+### ---------------------------------
+### Notifications
+### ---------------------------------
+### Type legend: 1=VisitorArrived 2=HostReminder 3=VisitorOverdue 4=HostAcknowledged
+###               5=VisitCompleted 6=CheckoutRequired 7=VisitClosed 8=VisitCancelled
+### Channel legend: 1=InApp 2=Email 3=Sms 4=Push
+### NOTE: most notifications are queued automatically by the Visits status actions above.
+### This section is for manually creating/inspecting notifications.
+
+### Notifications - Get all
+GET {{baseUrl}}/api/notifications
+Accept: application/json
+
+###
+
+### Notifications - Get by id
+GET {{baseUrl}}/api/notifications/1
+Accept: application/json
+
+###
+
+### Notifications - Get by visit
+GET {{baseUrl}}/api/notifications/visit/1
+Accept: application/json
+
+###
+
+### Notifications - Create
+POST {{baseUrl}}/api/notifications
+Content-Type: application/json
+Accept: application/json
+
+{
+  "visitId": 1,
+  "recipientEmployeeId": 1,
+  "type": 2,
+  "channel": 1,
+  "title": "Reminder",
+  "message": "You have a visitor waiting in reception."
+}
+
+###
+
+### Notifications - Mark as read
+PUT {{baseUrl}}/api/notifications/1/read
+Accept: application/json
+
+### ---------------------------------
+### Audit Logs
+### ---------------------------------
+### Action legend: 1=Create 2=Update 3=Delete 4=View 5=Login 6=Logout 7=Export
+###                8=StatusChanged 9=CheckIn 10=CheckOut 11=BadgeAssigned 12=BadgeReturned 13=NotificationSent
+### NOTE: audit logs are written automatically by the other endpoints above; this section is read-only.
+
+### Audit Logs - Get all
+GET {{baseUrl}}/api/auditlogs
+Accept: application/json
+
+###
+
+### Audit Logs - Get by id
+GET {{baseUrl}}/api/auditlogs/1
+Accept: application/json
+
+###
+
+### Audit Logs - Filter by entity type
+GET {{baseUrl}}/api/auditlogs?entityType=Visit
+Accept: application/json
+
+###
+
+### Audit Logs - Filter by action (8 = StatusChanged)
+GET {{baseUrl}}/api/auditlogs?action=8
+Accept: application/json
 
 ### ---------------------------------
 ### Parking Slots
 ### ---------------------------------
+### Status legend: 1=Available 2=Reserved 3=Occupied 4=Unavailable
 
 ### Parking Slots - Get all
 GET {{baseUrl}}/api/parkingslots
@@ -295,15 +509,15 @@ Accept: application/json
 
 ###
 
-### Parking Slots - Update
+### Parking Slots - Update (kept Available so the reservation demo below still works)
 PUT {{baseUrl}}/api/parkingslots/1
 Content-Type: application/json
 Accept: application/json
 
 {
   "code": "A-01",
-  "zone": "Zone A",
-  "status": 2
+  "zone": "Zone A - Visitor Parking",
+  "status": 1
 }
 
 ###
@@ -315,6 +529,7 @@ Accept: application/json
 ### ---------------------------------
 ### Parking Reservations
 ### ---------------------------------
+### Status legend: 1=Pending 2=Reserved 3=Released 4=Cancelled
 
 ### Parking Reservations - Get all
 GET {{baseUrl}}/api/parkingreservations
@@ -365,7 +580,7 @@ Accept: application/json
 
 ###
 
-### Parking Reservations - Cancel
+### Parking Reservations - Cancel (ALTERNATE branch instead of Release)
 PUT {{baseUrl}}/api/parkingreservations/1/cancel
 Content-Type: application/json
 Accept: application/json

@@ -12,14 +12,16 @@ public static class DemoPermissions
     public const string VisitorsRead = "visitors.read";
     public const string VisitorsCreate = "visitors.create";
     public const string VisitorsEdit = "visitors.edit";
-    public const string OfficesRead = "offices.read";
-    public const string OfficesManage = "offices.manage";
+    public const string EmployeesRead = "employees.read";
+    public const string EmployeesManage = "employees.manage";
     public const string VisitsRead = "visits.read";
     public const string VisitsCreate = "visits.create";
-    public const string VisitsApprove = "visits.approve";
-    public const string VisitsReject = "visits.reject";
-    public const string VisitsCheckIn = "visits.checkin";
+    public const string VisitsNotifyHost = "visits.notify_host";
+    public const string VisitsHostAcknowledge = "visits.host_acknowledge";
+    public const string VisitsProgress = "visits.progress";
     public const string VisitsCheckOut = "visits.checkout";
+    public const string VisitsClose = "visits.close";
+    public const string VisitsCancel = "visits.cancel";
     public const string DepartmentsRead = "departments.read";
     public const string DepartmentsManage = "departments.manage";
     public const string ParkingRead = "parking.read";
@@ -50,7 +52,7 @@ public static class MockRoleCatalog
                 Permissions =
                 [
                     DemoPermissions.VisitsRead,
-                    DemoPermissions.VisitsCheckIn,
+                    DemoPermissions.VisitsCreate,
                     DemoPermissions.VisitsCheckOut,
                     DemoPermissions.ParkingRead,
                     DemoPermissions.ParkingRelease
@@ -66,13 +68,15 @@ public static class MockRoleCatalog
                     DemoPermissions.VisitorsRead,
                     DemoPermissions.VisitorsCreate,
                     DemoPermissions.VisitorsEdit,
-                    DemoPermissions.OfficesRead,
+                    DemoPermissions.EmployeesRead,
                     DemoPermissions.VisitsRead,
                     DemoPermissions.VisitsCreate,
-                    DemoPermissions.VisitsApprove,
-                    DemoPermissions.VisitsReject,
-                    DemoPermissions.VisitsCheckIn,
+                    DemoPermissions.VisitsNotifyHost,
+                    DemoPermissions.VisitsHostAcknowledge,
+                    DemoPermissions.VisitsProgress,
                     DemoPermissions.VisitsCheckOut,
+                    DemoPermissions.VisitsClose,
+                    DemoPermissions.VisitsCancel,
                     DemoPermissions.DepartmentsRead,
                     DemoPermissions.ParkingRead,
                     DemoPermissions.ParkingReserve,
@@ -89,14 +93,16 @@ public static class MockRoleCatalog
                     DemoPermissions.VisitorsRead,
                     DemoPermissions.VisitorsCreate,
                     DemoPermissions.VisitorsEdit,
-                    DemoPermissions.OfficesRead,
-                    DemoPermissions.OfficesManage,
+                    DemoPermissions.EmployeesRead,
+                    DemoPermissions.EmployeesManage,
                     DemoPermissions.VisitsRead,
                     DemoPermissions.VisitsCreate,
-                    DemoPermissions.VisitsApprove,
-                    DemoPermissions.VisitsReject,
-                    DemoPermissions.VisitsCheckIn,
+                    DemoPermissions.VisitsNotifyHost,
+                    DemoPermissions.VisitsHostAcknowledge,
+                    DemoPermissions.VisitsProgress,
                     DemoPermissions.VisitsCheckOut,
+                    DemoPermissions.VisitsClose,
+                    DemoPermissions.VisitsCancel,
                     DemoPermissions.DepartmentsRead,
                     DemoPermissions.DepartmentsManage,
                     DemoPermissions.ParkingRead,

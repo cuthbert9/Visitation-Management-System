@@ -18,7 +18,9 @@ builder.Services.AddScoped(_ => new HttpClient
 builder.Services.AddScoped<MockAuthService>();
 builder.Services.AddScoped<IVisitorService, VisitorService>();
 builder.Services.AddScoped<IVisitService, VisitService>();
-builder.Services.AddScoped<IOfficeService, OfficeService>();
+builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<IStorageService, SupabaseStorageService>();
 
 await builder.Build().RunAsync();

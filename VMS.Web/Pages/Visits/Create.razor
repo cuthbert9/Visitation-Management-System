@@ -1,16 +1,18 @@
 @page "/visits/create"
 @inject VMS.Web.Services.IVisitService VisitService
 @inject VMS.Web.Services.IVisitorService VisitorService
-@inject VMS.Web.Services.IOfficeService OfficeService
+@inject VMS.Web.Services.IDepartmentService DepartmentService
+@inject VMS.Web.Services.IEmployeeService EmployeeService
 @inject VMS.Web.Services.IStorageService StorageService
 @inject VMS.Web.Auth.MockAuthService MockAuth
 @inject NavigationManager NavigationManager
 @using Microsoft.AspNetCore.Components.Forms
 @using System.Text.Json
 
-<PageTitle>Schedule Visit</PageTitle>
+<PageTitle>Register Visit</PageTitle>
 
-<h1 class="mb-4">Schedule Visit</h1>
+<h1 class="mb-1">Register Visit</h1>
+<p class="text-muted mb-4">Capture visitor details and notify the host.</p>
 
 @if (isLoading)
 {
@@ -18,85 +20,193 @@
 }
 else if (!MockAuth.HasPermission(DemoPermissions.VisitsCreate))
 {
-    <div class="alert alert-warning">Your current demo role cannot schedule visits.</div>
+    <div class="alert alert-warning">Your current demo role cannot register visits.</div>
 }
 else
 {
-    <div class="card shadow-sm">
-        <div class="card-body">
-            @if (!string.IsNullOrWhiteSpace(errorMessage))
-            {
-                <div class="alert alert-danger">@errorMessage</div>
-            }
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
 
-            <EditForm Model="request" OnValidSubmit="HandleSubmitAsync">
-                <DataAnnotationsValidator />
-                <ValidationSummary />
+    <EditForm Model="request" OnValidSubmit="HandleSubmitAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
 
-                <div class="mb-3">
-                    <label class="form-label">Visitor</label>
-                    <InputSelect class="form-select" @bind-Value="request.VisitorId">
-                        <option value="0">Select visitor</option>
-                        @foreach (var visitor in visitors)
-                        {
-                            <option value="@visitor.Id">@visitor.FullName</option>
-                        }
-                    </InputSelect>
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-person-vcard text-primary"></i>
+                    <span class="form-section-label">Visitor Details</span>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Office</label>
-                    <InputSelect class="form-select" @bind-Value="request.OfficeId">
-                        <option value="0">Select office</option>
-                        @foreach (var office in offices)
-                        {
-                            <option value="@office.Id">@office.Name (@office.OfficeCode)</option>
-                        }
-                    </InputSelect>
-                </div>
+                @if (selectedVisitor is not null)
+                {
+                    <div class="alert alert-info d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>@selectedVisitor.FullName</strong> — @selectedVisitor.PhoneNumber
+                            @if (!string.IsNullOrWhiteSpace(selectedVisitor.IdentificationNumber))
+                            {
+                                <span> · @selectedVisitor.IdentificationType: @selectedVisitor.IdentificationNumber</span>
+                            }
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="ClearSelectedVisitor">Change</button>
+                    </div>
+                }
+                else
+                {
+                    <label class="form-label-sm">Search Existing Visitor</label>
+                    <div class="input-icon-wrapper mb-3">
+                        <i class="bi bi-search"></i>
+                        <input class="form-control" placeholder="Search by name, phone, or ID number" @bind="searchTerm" @bind:event="oninput" />
+                    </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Visit Date</label>
-                    <InputDate  class="form-control" @bind-Value="request.VisitDate" />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Expected Arrival</label>
-                    <InputDate class="form-control" @bind-Value="expectedArrivalDate" />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Purpose</label>
-                    <InputTextArea class="form-control" @bind-Value="request.Purpose" />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Attachment</label>
-                    <InputFile class="form-control" OnChange="HandleFileSelected" />
-                    @if (selectedFile is not null)
+                    @if (!string.IsNullOrWhiteSpace(searchTerm))
                     {
-                        <div class="form-text">Selected file: @selectedFile.Name</div>
+                        var matches = FilteredVisitors.Take(8).ToList();
+
+                        @if (matches.Count > 0)
+                        {
+                            <div class="list-group mb-3">
+                                @foreach (var visitor in matches)
+                                {
+                                    <button type="button" class="list-group-item list-group-item-action" @onclick="() => SelectVisitor(visitor)">
+                                        <strong>@visitor.FullName</strong> — @visitor.PhoneNumber
+                                        @if (!string.IsNullOrWhiteSpace(visitor.IdentificationNumber))
+                                        {
+                                            <span class="text-muted"> · @visitor.IdentificationNumber</span>
+                                        }
+                                    </button>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="form-text mb-3">No matching visitor found — fill in the details below to register a new one.</div>
+                        }
                     }
+
+                    <VisitorFieldsEditor Visitor="newVisitorRequest" />
+                }
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-clipboard-check text-primary"></i>
+                    <span class="form-section-label">Visit Details</span>
                 </div>
 
-                <button class="btn btn-primary" type="submit" disabled="@isSaving">
-                    @(isSaving ? (isUploadingFile ? "Uploading attachment..." : "Saving...") : "Create Visit")
-                </button>
-            </EditForm>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Department</label>
+                        <InputSelect class="form-select" @bind-Value="request.DepartmentId" @bind-Value:after="HandleDepartmentChangedAsync">
+                            <option value="0">Select department</option>
+                            @foreach (var department in departments)
+                            {
+                                <option value="@department.Id">@department.Name (@department.Code)</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Host</label>
+                        <InputSelect class="form-select" @bind-Value="request.HostEmployeeId" disabled="@(request.DepartmentId == 0)">
+                            <option value="0">Select host</option>
+                            @foreach (var employee in employees)
+                            {
+                                <option value="@employee.Id">@employee.FullName@(string.IsNullOrWhiteSpace(employee.Position) ? "" : $" ({employee.Position})")</option>
+                            }
+                        </InputSelect>
+                        @if (SelectedEmployee is not null)
+                        {
+                            <div class="mt-2">
+                                <span class="text-muted small">Presence:</span>
+                                <span class="status-pill @(SelectedEmployee.IsActive ? "status-pill-green" : "status-pill-gray")">@(SelectedEmployee.IsActive ? "Active" : "Inactive")</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Purpose</label>
+                        <InputSelect class="form-select" @bind-Value="request.Purpose">
+                            @foreach (var purpose in Enum.GetValues<VisitPurposeType>())
+                            {
+                                <option value="@purpose">@purpose</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Expected Departure</label>
+                        <InputDate class="form-control" @bind-Value="expectedDepartureDate" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label-sm">Purpose Details</label>
+                    <InputTextArea class="form-control" placeholder="Optional — additional context" @bind-Value="request.PurposeDescription" />
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Vehicle Model</label>
+                        <InputText class="form-control" placeholder="Optional" @bind-Value="request.VehicleModel" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Vehicle Plate</label>
+                        <InputText class="form-control" placeholder="Optional" @bind-Value="request.VehiclePlateNumber" />
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Badge Number</label>
+                        <InputText class="form-control" placeholder="Optional" @bind-Value="request.BadgeNumber" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Attachment</label>
+                        <div class="file-drop">
+                            <InputFile class="form-control" OnChange="HandleFileSelected" />
+                        </div>
+                        @if (selectedFile is not null)
+                        {
+                            <div class="form-text">Selected file: @selectedFile.Name</div>
+                        }
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+
+        <button class="btn btn-primary" type="submit" disabled="@isSaving">
+            @(isSaving ? (isUploadingFile ? "Uploading attachment..." : "Saving...") : "Register Visit")
+        </button>
+    </EditForm>
 }
 
 @code {
-    private VisitCreateDto request = new() { VisitDate = DateTime.Today };
-    private DateTime? expectedArrivalDate = DateTime.Today;
+    private VisitCreateDto request = new();
+    private CreateVisitorDto newVisitorRequest = new();
+    private VisitorDto? selectedVisitor;
+    private string searchTerm = string.Empty;
+    private DateTime? expectedDepartureDate;
     private List<VisitorDto> visitors = [];
-    private List<OfficeDto> offices = [];
+    private List<DepartmentDto> departments = [];
+    private List<EmployeeDto> employees = [];
     private IBrowserFile? selectedFile;
     private bool isLoading = true;
     private bool isSaving;
     private bool isUploadingFile;
     private string? errorMessage;
+
+    private EmployeeDto? SelectedEmployee => employees.FirstOrDefault(employee => employee.Id == request.HostEmployeeId);
+
+    private IEnumerable<VisitorDto> FilteredVisitors =>
+        visitors.Where(visitor =>
+            visitor.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            visitor.PhoneNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            visitor.IdentificationNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
 
     protected override async Task OnInitializedAsync()
     {
@@ -105,7 +215,7 @@ else
         try
         {
             visitors = (await VisitorService.GetVisitorsAsync()).ToList();
-            offices = (await OfficeService.GetOfficesAsync()).ToList();
+            departments = (await DepartmentService.GetDepartmentsAsync()).ToList();
         }
         catch
         {
@@ -117,6 +227,38 @@ else
         }
     }
 
+    private void SelectVisitor(VisitorDto visitor)
+    {
+        selectedVisitor = visitor;
+        searchTerm = string.Empty;
+    }
+
+    private void ClearSelectedVisitor()
+    {
+        selectedVisitor = null;
+        searchTerm = string.Empty;
+    }
+
+    private async Task HandleDepartmentChangedAsync()
+    {
+        request.HostEmployeeId = 0;
+        employees = [];
+
+        if (request.DepartmentId == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            employees = (await EmployeeService.GetEmployeesByDepartmentAsync(request.DepartmentId)).ToList();
+        }
+        catch
+        {
+            errorMessage = "Failed to load employees for the selected department.";
+        }
+    }
+
     private void HandleFileSelected(InputFileChangeEventArgs args)
     {
         selectedFile = args.File;
@@ -124,14 +266,44 @@ else
 
     private async Task HandleSubmitAsync()
     {
+        if (selectedVisitor is null &&
+            (string.IsNullOrWhiteSpace(newVisitorRequest.FullName) ||
+             string.IsNullOrWhiteSpace(newVisitorRequest.PhoneNumber) ||
+             string.IsNullOrWhiteSpace(newVisitorRequest.IdentificationNumber)))
+        {
+            errorMessage = "Full name, phone number, and identification number are required to register a new visitor.";
+            return;
+        }
+
+        if (request.HostEmployeeId == 0)
+        {
+            errorMessage = "Select a host.";
+            return;
+        }
+
         isSaving = true;
         isUploadingFile = false;
         errorMessage = null;
 
         try
         {
-            request.CreatedById = null;
-            request.ExpectedArrival = expectedArrivalDate;
+            if (selectedVisitor is null)
+            {
+                var createdVisitor = await VisitorService.CreateVisitorAsync(newVisitorRequest);
+                if (createdVisitor is null)
+                {
+                    errorMessage = "Failed to create visitor.";
+                    return;
+                }
+
+                // Lock in the newly created visitor immediately so a retry (if the
+                // visit call below fails) does not create a duplicate visitor record.
+                selectedVisitor = createdVisitor;
+            }
+
+            request.VisitorId = selectedVisitor.Id;
+            request.CheckedInById = MockAuth.CurrentSession?.ActorId ?? 0;
+            request.ExpectedDepartureTime = expectedDepartureDate;
 
             if (selectedFile is not null)
             {
@@ -145,7 +317,7 @@ else
         }
         catch (HttpRequestException ex)
         {
-            errorMessage = TryExtractMessage(ex.Message) ?? "Failed to create visit.";
+            errorMessage = TryExtractMessage(ex.Message) ?? "Failed to register visit.";
         }
         catch (Exception ex)
         {

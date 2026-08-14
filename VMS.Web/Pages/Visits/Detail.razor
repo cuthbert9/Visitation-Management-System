@@ -25,45 +25,58 @@ else
     <div class="d-flex justify-content-between align-items-start mb-3 gap-2 flex-wrap">
         <p class="text-muted mb-0">Manage the current visit status.</p>
         <div class="btn-group flex-wrap">
-            @if (MockAuth.HasPermission(DemoPermissions.VisitsApprove))
+            @if (MockAuth.HasPermission(DemoPermissions.VisitsNotifyHost))
             {
-                <button class="btn btn-outline-success" @onclick='() => ApplyActionAsync("approve")' disabled="@(isActing || visit.Status != VisitStatus.Pending)">Approve</button>
+                <button class="btn btn-outline-primary" @onclick='() => ApplyActionAsync("notify-host")' disabled="@(isActing || visit.Status != VisitStatus.Registered)">Notify Host</button>
             }
-            @if (MockAuth.HasPermission(DemoPermissions.VisitsReject))
+            @if (MockAuth.HasPermission(DemoPermissions.VisitsHostAcknowledge))
             {
-                <button class="btn btn-outline-danger" @onclick='() => ApplyActionAsync("reject")' disabled="@(isActing || visit.Status != VisitStatus.Pending)">Reject</button>
+                <button class="btn btn-outline-success" @onclick='() => ApplyActionAsync("host-acknowledge")' disabled="@(isActing || visit.Status != VisitStatus.WaitingForHost)">Host Acknowledge</button>
+                <button class="btn btn-outline-danger" @onclick='() => ApplyActionAsync("deny")' disabled="@(isActing || visit.Status != VisitStatus.WaitingForHost)">Deny</button>
             }
-            @if (MockAuth.HasPermission(DemoPermissions.VisitsCheckIn))
+            @if (MockAuth.HasPermission(DemoPermissions.VisitsProgress))
             {
-                <button class="btn btn-outline-primary" @onclick='() => ApplyActionAsync("checkin")' disabled="@(isActing || visit.Status != VisitStatus.Approved)">Check In</button>
+                <button class="btn btn-outline-secondary" @onclick='() => ApplyActionAsync("mark-attended")' disabled="@(isActing || visit.Status != VisitStatus.HostAcknowledged)">Mark Attended</button>
+                <button class="btn btn-outline-secondary" @onclick='() => ApplyActionAsync("host-complete")' disabled="@(isActing || visit.Status != VisitStatus.Attended)">Host Complete</button>
             }
             @if (MockAuth.HasPermission(DemoPermissions.VisitsCheckOut))
             {
-                <button class="btn btn-outline-secondary" @onclick='() => ApplyActionAsync("checkout")' disabled="@(isActing || visit.Status != VisitStatus.CheckedIn)">Check Out</button>
+                <button class="btn btn-outline-primary" @onclick='() => ApplyActionAsync("checkout")' disabled="@(isActing || visit.Status != VisitStatus.AwaitingExit)">Check Out</button>
+            }
+            @if (MockAuth.HasPermission(DemoPermissions.VisitsClose))
+            {
+                <button class="btn btn-outline-dark" @onclick='() => ApplyActionAsync("close")' disabled="@(isActing || visit.Status != VisitStatus.Completed)">Close</button>
+            }
+            @if (MockAuth.HasPermission(DemoPermissions.VisitsCancel))
+            {
+                <button class="btn btn-outline-danger" @onclick='() => ApplyActionAsync("cancel")' disabled="@(isActing || !CancellableStatuses.Contains(visit.Status))">Cancel</button>
             }
         </div>
     </div>
 
-    <div class="card shadow-sm">
+    <div class="card shadow-sm mb-4">
         <div class="card-body">
             <dl class="row mb-0">
+                <dt class="col-sm-3">Visit Number</dt>
+                <dd class="col-sm-9">@visit.VisitNumber</dd>
+
                 <dt class="col-sm-3">Visitor</dt>
                 <dd class="col-sm-9">@visit.Visitor.FullName</dd>
 
-                <dt class="col-sm-3">Office</dt>
-                <dd class="col-sm-9">@visit.Office.Name</dd>
+                <dt class="col-sm-3">Host</dt>
+                <dd class="col-sm-9">@visit.HostEmployee.FullName</dd>
 
-                <dt class="col-sm-3">Visit Date</dt>
-                <dd class="col-sm-9">@visit.VisitDate.ToLocalTime().ToString("f")</dd>
-
-                <dt class="col-sm-3">Expected Arrival</dt>
-                <dd class="col-sm-9">@(visit.ExpectedArrival?.ToLocalTime().ToString("f") ?? "Not specified")</dd>
+                <dt class="col-sm-3">Department</dt>
+                <dd class="col-sm-9">@visit.Department.Name</dd>
 
                 <dt class="col-sm-3">Status</dt>
                 <dd class="col-sm-9">@visit.Status</dd>
 
+                <dt class="col-sm-3">Staff Availability</dt>
+                <dd class="col-sm-9">@(visit.StaffAvailabilityStatus?.ToString() ?? "Not specified")</dd>
+
                 <dt class="col-sm-3">Purpose</dt>
-                <dd class="col-sm-9">@visit.Purpose</dd>
+                <dd class="col-sm-9">@visit.Purpose@(string.IsNullOrWhiteSpace(visit.PurposeDescription) ? "" : $" - {visit.PurposeDescription}")</dd>
 
                 <dt class="col-sm-3">Attachment</dt>
                 <dd class="col-sm-9">
@@ -81,22 +94,39 @@ else
                         <span>Attachment unavailable</span>
                     }
                 </dd>
-                
 
-                <dt class="col-sm-3">Check In</dt>
-                <dd class="col-sm-9">@(visit.LatestCheckIn?.CheckInTime.ToLocalTime().ToString("f") ?? "Not checked in")</dd>
+                <dt class="col-sm-3">Arrival</dt>
+                <dd class="col-sm-9">@visit.ArrivalTime.ToLocalTime().ToString("f")</dd>
 
-                <dt class="col-sm-3">Check Out</dt>
-                <dd class="col-sm-9">@(visit.LatestCheckOut?.CheckOutTime.ToLocalTime().ToString("f") ?? "Not checked out")</dd>
+                <dt class="col-sm-3">Expected Departure</dt>
+                <dd class="col-sm-9">@(visit.ExpectedDepartureTime?.ToLocalTime().ToString("f") ?? "Not specified")</dd>
+
+                <dt class="col-sm-3">Departure</dt>
+                <dd class="col-sm-9">@(visit.DepartureTime?.ToLocalTime().ToString("f") ?? "Not departed")</dd>
+
+                <dt class="col-sm-3">Host Acknowledged</dt>
+                <dd class="col-sm-9">@(visit.HostAcknowledgedAt?.ToLocalTime().ToString("f") ?? "Not yet")</dd>
+
+                <dt class="col-sm-3">Host Completed</dt>
+                <dd class="col-sm-9">@(visit.HostCompletedAt?.ToLocalTime().ToString("f") ?? "Not yet")</dd>
+
+                <dt class="col-sm-3">Vehicle</dt>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(visit.VehicleModel) && string.IsNullOrWhiteSpace(visit.VehiclePlateNumber) ? "Not provided" : $"{visit.VehicleModel} {visit.VehiclePlateNumber}")</dd>
+
+                <dt class="col-sm-3">Badge</dt>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(visit.BadgeNumber) ? "Not issued" : $"{visit.BadgeNumber} ({visit.BadgeStatus})")</dd>
+
+                <dt class="col-sm-3">Remarks</dt>
+                <dd class="col-sm-9">@(visit.Remarks ?? "None")</dd>
+
+                <dt class="col-sm-3">Closed At</dt>
+                <dd class="col-sm-9">@(visit.ClosedAt?.ToLocalTime().ToString("f") ?? "Not closed")</dd>
 
                 <dt class="col-sm-3">Parking Status</dt>
                 <dd class="col-sm-9">@(currentParking?.Status.ToString() ?? "No parking reservation")</dd>
 
                 <dt class="col-sm-3">Parking Slot</dt>
                 <dd class="col-sm-9">@(currentParking is null ? "No parking reservation" : string.IsNullOrWhiteSpace(currentParking.Zone) ? currentParking.SlotCode : $"{currentParking.SlotCode} ({currentParking.Zone})")</dd>
-
-                <dt class="col-sm-3">Vehicle Plate</dt>
-                <dd class="col-sm-9">@(currentParking?.VehiclePlate ?? "Not provided")</dd>
 
                 <dt class="col-sm-3">Reserved At</dt>
                 <dd class="col-sm-9">@(currentParking?.ReservedAt?.ToLocalTime().ToString("f") ?? "Not reserved")</dd>
@@ -106,12 +136,87 @@ else
             </dl>
         </div>
     </div>
+
+    @if (visit.Items.Count > 0)
+    {
+        <h2 class="h4 mb-3">Items</h2>
+        <div class="card shadow-sm mb-4">
+            <div class="table-responsive">
+                <table class="table table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Type</th>
+                            <th>Movement</th>
+                            <th>Quantity</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var item in visit.Items)
+                    {
+                        <tr>
+                            <td>@item.ItemName</td>
+                            <td>@item.ItemType</td>
+                            <td>@item.MovementType</td>
+                            <td>@item.Quantity</td>
+                            <td>@item.Remarks</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <h2 class="h4 mb-3">Status History</h2>
+    @if (history.Count == 0)
+    {
+        <div class="alert alert-info">No status history yet.</div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Changed At</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var entry in history)
+                    {
+                        <tr>
+                            <td>@(entry.FromStatus?.ToString() ?? "-")</td>
+                            <td>@entry.ToStatus</td>
+                            <td>@entry.ChangedAt.ToLocalTime().ToString("f")</td>
+                            <td>@entry.Remarks</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
 }
 
 @code {
     [Parameter] public int Id { get; set; }
 
+    private static readonly VisitStatus[] CancellableStatuses =
+    [
+        VisitStatus.Registered,
+        VisitStatus.WaitingForHost,
+        VisitStatus.HostAcknowledged,
+        VisitStatus.Attended
+    ];
+
     private VisitDto? visit;
+    private List<VisitStatusHistoryDto> history = [];
     private bool isLoading = true;
     private bool isActing;
     private string? errorMessage;
@@ -130,6 +235,7 @@ else
         try
         {
             visit = await VisitService.GetVisitByIdAsync(Id);
+            history = visit is null ? [] : (await VisitService.GetVisitHistoryAsync(Id)).ToList();
         }
         catch
         {
@@ -152,12 +258,18 @@ else
 
             visit = action switch
             {
-                "approve" => await VisitService.ApproveVisitAsync(Id, new VisitApprovalDto { ApprovedById = actorId }),
-                "reject" => await VisitService.RejectVisitAsync(Id, new VisitApprovalDto { ApprovedById = actorId }),
-                "checkin" => await VisitService.CheckInVisitAsync(Id, new VisitCheckInDto { CheckedInById = actorId, Gate = "Main Gate" }),
-                "checkout" => await VisitService.CheckOutVisitAsync(Id, new VisitCheckOutDto { CheckedOutById = actorId, Remarks = "Processed in demo mode" }),
+                "notify-host" => await VisitService.NotifyHostAsync(Id, new VisitNotifyHostDto { ChangedByUserId = actorId }),
+                "host-acknowledge" => await VisitService.HostAcknowledgeAsync(Id, new VisitHostAcknowledgeDto { ChangedByUserId = actorId }),
+                "deny" => await VisitService.DenyAsync(Id, new VisitDenyDto { ChangedByUserId = actorId, Remarks = "Denied in demo mode" }),
+                "mark-attended" => await VisitService.MarkAttendedAsync(Id, new VisitMarkAttendedDto { ChangedByUserId = actorId }),
+                "host-complete" => await VisitService.HostCompleteAsync(Id, new VisitHostCompleteDto { ChangedByUserId = actorId }),
+                "checkout" => await VisitService.CheckOutVisitAsync(Id, new VisitCheckOutDto { CheckedOutById = actorId, BadgeReturned = true, Remarks = "Processed in demo mode" }),
+                "close" => await VisitService.CloseAsync(Id, new VisitCloseDto { ChangedByUserId = actorId }),
+                "cancel" => await VisitService.CancelAsync(Id, new VisitCancelDto { ChangedByUserId = actorId, Remarks = "Cancelled in demo mode" }),
                 _ => visit
             };
+
+            history = visit is null ? [] : (await VisitService.GetVisitHistoryAsync(Id)).ToList();
         }
         catch
         {

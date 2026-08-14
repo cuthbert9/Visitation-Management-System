@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("WebClient", policy =>
@@ -49,9 +50,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 var app = builder.Build();
 
-// if (args.Length > 0 && string.Equals(args[0], "seed-admin", StringComparison.OrdinalIgnoreCase))
+// using (var scope = app.Services.CreateScope())
 // {
-//     using var scope = app.Services.CreateScope();
 //     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
 //     const string adminFullName = "System Admin";
@@ -65,10 +65,7 @@ var app = builder.Build();
 //         adminPassword);
 
 //     Console.WriteLine($"Admin user ready. UserId={adminUserId}, Email={adminEmail}");
-//     return;
 // }
-
-
 
 app.UseCors("WebClient");
 app.UseAuthorization();

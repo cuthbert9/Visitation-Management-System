@@ -1,16 +1,18 @@
 @page "/visits"
 @inject VMS.Web.Services.IVisitService VisitService
+@inject VMS.Web.Services.IAnalyticsService AnalyticsService
 @inject VMS.Web.Auth.MockAuthService MockAuth
 
 <PageTitle>Visits</PageTitle>
 
-<h1 class="mb-4">Visits</h1>
-
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <p class="text-muted mb-0">Scheduled and completed visits.</p>
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+    <div>
+        <h1 class="mb-1">Visits</h1>
+        <p class="text-muted mb-0">Registered and completed visits.</p>
+    </div>
     @if (MockAuth.HasPermission(DemoPermissions.VisitsCreate))
     {
-        <a class="btn btn-primary" href="/visits/create">Schedule Visit</a>
+        <a class="btn btn-primary" href="/visits/create"><i class="bi bi-plus-circle me-1"></i> Register Visit</a>
     }
 </div>
 
@@ -22,49 +24,190 @@ else if (!string.IsNullOrWhiteSpace(errorMessage))
 {
     <div class="alert alert-danger">@errorMessage</div>
 }
-else if (visits.Count == 0)
-{
-    <div class="alert alert-info">No visits found.</div>
-}
 else
 {
-    <div class="card shadow-sm">
-        <div class="table-responsive">
-            <table class="table table-striped mb-0">
-                <thead>
-                    <tr>
-                        <th>Visitor</th>
-                        <th>Office</th>
-                        <th>Visit Date</th>
-                        <th>Status</th>
-                        <th>Expected Arrival</th>
-                        <th>Purpose</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach (var visit in visits)
-                {
-                    <tr>
-                        <td>@visit.Visitor.FullName</td>
-                        <td>@visit.Office.Name</td>
-                        <td>@visit.VisitDate.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
-                        <td>@visit.Status</td>
-                        <td>@(visit.ExpectedArrival?.ToLocalTime().ToString("dd MMM yyyy HH:mm") ?? "-" )</td>
-                        <td>@visit.Purpose</td>
-                        <td><a class="btn btn-sm btn-outline-primary" href="/visits/@visit.Id">View</a></td>
-                    </tr>
-                }
-                </tbody>
-            </table>
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-lg">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Total Visits Today</div>
+                    <div class="stat-value">@(dashboard?.TotalVisitsToday ?? 0)</div>
+                </div>
+                <div class="stat-icon stat-icon-blue"><i class="bi bi-calendar-check"></i></div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Awaiting Host</div>
+                    <div class="stat-value">@(dashboard?.AwaitingHost ?? 0)</div>
+                </div>
+                <div class="stat-icon stat-icon-amber"><i class="bi bi-hourglass-split"></i></div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">On-site Now</div>
+                    <div class="stat-value">@(dashboard?.OnSiteNow ?? 0)</div>
+                </div>
+                <div class="stat-icon stat-icon-green"><i class="bi bi-person-check"></i></div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Overdue</div>
+                    <div class="stat-value">@(dashboard?.Overdue ?? 0)</div>
+                </div>
+                <div class="stat-icon stat-icon-red"><i class="bi bi-exclamation-triangle"></i></div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Closed Today</div>
+                    <div class="stat-value">@(dashboard?.ClosedToday ?? 0)</div>
+                </div>
+                <div class="stat-icon stat-icon-gray"><i class="bi bi-archive"></i></div>
+            </div>
         </div>
     </div>
+
+    @if ((dashboard?.Overdue ?? 0) > 0)
+    {
+        <div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div><strong>@dashboard!.Overdue</strong> visitor@(dashboard.Overdue == 1 ? " has" : "s have") exceeded their expected duration. Follow up required.</div>
+        </div>
+    }
+
+    <div class="d-flex gap-3 mb-3 flex-wrap">
+        <div class="flex-grow-1" style="min-width: 240px;">
+            <div class="input-group">
+                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                <input class="form-control" placeholder="Search visitor, host, visit #..." @bind="searchTerm" @bind:event="oninput" />
+            </div>
+        </div>
+        <div>
+            <select class="form-select" @bind="statusFilterValue">
+                <option value="">All statuses</option>
+                @foreach (var status in Enum.GetValues<VisitStatus>())
+                {
+                    <option value="@status">@GetStatusPresentation(status).Label</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    @if (visits.Count == 0)
+    {
+        <div class="alert alert-info">No visits found.</div>
+    }
+    else if (!FilteredVisits.Any())
+    {
+        <div class="alert alert-info">No visits match your search/filter.</div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Visitor</th>
+                            <th>Visit #</th>
+                            <th>Host</th>
+                            <th>Arrival</th>
+                            <th>Purpose</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var visit in FilteredVisits)
+                    {
+                        var presentation = GetStatusPresentation(visit.Status);
+                        var overdue = IsOverdue(visit);
+                        var nextAction = GetNextAction(visit);
+                        var busy = busyVisitIds.Contains(visit.Id);
+
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="avatar-circle">@GetInitials(visit.Visitor.FullName)</div>
+                                    <div>
+                                        <div class="fw-semibold">
+                                            @visit.Visitor.FullName
+                                            @if (overdue)
+                                            {
+                                                <span class="overdue-tag">Overdue</span>
+                                            }
+                                        </div>
+                                        <div class="text-muted small">@(string.IsNullOrWhiteSpace(visit.Visitor.Organization) ? "Individual" : visit.Visitor.Organization)</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-muted small">@visit.VisitNumber</td>
+                            <td>
+                                <div class="fw-semibold">@visit.HostEmployee.FullName</div>
+                                <div class="text-muted small">@visit.Department.Name</div>
+                            </td>
+                            <td>
+                                <div>@visit.ArrivalTime.ToLocalTime().ToString("dd MMM yyyy HH:mm")</div>
+                                <div class="text-muted small">@FormatElapsed(visit.ArrivalTime)</div>
+                            </td>
+                            <td class="text-truncate" style="max-width: 160px;">@visit.Purpose</td>
+                            <td><span class="status-pill @presentation.CssClass">@presentation.Label</span></td>
+                            <td class="text-end">
+                                <div class="d-flex gap-2 justify-content-end">
+                                    @if (nextAction is not null)
+                                    {
+                                        <button class="btn btn-sm @nextAction.Value.CssClass" disabled="@busy" @onclick="() => nextAction.Value.Action(visit)">
+                                            @(busy ? "Saving..." : nextAction.Value.Label)
+                                        </button>
+                                    }
+                                    <a class="btn btn-sm btn-outline-secondary" href="/visits/@visit.Id">View</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
 }
 
 @code {
+    private static readonly VisitStatus[] TerminalStatuses =
+    [
+        VisitStatus.Completed,
+        VisitStatus.Closed,
+        VisitStatus.Cancelled,
+        VisitStatus.Denied
+    ];
+
     private List<VisitDto> visits = [];
+    private VisitsDashboardDto? dashboard;
+    private HashSet<int> busyVisitIds = [];
+    private string searchTerm = string.Empty;
+    private string statusFilterValue = string.Empty;
     private bool isLoading = true;
     private string? errorMessage;
+
+    private int ActorId => MockAuth.CurrentSession?.ActorId ?? 0;
+
+    private VisitStatus? SelectedStatus =>
+        Enum.TryParse<VisitStatus>(statusFilterValue, out var parsed) ? parsed : null;
+
+    private IEnumerable<VisitDto> FilteredVisits =>
+        visits.Where(visit =>
+            (string.IsNullOrWhiteSpace(searchTerm) ||
+             visit.Visitor.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+             visit.HostEmployee.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+             visit.VisitNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
+            (SelectedStatus is null || visit.Status == SelectedStatus));
 
     protected override async Task OnInitializedAsync()
     {
@@ -73,6 +216,7 @@ else
         try
         {
             visits = (await VisitService.GetVisitsAsync()).ToList();
+            dashboard = await AnalyticsService.GetVisitsDashboardAsync();
         }
         catch
         {
@@ -81,6 +225,136 @@ else
         finally
         {
             isLoading = false;
+        }
+    }
+
+    private static (string Label, string CssClass) GetStatusPresentation(VisitStatus status) => status switch
+    {
+        VisitStatus.Registered => ("Registered", "status-pill-amber"),
+        VisitStatus.WaitingForHost => ("Awaiting Host", "status-pill-amber"),
+        VisitStatus.HostAcknowledged => ("Host Acknowledged", "status-pill-blue"),
+        VisitStatus.Attended => ("Attended", "status-pill-green"),
+        VisitStatus.AwaitingExit => ("Departure Pending", "status-pill-blue"),
+        VisitStatus.Completed => ("Completed", "status-pill-teal"),
+        VisitStatus.Closed => ("Closed", "status-pill-gray"),
+        VisitStatus.Cancelled => ("Cancelled", "status-pill-gray"),
+        VisitStatus.Denied => ("Denied", "status-pill-red"),
+        _ => (status.ToString(), "status-pill-gray")
+    };
+
+    private static bool IsOverdue(VisitDto visit) =>
+        !TerminalStatuses.Contains(visit.Status) &&
+        visit.ExpectedDepartureTime.HasValue &&
+        visit.ExpectedDepartureTime.Value < DateTime.UtcNow;
+
+    private static string FormatElapsed(DateTime arrivalUtc)
+    {
+        var elapsed = DateTime.UtcNow - arrivalUtc;
+
+        if (elapsed.TotalMinutes < 1)
+        {
+            return "just now";
+        }
+
+        if (elapsed.TotalHours < 1)
+        {
+            var minutes = (int)elapsed.TotalMinutes;
+            return $"{minutes} minute{(minutes == 1 ? "" : "s")}";
+        }
+
+        if (elapsed.TotalDays < 1)
+        {
+            var hours = (int)elapsed.TotalHours;
+            return $"{hours} hour{(hours == 1 ? "" : "s")}";
+        }
+
+        var days = (int)elapsed.TotalDays;
+        return $"{days} day{(days == 1 ? "" : "s")}";
+    }
+
+    private static string GetInitials(string fullName)
+    {
+        var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        if (parts.Length == 0)
+        {
+            return "?";
+        }
+
+        if (parts.Length == 1)
+        {
+            return parts[0][..Math.Min(2, parts[0].Length)].ToUpperInvariant();
+        }
+
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
+    }
+
+    private (string Label, string CssClass, Func<VisitDto, Task> Action)? GetNextAction(VisitDto visit) => visit.Status switch
+    {
+        VisitStatus.Registered => ("Notify Host", "btn-outline-primary", NotifyHostAsync),
+        VisitStatus.WaitingForHost => ("Host Acknowledge", "btn-outline-primary", HostAcknowledgeAsync),
+        VisitStatus.HostAcknowledged => ("Mark Attended", "btn-success", MarkAttendedAsync),
+        VisitStatus.Attended => ("Host Complete", "btn-primary", HostCompleteAsync),
+        VisitStatus.AwaitingExit => ("Confirm Departure", "btn-primary", CheckOutAsync),
+        VisitStatus.Completed => ("Close Visit", "btn-primary", CloseVisitAsync),
+        _ => null
+    };
+
+    private Task NotifyHostAsync(VisitDto visit) =>
+        ApplyActionAsync(visit, () => VisitService.NotifyHostAsync(visit.Id, new VisitNotifyHostDto { ChangedByUserId = ActorId }));
+
+    private Task HostAcknowledgeAsync(VisitDto visit) =>
+        ApplyActionAsync(visit, () => VisitService.HostAcknowledgeAsync(visit.Id, new VisitHostAcknowledgeDto { ChangedByUserId = ActorId }));
+
+    private Task MarkAttendedAsync(VisitDto visit) =>
+        ApplyActionAsync(visit, () => VisitService.MarkAttendedAsync(visit.Id, new VisitMarkAttendedDto { ChangedByUserId = ActorId }));
+
+    private Task HostCompleteAsync(VisitDto visit) =>
+        ApplyActionAsync(visit, () => VisitService.HostCompleteAsync(visit.Id, new VisitHostCompleteDto { ChangedByUserId = ActorId }));
+
+    private Task CheckOutAsync(VisitDto visit) =>
+        ApplyActionAsync(visit, () => VisitService.CheckOutVisitAsync(visit.Id, new VisitCheckOutDto { CheckedOutById = ActorId }));
+
+    private Task CloseVisitAsync(VisitDto visit) =>
+        ApplyActionAsync(visit, () => VisitService.CloseAsync(visit.Id, new VisitCloseDto { ChangedByUserId = ActorId }));
+
+    private async Task ApplyActionAsync(VisitDto visit, Func<Task<VisitDto?>> action)
+    {
+        if (!busyVisitIds.Add(visit.Id))
+        {
+            return;
+        }
+
+        errorMessage = null;
+
+        try
+        {
+            var updated = await action();
+            if (updated is not null)
+            {
+                var index = visits.FindIndex(v => v.Id == updated.Id);
+                if (index >= 0)
+                {
+                    visits[index] = updated;
+                }
+            }
+
+            try
+            {
+                dashboard = await AnalyticsService.GetVisitsDashboardAsync();
+            }
+            catch
+            {
+                // Keep the previous dashboard numbers if the refresh call fails.
+            }
+        }
+        catch
+        {
+            errorMessage = "Failed to update visit status.";
+        }
+        finally
+        {
+            busyVisitIds.Remove(visit.Id);
         }
     }
 }

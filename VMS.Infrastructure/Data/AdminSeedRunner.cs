@@ -15,8 +15,11 @@ public static class AdminSeedRunner
     {
         await context.Database.MigrateAsync(cancellationToken);
 
-        var normalizedEmail = email.Trim().ToLowerInvariant();
-        var now = DateTime.UtcNow;
+        var existingUser = await context.Users.FirstOrDefaultAsync(cancellationToken);
+        if (existingUser is not null)
+        {
+            return existingUser.Id;
+        }
 
         var adminRole = await context.Roles
             .FirstOrDefaultAsync(role => role.Name == "Admin", cancellationToken);
@@ -33,25 +36,11 @@ public static class AdminSeedRunner
             await context.SaveChangesAsync(cancellationToken);
         }
 
-        var existingUser = await context.Users
-            .FirstOrDefaultAsync(user => user.Email.ToLower() == normalizedEmail, cancellationToken);
-
-        if (existingUser is not null)
-        {
-            if (existingUser.RoleId != adminRole.Id)
-            {
-                existingUser.RoleId = adminRole.Id;
-                existingUser.UpdatedAt = now;
-                await context.SaveChangesAsync(cancellationToken);
-            }
-
-            return existingUser.Id;
-        }
-
+        var now = DateTime.UtcNow;
         var adminUser = new User
         {
             FullName = fullName.Trim(),
-            Email = normalizedEmail,
+            Email = email.Trim().ToLowerInvariant(),
             PasswordHash = password,
             RoleId = adminRole.Id,
             CreatedAt = now,

@@ -1,0 +1,117 @@
+@page "/employees/{Id:int}"
+@inject VMS.Web.Services.IEmployeeService EmployeeService
+@inject VMS.Web.Auth.MockAuthService MockAuth
+@inject NavigationManager NavigationManager
+
+<PageTitle>Employee Details</PageTitle>
+
+<h1 class="mb-4">Employee Details</h1>
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (employee is null)
+{
+    <div class="alert alert-warning">Employee not found.</div>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <p class="text-muted mb-0">Employee profile.</p>
+        @if (MockAuth.HasPermission(DemoPermissions.EmployeesManage))
+        {
+            <div class="btn-group">
+                <a class="btn btn-outline-secondary" href="/employees/@employee.Id/edit">Edit</a>
+                <button class="btn btn-outline-danger" @onclick="DeleteEmployeeAsync" disabled="@isDeleting">
+                    @(isDeleting ? "Deleting..." : "Delete")
+                </button>
+            </div>
+        }
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Employee Number</dt>
+                <dd class="col-sm-9">@employee.EmployeeNumber</dd>
+
+                <dt class="col-sm-3">Full Name</dt>
+                <dd class="col-sm-9">@employee.FullName</dd>
+
+                <dt class="col-sm-3">Email</dt>
+                <dd class="col-sm-9">@employee.Email</dd>
+
+                <dt class="col-sm-3">Phone Number</dt>
+                <dd class="col-sm-9">@employee.PhoneNumber</dd>
+
+                <dt class="col-sm-3">Position</dt>
+                <dd class="col-sm-9">@employee.Position</dd>
+
+                <dt class="col-sm-3">Department</dt>
+                <dd class="col-sm-9">@employee.DepartmentName</dd>
+
+                <dt class="col-sm-3">Active</dt>
+                <dd class="col-sm-9">@(employee.IsActive ? "Yes" : "No")</dd>
+            </dl>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private EmployeeDto? employee;
+    private bool isLoading = true;
+    private bool isDeleting;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await MockAuth.InitializeAsync();
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            employee = await EmployeeService.GetEmployeeByIdAsync(Id);
+        }
+        catch
+        {
+            errorMessage = "Failed to load employee details.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DeleteEmployeeAsync()
+    {
+        if (employee is null)
+        {
+            return;
+        }
+
+        isDeleting = true;
+        errorMessage = null;
+
+        try
+        {
+            await EmployeeService.DeleteEmployeeAsync(employee.Id);
+            NavigationManager.NavigateTo("/employees");
+        }
+        catch
+        {
+            errorMessage = "Failed to delete employee. They may still be hosting visits.";
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+    }
+}

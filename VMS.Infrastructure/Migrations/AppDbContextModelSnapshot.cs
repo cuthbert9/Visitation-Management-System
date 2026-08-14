@@ -17,11 +17,82 @@ namespace VMS.Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.9");
 
+            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.AuditLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ActorType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("EntityType")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NewValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OldValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Action");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("EntityId");
+
+                    b.HasIndex("EntityType");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AuditLogs");
+                });
+
             modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.Department", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
@@ -30,43 +101,11 @@ namespace VMS.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("OfficeId")
+                    b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OfficeId");
-
-                    b.ToTable("Departments");
-                });
-
-            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.Office", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Floor")
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("OfficeCode")
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
@@ -75,10 +114,136 @@ namespace VMS.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OfficeCode")
+                    b.HasIndex("Code")
                         .IsUnique();
 
-                    b.ToTable("Offices");
+                    b.ToTable("Departments");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.Employee", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EmployeeNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Position")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.HasIndex("EmployeeNumber")
+                        .IsUnique();
+
+                    b.HasIndex("FullName");
+
+                    b.ToTable("Employees");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Channel")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("FailedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("RecipientEmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("RecipientUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("SentAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("VisitId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("RecipientEmployeeId");
+
+                    b.HasIndex("RecipientUserId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("VisitId");
+
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.ParkingReservation", b =>
@@ -255,38 +420,100 @@ namespace VMS.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("ApprovedById")
-                        .HasColumnType("INTEGER");
+                    b.Property<DateTime>("ArrivalTime")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("AttachmentUrl")
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("BadgeIssuedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BadgeNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("BadgeReturnedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BadgeStatus")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CheckedInById")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("CheckedOutById")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("CreatedById")
+                    b.Property<int>("DepartmentId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime?>("ExpectedArrival")
+                    b.Property<DateTime?>("DepartureTime")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("OfficeId")
+                    b.Property<string>("ExitSignatureReference")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ExpectedDepartureTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("HostAcknowledgedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("HostCompletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("HostEmployeeId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PurposeDescription")
                         .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("StaffAvailabilityStatus")
+                        .HasMaxLength(30)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(50)
+                        .HasMaxLength(30)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("VisitDate")
+                    b.Property<string>("VehicleModel")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("VehiclePlateNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("VisitNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("VisitorExitAcknowledgedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("VisitorId")
@@ -294,37 +521,62 @@ namespace VMS.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ApprovedById");
+                    b.HasIndex("ArrivalTime");
 
-                    b.HasIndex("CreatedById");
+                    b.HasIndex("CheckedInById");
 
-                    b.HasIndex("OfficeId");
+                    b.HasIndex("CheckedOutById");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.HasIndex("ExpectedDepartureTime");
+
+                    b.HasIndex("HostEmployeeId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("VisitNumber")
+                        .IsUnique();
 
                     b.HasIndex("VisitorId");
 
                     b.ToTable("Visits");
                 });
 
-            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.VisitCheckIn", b =>
+            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.VisitItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("BadgeNumber")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CheckInTime")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("CheckedInById")
-                        .HasColumnType("INTEGER");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Gate")
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ItemName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ItemType")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MovementType")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SerialNumber")
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
@@ -333,30 +585,34 @@ namespace VMS.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CheckedInById");
-
                     b.HasIndex("VisitId");
 
-                    b.ToTable("VisitCheckIns");
+                    b.ToTable("VisitItems");
                 });
 
-            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.VisitCheckOut", b =>
+            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.VisitStatusHistory", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("CheckOutTime")
+                    b.Property<DateTime>("ChangedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("CheckedOutById")
+                    b.Property<int?>("ChangedByUserId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<string>("FromStatus")
+                        .HasMaxLength(30)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Remarks")
-                        .HasMaxLength(1000)
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ToStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("VisitId")
@@ -364,11 +620,15 @@ namespace VMS.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CheckedOutById");
+                    b.HasIndex("ChangedAt");
+
+                    b.HasIndex("ChangedByUserId");
+
+                    b.HasIndex("ToStatus");
 
                     b.HasIndex("VisitId");
 
-                    b.ToTable("VisitCheckOuts");
+                    b.ToTable("VisitStatusHistories");
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.Visitor", b =>
@@ -377,24 +637,38 @@ namespace VMS.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Company")
-                        .HasMaxLength(200)
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<string>("Email")
+                        .HasMaxLength(150)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("FullName")
                         .IsRequired()
-                        .HasMaxLength(200)
+                        .HasMaxLength(150)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("NationalId")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Phone")
+                    b.Property<string>("IdentificationNumber")
+                        .IsRequired()
                         .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IdentificationType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Organization")
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PhotoUrl")
@@ -404,24 +678,58 @@ namespace VMS.Infrastructure.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("VehiclePlate")
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("IdentificationNumber");
+
+                    b.HasIndex("PhoneNumber");
 
                     b.ToTable("Visitors");
                 });
 
-            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.Department", b =>
+            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.AuditLog", b =>
                 {
-                    b.HasOne("VisitorManagementSystem.Domain.Entities.Office", "Office")
-                        .WithMany("Departments")
-                        .HasForeignKey("OfficeId")
+                    b.HasOne("VisitorManagementSystem.Domain.Entities.User", "User")
+                        .WithMany("AuditLogs")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.Employee", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Domain.Entities.Department", "Department")
+                        .WithMany("Employees")
+                        .HasForeignKey("DepartmentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Office");
+                    b.Navigation("Department");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.Notification", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Domain.Entities.Employee", "RecipientEmployee")
+                        .WithMany("Notifications")
+                        .HasForeignKey("RecipientEmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("VisitorManagementSystem.Domain.Entities.User", "RecipientUser")
+                        .WithMany("ReceivedNotifications")
+                        .HasForeignKey("RecipientUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("VisitorManagementSystem.Domain.Entities.Visit", "Visit")
+                        .WithMany("Notifications")
+                        .HasForeignKey("VisitId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("RecipientEmployee");
+
+                    b.Navigation("RecipientUser");
+
+                    b.Navigation("Visit");
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.ParkingReservation", b =>
@@ -475,19 +783,26 @@ namespace VMS.Infrastructure.Migrations
 
             modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.Visit", b =>
                 {
-                    b.HasOne("VisitorManagementSystem.Domain.Entities.User", "ApprovedBy")
-                        .WithMany("ApprovedVisits")
-                        .HasForeignKey("ApprovedById")
+                    b.HasOne("VisitorManagementSystem.Domain.Entities.User", "CheckedInBy")
+                        .WithMany("CheckedInVisits")
+                        .HasForeignKey("CheckedInById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("VisitorManagementSystem.Domain.Entities.User", "CheckedOutBy")
+                        .WithMany("CheckedOutVisits")
+                        .HasForeignKey("CheckedOutById")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("VisitorManagementSystem.Domain.Entities.User", "CreatedBy")
-                        .WithMany("CreatedVisits")
-                        .HasForeignKey("CreatedById")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("VisitorManagementSystem.Domain.Entities.Office", "Office")
+                    b.HasOne("VisitorManagementSystem.Domain.Entities.Department", "Department")
                         .WithMany("Visits")
-                        .HasForeignKey("OfficeId")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("VisitorManagementSystem.Domain.Entities.Employee", "HostEmployee")
+                        .WithMany("HostedVisits")
+                        .HasForeignKey("HostEmployeeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -497,58 +812,58 @@ namespace VMS.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("ApprovedBy");
+                    b.Navigation("CheckedInBy");
 
-                    b.Navigation("CreatedBy");
+                    b.Navigation("CheckedOutBy");
 
-                    b.Navigation("Office");
+                    b.Navigation("Department");
+
+                    b.Navigation("HostEmployee");
 
                     b.Navigation("Visitor");
                 });
 
-            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.VisitCheckIn", b =>
+            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.VisitItem", b =>
                 {
-                    b.HasOne("VisitorManagementSystem.Domain.Entities.User", "CheckedInBy")
-                        .WithMany("VisitCheckIns")
-                        .HasForeignKey("CheckedInById")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("VisitorManagementSystem.Domain.Entities.Visit", "Visit")
-                        .WithMany("CheckIns")
+                        .WithMany("Items")
                         .HasForeignKey("VisitId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("CheckedInBy");
-
                     b.Navigation("Visit");
                 });
 
-            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.VisitCheckOut", b =>
+            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.VisitStatusHistory", b =>
                 {
-                    b.HasOne("VisitorManagementSystem.Domain.Entities.User", "CheckedOutBy")
-                        .WithMany("VisitCheckOuts")
-                        .HasForeignKey("CheckedOutById")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                    b.HasOne("VisitorManagementSystem.Domain.Entities.User", "ChangedByUser")
+                        .WithMany("VisitStatusChanges")
+                        .HasForeignKey("ChangedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("VisitorManagementSystem.Domain.Entities.Visit", "Visit")
-                        .WithMany("CheckOuts")
+                        .WithMany("StatusHistory")
                         .HasForeignKey("VisitId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("CheckedOutBy");
+                    b.Navigation("ChangedByUser");
 
                     b.Navigation("Visit");
                 });
 
-            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.Office", b =>
+            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.Department", b =>
                 {
-                    b.Navigation("Departments");
+                    b.Navigation("Employees");
 
                     b.Navigation("Visits");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.Employee", b =>
+                {
+                    b.Navigation("HostedVisits");
+
+                    b.Navigation("Notifications");
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.ParkingSlot", b =>
@@ -570,22 +885,26 @@ namespace VMS.Infrastructure.Migrations
 
             modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.User", b =>
                 {
-                    b.Navigation("ApprovedVisits");
+                    b.Navigation("AuditLogs");
 
-                    b.Navigation("CreatedVisits");
+                    b.Navigation("CheckedInVisits");
 
-                    b.Navigation("VisitCheckIns");
+                    b.Navigation("CheckedOutVisits");
 
-                    b.Navigation("VisitCheckOuts");
+                    b.Navigation("ReceivedNotifications");
+
+                    b.Navigation("VisitStatusChanges");
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.Visit", b =>
                 {
-                    b.Navigation("CheckIns");
+                    b.Navigation("Items");
 
-                    b.Navigation("CheckOuts");
+                    b.Navigation("Notifications");
 
                     b.Navigation("ParkingReservations");
+
+                    b.Navigation("StatusHistory");
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.Visitor", b =>

@@ -33,24 +33,24 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/Pages/Employees/Create.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvRW1wbG95ZWVzL0NyZWF0ZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/Pages/Employees/Detail.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvRW1wbG95ZWVzL0RldGFpbC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/Pages/Employees/Edit.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvRW1wbG95ZWVzL0VkaXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/Pages/Employees/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvRW1wbG95ZWVzL0luZGV4LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/Pages/Login.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTG9naW4ucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = 
-
-[/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/Pages/Offices/Create.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXMvT2ZmaWNlcy9DcmVhdGUucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = 
-
-[/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/Pages/Offices/Detail.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXMvT2ZmaWNlcy9EZXRhaWwucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = 
-
-[/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/Pages/Offices/Edit.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXMvT2ZmaWNlcy9FZGl0LnJhem9y
-build_metadata.AdditionalFiles.CssScope = 
-
-[/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/Pages/Offices/Index.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXMvT2ZmaWNlcy9JbmRleC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/Pages/Visitors/Create.razor]
@@ -91,6 +91,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/Shared/NavMenu.razor]
 build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL05hdk1lbnUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/Shared/VisitorFieldsEditor.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL1Zpc2l0b3JGaWVsZHNFZGl0b3IucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/_Imports.razor]
