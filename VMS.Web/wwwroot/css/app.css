@@ -329,3 +329,162 @@ h1, h2, h3, h4, h5, h6 {
     border: none;
     padding: 0.25rem 0.35rem;
 }
+
+/* ---------------------------------
+   Login page
+   --------------------------------- */
+.login-page {
+    min-height: calc(100vh - 3rem);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.login-logo {
+    position: fixed;
+    top: 1.5rem;
+    left: 7rem;
+    z-index: 10;
+}
+
+.login-logo-wordmark {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--vms-text-primary);
+    line-height: 1.1;
+}
+
+.login-logo-subtitle {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--vms-text-muted);
+}
+
+.login-card-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 420px;
+    padding: 1.5rem;
+}
+
+.role-option {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    width: 100%;
+    text-align: left;
+    padding: 0.85rem 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--vms-card-border);
+    background-color: #ffffff;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.role-option:hover {
+    border-color: var(--vms-primary);
+}
+
+.role-option-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+
+.role-option-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.role-option-subtitle {
+    font-size: 0.78rem;
+    color: var(--vms-text-muted);
+}
+
+.role-option-chevron {
+    margin-left: auto;
+    color: var(--vms-text-muted);
+}
+
+.role-option-security .role-option-icon {
+    background: #e0e7ff;
+    color: #4338ca;
+}
+
+.role-option-receptionist {
+    background-color: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.role-option-receptionist .role-option-icon {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.role-option-receptionist .role-option-title {
+    color: #15803d;
+}
+
+.role-option-host {
+    background-color: var(--vms-sidebar-bg);
+    border-color: var(--vms-sidebar-bg);
+}
+
+.role-option-host .role-option-icon {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+.role-option-host .role-option-title {
+    color: #ffffff;
+}
+
+.role-option-host .role-option-subtitle {
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.role-option-host .role-option-chevron {
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.role-option-host:hover {
+    border-color: var(--vms-primary);
+}
+
+.role-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.5rem 0 1rem;
+}
+
+.role-divider::before,
+.role-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: var(--vms-card-border);
+}
+
+.role-divider span {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--vms-text-muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+}

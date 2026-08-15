@@ -23,13 +23,9 @@
 
         @if (CanAccess(DemoPermissions.EmployeesRead))
         {
-            <NavLink class="nav-link" href="/employees" Match="NavLinkMatch.All"><i class="bi bi-briefcase"></i> Employees</NavLink>
+            <NavLink class="nav-link" href="/employees" Match="NavLinkMatch.All"><i class="bi bi-briefcase"></i> Hosts</NavLink>
         }
 
-        @if (CanAccess(DemoPermissions.EmployeesManage))
-        {
-            <NavLink class="nav-link" href="/employees/create"><i class="bi bi-person-plus"></i> Add Employee</NavLink>
-        }
     </nav>
 
     <div class="mt-auto pt-3 border-top border-secondary d-grid gap-2">
