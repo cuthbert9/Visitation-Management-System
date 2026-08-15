@@ -51,6 +51,7 @@ public class VisitsController : ControllerBase
         }
 
         var checkedInByExists = await _context.Users.AnyAsync(user => user.Id == request.CheckedInById);
+        
         if (!checkedInByExists)
         {
             return BadRequest(new { message = "Checking-in user does not exist." });

@@ -302,7 +302,7 @@ else
             }
 
             request.VisitorId = selectedVisitor.Id;
-            request.CheckedInById = MockAuth.CurrentSession?.ActorId ?? 0;
+            request.CheckedInById = 1;
             request.ExpectedDepartureTime = expectedDepartureDate;
 
             if (selectedFile is not null)
