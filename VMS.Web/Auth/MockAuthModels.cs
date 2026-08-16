@@ -90,13 +90,11 @@ public static class MockRoleCatalog
                 ActorId = 3,
                 Permissions =
                 [
-                    DemoPermissions.VisitorsRead,
+                    
                     DemoPermissions.VisitorsCreate,
-                    DemoPermissions.VisitorsEdit,
-                    DemoPermissions.EmployeesRead,
+                    DemoPermissions.VisitorsEdit,                    
                     DemoPermissions.EmployeesManage,
-                    DemoPermissions.VisitsRead,
-                    DemoPermissions.VisitsCreate,
+                    DemoPermissions.VisitsRead,                
                     DemoPermissions.VisitsNotifyHost,
                     DemoPermissions.VisitsHostAcknowledge,
                     DemoPermissions.VisitsProgress,

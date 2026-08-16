@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("VMS.Application")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d3ebc74fd68de48192cfe520600b625315b0a327")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+122bc2a1926a8e23d99429b7943b90ed2eca9375")]
 [assembly: System.Reflection.AssemblyProductAttribute("VMS.Application")]
 [assembly: System.Reflection.AssemblyTitleAttribute("VMS.Application")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
