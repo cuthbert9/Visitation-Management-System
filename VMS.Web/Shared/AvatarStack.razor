@@ -1,0 +1,19 @@
+<div class="avatar-stack">
+    @foreach (var name in DisplayNames)
+    {
+        <div class="avatar-stack-item"><Avatar FullName="@name" Size="sm" /></div>
+    }
+    @if (OverflowCount > 0)
+    {
+        <div class="avatar-stack-item avatar-stack-overflow" title="@OverflowTitle">+@OverflowCount</div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<string> Names { get; set; } = [];
+    [Parameter] public int MaxVisible { get; set; } = 3;
+
+    private IEnumerable<string> DisplayNames => Names.Take(MaxVisible);
+    private int OverflowCount => Math.Max(0, Names.Count - MaxVisible);
+    private string OverflowTitle => string.Join(", ", Names.Skip(MaxVisible));
+}

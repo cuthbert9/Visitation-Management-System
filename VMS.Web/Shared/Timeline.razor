@@ -1,0 +1,41 @@
+@if (Entries.Count == 0)
+{
+    <EmptyState IconClass="bi-clock-history" Message="@EmptyMessage" />
+}
+else
+{
+    <div class="timeline">
+        @foreach (var entry in Entries)
+        {
+            <div class="timeline-item @(entry.IsPending ? "timeline-item-pending" : "")">
+                <div class="timeline-marker timeline-marker-@entry.Tone"></div>
+                <div class="timeline-content">
+                    <div class="timeline-title">@entry.Title</div>
+                    <div class="timeline-meta">
+                        @if (!string.IsNullOrWhiteSpace(entry.By))
+                        {
+                            <span>@entry.By</span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(entry.Role))
+                        {
+                            <span class="text-muted"> &middot; @entry.Role</span>
+                        }
+                        @if (entry.At.HasValue)
+                        {
+                            <span class="text-muted"> &middot; @entry.At.Value.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</span>
+                        }
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(entry.Comment))
+                    {
+                        <blockquote class="timeline-quote">@entry.Comment</blockquote>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<TimelineEntry> Entries { get; set; } = [];
+    [Parameter] public string EmptyMessage { get; set; } = "No history yet.";
+}

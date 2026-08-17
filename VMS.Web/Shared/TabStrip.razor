@@ -1,0 +1,20 @@
+<div class="tab-strip" role="tablist">
+    @foreach (var tab in Tabs)
+    {
+        <button type="button" role="tab" aria-selected="@(tab.Key == ActiveKey)" class="tab-strip-item @(tab.Key == ActiveKey ? "active" : "")" @onclick="() => SelectAsync(tab.Key)">
+            @tab.Label
+            @if (tab.Count.HasValue)
+            {
+                <span class="tab-strip-count">@tab.Count</span>
+            }
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<TabStripItem> Tabs { get; set; } = [];
+    [Parameter] public string ActiveKey { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> ActiveKeyChanged { get; set; }
+
+    private Task SelectAsync(string key) => ActiveKeyChanged.InvokeAsync(key);
+}

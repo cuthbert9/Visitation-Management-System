@@ -1,0 +1,18 @@
+<div class="empty-state">
+    @if (!string.IsNullOrWhiteSpace(IconClass))
+    {
+        <div class="empty-state-icon"><i class="bi @IconClass"></i></div>
+    }
+    <p class="empty-state-message mb-2">@Message</p>
+    @if (!string.IsNullOrWhiteSpace(ActionLabel) && OnAction.HasDelegate)
+    {
+        <button type="button" class="btn btn-primary btn-sm" @onclick="OnAction">@ActionLabel</button>
+    }
+</div>
+
+@code {
+    [Parameter] public string? IconClass { get; set; }
+    [Parameter] public string Message { get; set; } = "Nothing here yet.";
+    [Parameter] public string? ActionLabel { get; set; }
+    [Parameter] public EventCallback OnAction { get; set; }
+}

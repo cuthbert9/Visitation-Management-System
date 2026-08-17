@@ -18,7 +18,8 @@ public static class DemoPermissions
     public const string VisitsCreate = "visits.create";
     public const string VisitsNotifyHost = "visits.notify_host";
     public const string VisitsHostAcknowledge = "visits.host_acknowledge";
-    public const string VisitsProgress = "visits.progress";
+    public const string VisitsMarkAttended = "visits.mark_attended";
+    public const string VisitsHostComplete = "visits.host_complete";
     public const string VisitsCheckOut = "visits.checkout";
     public const string VisitsClose = "visits.close";
     public const string VisitsCancel = "visits.cancel";
@@ -28,6 +29,9 @@ public static class DemoPermissions
     public const string ParkingManageSlots = "parking.manage_slots";
     public const string ParkingReserve = "parking.reserve";
     public const string ParkingRelease = "parking.release";
+    public const string OutboundVisitsRead = "outbound_visits.read";
+    public const string OutboundVisitsCreate = "outbound_visits.create";
+    public const string OutboundVisitsApprove = "outbound_visits.approve";
 }
 
 public sealed class MockSession
@@ -72,15 +76,16 @@ public static class MockRoleCatalog
                     DemoPermissions.VisitsRead,
                     DemoPermissions.VisitsCreate,
                     DemoPermissions.VisitsNotifyHost,
-                    DemoPermissions.VisitsHostAcknowledge,
-                    DemoPermissions.VisitsProgress,
+                    DemoPermissions.VisitsMarkAttended,
                     DemoPermissions.VisitsCheckOut,
                     DemoPermissions.VisitsClose,
                     DemoPermissions.VisitsCancel,
                     DemoPermissions.DepartmentsRead,
                     DemoPermissions.ParkingRead,
                     DemoPermissions.ParkingReserve,
-                    DemoPermissions.ParkingRelease
+                    DemoPermissions.ParkingRelease,
+                    DemoPermissions.OutboundVisitsRead,
+                    DemoPermissions.OutboundVisitsCreate
                 ]
             },
             _ => new MockSession
@@ -94,19 +99,19 @@ public static class MockRoleCatalog
                     DemoPermissions.VisitorsCreate,
                     DemoPermissions.VisitorsEdit,                    
                     DemoPermissions.EmployeesManage,
-                    DemoPermissions.VisitsRead,                
-                    DemoPermissions.VisitsNotifyHost,
+                    DemoPermissions.VisitsRead,
                     DemoPermissions.VisitsHostAcknowledge,
-                    DemoPermissions.VisitsProgress,
-                    DemoPermissions.VisitsCheckOut,
-                    DemoPermissions.VisitsClose,
+                    DemoPermissions.VisitsHostComplete,
                     DemoPermissions.VisitsCancel,
                     DemoPermissions.DepartmentsRead,
                     DemoPermissions.DepartmentsManage,
                     DemoPermissions.ParkingRead,
                     DemoPermissions.ParkingManageSlots,
                     DemoPermissions.ParkingReserve,
-                    DemoPermissions.ParkingRelease
+                    DemoPermissions.ParkingRelease,
+                    DemoPermissions.OutboundVisitsRead,
+                    DemoPermissions.OutboundVisitsCreate,
+                    DemoPermissions.OutboundVisitsApprove
                 ]
             }
         };

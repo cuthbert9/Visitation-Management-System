@@ -1,0 +1,25 @@
+<div class="avatar-circle @(Size == "sm" ? "avatar-circle-sm" : "")" title="@FullName">@Initials</div>
+
+@code {
+    [Parameter, EditorRequired] public string FullName { get; set; } = string.Empty;
+    [Parameter] public string Size { get; set; } = "md";
+
+    private string Initials
+    {
+        get
+        {
+            var parts = FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0)
+            {
+                return "?";
+            }
+
+            if (parts.Length == 1)
+            {
+                return parts[0][..Math.Min(2, parts[0].Length)].ToUpperInvariant();
+            }
+
+            return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
+        }
+    }
+}

@@ -1,0 +1,403 @@
+@page "/visits/outbound"
+@inject VMS.Web.Services.IOutboundVisitService OutboundVisitService
+@inject VMS.Web.Services.ToastService Toasts
+@inject VMS.Web.Auth.MockAuthService MockAuth
+@inject NavigationManager NavigationManager
+
+<PageTitle>Outbound Visits</PageTitle>
+
+<div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+    <div>
+        <h1 class="mb-1">Outbound Visits</h1>
+        <p class="text-muted mb-0">Our employees and teams visiting customers, prospects and stakeholders.</p>
+    </div>
+    <a class="btn btn-primary" href="/visits/outbound/plan"><i class="bi bi-plus-circle me-1"></i> Plan Outbound Visit</a>
+</div>
+
+<div class="btn-group mb-4" role="group" aria-label="Outbound view">
+    <a class="btn btn-sm btn-primary" href="/visits/outbound">Visits list</a>
+    <a class="btn btn-sm btn-outline-primary" href="/visits/outbound/approvals">Approvals</a>
+</div>
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else
+{
+    <TabStrip Tabs="tabs" ActiveKey="activeTab" ActiveKeyChanged="OnTabChangedAsync" />
+
+    <div class="d-flex gap-3 mb-3 flex-wrap align-items-center">
+        <div class="flex-grow-1" style="min-width: 240px;">
+            <div class="input-group">
+                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                <input class="form-control" placeholder="Search visit title, organization, owner, request #..." @bind="searchTerm" @bind:event="oninput" />
+            </div>
+        </div>
+        <div>
+            <select class="form-select" @bind="departmentFilter">
+                <option value="">All departments</option>
+                @foreach (var department in Departments)
+                {
+                    <option value="@department">@department</option>
+                }
+            </select>
+        </div>
+        <div>
+            <select class="form-select" @bind="categoryFilterValue">
+                <option value="">All categories</option>
+                @foreach (var category in Enum.GetValues<OutboundVisitCategory>())
+                {
+                    <option value="@category">@category</option>
+                }
+            </select>
+        </div>
+        @if (HasActiveFilters)
+        {
+            <button type="button" class="btn btn-link btn-sm text-decoration-none" @onclick="ClearFilters">Clear</button>
+        }
+    </div>
+
+    @if (FilteredVisits.Count == 0)
+    {
+        <div class="card">
+            <EmptyState IconClass="bi-inboxes" Message="@EmptyMessage" ActionLabel="Plan a visit" OnAction="GoToPlanForm" />
+        </div>
+    }
+    else
+    {
+        <div class="full-bleed">
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Visit</th>
+                            <th>Customer / Stakeholder</th>
+                            <th>Purpose</th>
+                            <th>Visit Owner</th>
+                            <th>Team</th>
+                            <th>Scheduled</th>
+                            <th>Duration</th>
+                            <th>Approval</th>
+                            <th>Visit Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var visit in FilteredVisits)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">@visit.Title</div>
+                                <div class="text-muted small">@visit.RequestNo</div>
+                                <span class="status-pill status-pill-gray mt-1">@visit.Category</span>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">@visit.Organization</div>
+                                <div class="text-muted small">@visit.StakeholderType</div>
+                            </td>
+                            <td>@FormatPurpose(visit.Purpose)</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <Avatar FullName="@visit.Owner.FullName" Size="sm" />
+                                    <span>@visit.Owner.FullName</span>
+                                </div>
+                            </td>
+                            <td>
+                                @if (visit.TeamMembers.Count == 0)
+                                {
+                                    <span class="text-muted small">Travelling alone</span>
+                                }
+                                else
+                                {
+                                    <AvatarStack Names="visit.TeamMembers.Select(m => m.FullName).ToList()" />
+                                }
+                            </td>
+                            <td>
+                                <div>@visit.ProposedDate.ToString("dd MMM yyyy")</div>
+                                <div class="text-muted small">@visit.StartTime.ToString("HH:mm")</div>
+                            </td>
+                            <td>@FormatDuration(visit)</td>
+                            <td><StatusPill Label="@FormatApprovalStatus(visit.ApprovalStatus)" Tone="@ApprovalTone(visit.ApprovalStatus)" /></td>
+                            <td><StatusPill Label="@FormatExecutionStatus(visit.ExecutionStatus)" Tone="@ExecutionTone(visit.ExecutionStatus)" /></td>
+                            <td class="text-end">
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <a class="btn btn-sm btn-outline-secondary" href="@($"/visits/outbound/{visit.Id}")">Open</a>
+                                    <OverflowMenu Items="BuildRowActions(visit)" />
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        </div>
+    }
+}
+
+<ConfirmDialog @ref="cancelDialog"
+               Title="Cancel this outbound visit?"
+               Description="The visit owner and team will be notified that this visit has been cancelled."
+               ConfirmLabel="Cancel visit"
+               ConfirmButtonClass="btn-danger"
+               RequireReason="true"
+               ReasonLabel="Cancellation reason"
+               ReasonPlaceholder="Why is this visit being cancelled?" />
+
+@code {
+    [SupplyParameterFromQuery(Name = "tab")]
+    public string? TabParam { get; set; }
+
+    private List<OutboundVisitDto> visits = [];
+    private string searchTerm = string.Empty;
+    private string departmentFilter = string.Empty;
+    private string categoryFilterValue = string.Empty;
+    private string activeTab = "all";
+    private bool isLoading = true;
+    private string? errorMessage;
+    private ConfirmDialog cancelDialog = null!;
+
+    private IReadOnlyList<TabStripItem> tabs = [];
+
+    private IEnumerable<string> Departments => visits.Select(v => v.DepartmentName).Distinct().OrderBy(d => d);
+
+    private OutboundVisitCategory? SelectedCategory =>
+        Enum.TryParse<OutboundVisitCategory>(categoryFilterValue, out var parsed) ? parsed : null;
+
+    private bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(searchTerm) || !string.IsNullOrWhiteSpace(departmentFilter) || !string.IsNullOrWhiteSpace(categoryFilterValue) || activeTab != "all";
+
+    private string EmptyMessage => HasActiveFilters
+        ? "No outbound visits match your search or filters."
+        : "No outbound visits yet. Plan one to get started.";
+
+    private static readonly HashSet<string> ValidTabKeys = ["all", "draft", "pending", "approved", "upcoming", "inprogress", "completed", "rejected"];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await MockAuth.InitializeAsync();
+
+        if (!string.IsNullOrWhiteSpace(TabParam) && ValidTabKeys.Contains(TabParam))
+        {
+            activeTab = TabParam;
+        }
+
+        try
+        {
+            visits = (await OutboundVisitService.GetVisitsAsync()).ToList();
+            RebuildTabs();
+        }
+        catch
+        {
+            errorMessage = "Failed to load outbound visits.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void RebuildTabs()
+    {
+        tabs =
+        [
+            new TabStripItem { Key = "all", Label = "All", Count = visits.Count },
+            new TabStripItem { Key = "draft", Label = "Draft", Count = visits.Count(v => v.ApprovalStatus == OutboundVisitApprovalStatus.Draft) },
+            new TabStripItem { Key = "pending", Label = "Pending Approval", Count = visits.Count(v => v.ApprovalStatus == OutboundVisitApprovalStatus.PendingApproval) },
+            new TabStripItem { Key = "approved", Label = "Approved", Count = visits.Count(v => v.ApprovalStatus == OutboundVisitApprovalStatus.Approved) },
+            new TabStripItem { Key = "upcoming", Label = "Upcoming", Count = visits.Count(IsUpcoming) },
+            new TabStripItem { Key = "inprogress", Label = "In Progress", Count = visits.Count(v => v.ExecutionStatus == OutboundVisitExecutionStatus.InProgress) },
+            new TabStripItem { Key = "completed", Label = "Completed", Count = visits.Count(v => v.ExecutionStatus == OutboundVisitExecutionStatus.Completed) },
+            new TabStripItem { Key = "rejected", Label = "Rejected / Returned", Count = visits.Count(v => v.ApprovalStatus is OutboundVisitApprovalStatus.Rejected or OutboundVisitApprovalStatus.ChangesRequested) }
+        ];
+    }
+
+    private static bool IsUpcoming(OutboundVisitDto visit) =>
+        visit.ApprovalStatus == OutboundVisitApprovalStatus.Approved && visit.ExecutionStatus == OutboundVisitExecutionStatus.Scheduled;
+
+    private Task OnTabChangedAsync(string key)
+    {
+        activeTab = key;
+        return Task.CompletedTask;
+    }
+
+    private void GoToPlanForm() => NavigationManager.NavigateTo("/visits/outbound/plan");
+
+    private void ClearFilters()
+    {
+        searchTerm = string.Empty;
+        departmentFilter = string.Empty;
+        categoryFilterValue = string.Empty;
+        activeTab = "all";
+    }
+
+    private List<OutboundVisitDto> FilteredVisits => visits
+        .Where(MatchesTab)
+        .Where(v => string.IsNullOrWhiteSpace(departmentFilter) || v.DepartmentName == departmentFilter)
+        .Where(v => SelectedCategory is null || v.Category == SelectedCategory)
+        .Where(v => string.IsNullOrWhiteSpace(searchTerm) ||
+            v.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            v.Organization.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            v.Owner.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            v.RequestNo.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+        .OrderByDescending(v => v.UpdatedAt)
+        .ToList();
+
+    private bool MatchesTab(OutboundVisitDto visit) => activeTab switch
+    {
+        "draft" => visit.ApprovalStatus == OutboundVisitApprovalStatus.Draft,
+        "pending" => visit.ApprovalStatus == OutboundVisitApprovalStatus.PendingApproval,
+        "approved" => visit.ApprovalStatus == OutboundVisitApprovalStatus.Approved,
+        "upcoming" => IsUpcoming(visit),
+        "inprogress" => visit.ExecutionStatus == OutboundVisitExecutionStatus.InProgress,
+        "completed" => visit.ExecutionStatus == OutboundVisitExecutionStatus.Completed,
+        "rejected" => visit.ApprovalStatus is OutboundVisitApprovalStatus.Rejected or OutboundVisitApprovalStatus.ChangesRequested,
+        _ => true
+    };
+
+    private List<OverflowMenuItem> BuildRowActions(OutboundVisitDto visit)
+    {
+        var items = new List<OverflowMenuItem>();
+
+        if (visit.ApprovalStatus == OutboundVisitApprovalStatus.Draft || visit.ApprovalStatus == OutboundVisitApprovalStatus.ChangesRequested)
+        {
+            items.Add(new OverflowMenuItem
+            {
+                Label = "Submit for approval",
+                IconClass = "bi-send",
+                OnClick = EventCallback.Factory.Create(this, () => NavigationManager.NavigateTo($"/visits/outbound/plan?id={visit.Id}"))
+            });
+        }
+
+        if (visit.ApprovalStatus == OutboundVisitApprovalStatus.PendingApproval && MockAuth.HasPermission(VMS.Web.Auth.DemoPermissions.OutboundVisitsApprove))
+        {
+            items.Add(new OverflowMenuItem
+            {
+                Label = "Review",
+                IconClass = "bi-clipboard-check",
+                OnClick = EventCallback.Factory.Create(this, () => NavigationManager.NavigateTo($"/visits/outbound/{visit.Id}/review"))
+            });
+        }
+
+        if (visit.ExecutionStatus == OutboundVisitExecutionStatus.Scheduled)
+        {
+            items.Add(new OverflowMenuItem
+            {
+                Label = "Reschedule",
+                IconClass = "bi-calendar-event",
+                OnClick = EventCallback.Factory.Create(this, () => NavigationManager.NavigateTo($"/visits/outbound/{visit.Id}"))
+            });
+        }
+
+        if (visit.ExecutionStatus == OutboundVisitExecutionStatus.InProgress)
+        {
+            items.Add(new OverflowMenuItem
+            {
+                Label = "Complete visit",
+                IconClass = "bi-check2-circle",
+                OnClick = EventCallback.Factory.Create(this, () => NavigationManager.NavigateTo($"/visits/outbound/{visit.Id}/complete"))
+            });
+        }
+
+        if (visit.ExecutionStatus is not (OutboundVisitExecutionStatus.Completed or OutboundVisitExecutionStatus.Cancelled))
+        {
+            items.Add(new OverflowMenuItem
+            {
+                Label = "Cancel visit",
+                IconClass = "bi-x-circle",
+                IsDestructive = true,
+                OnClick = EventCallback.Factory.Create(this, () => OpenCancelDialog(visit))
+            });
+        }
+
+        return items;
+    }
+
+    private void OpenCancelDialog(OutboundVisitDto visit)
+    {
+        cancelDialog.Open(async reason =>
+        {
+            try
+            {
+                await OutboundVisitService.CancelVisitAsync(visit.Id, reason ?? string.Empty, MockAuth.CurrentSession?.DisplayName?.Trim() ?? "Unknown");
+                visits = (await OutboundVisitService.GetVisitsAsync()).ToList();
+                RebuildTabs();
+                Toasts.Show($"{visit.Title} has been cancelled. The visit owner has been notified.", VMS.Web.Services.ToastTone.Warning);
+            }
+            catch (Exception)
+            {
+                Toasts.Show("Could not cancel this visit.", VMS.Web.Services.ToastTone.Danger);
+            }
+        });
+    }
+
+    private static string FormatPurpose(OutboundVisitPurpose purpose) => purpose switch
+    {
+        OutboundVisitPurpose.CustomerRelationshipVisit => "Customer Relationship",
+        OutboundVisitPurpose.NewBusiness => "New Business",
+        OutboundVisitPurpose.AccountReview => "Account Review",
+        OutboundVisitPurpose.TechnicalSupport => "Technical Support",
+        OutboundVisitPurpose.PartnershipDevelopment => "Partnership Development",
+        OutboundVisitPurpose.AuditInspection => "Audit / Inspection",
+        OutboundVisitPurpose.SiteSurvey => "Site Survey",
+        OutboundVisitPurpose.ContractNegotiation => "Contract Negotiation",
+        _ => purpose.ToString()
+    };
+
+    private static string FormatDuration(OutboundVisitDto visit)
+    {
+        if (!visit.EndTime.HasValue)
+        {
+            return "-";
+        }
+
+        var span = visit.EndTime.Value - visit.StartTime;
+        return span.TotalMinutes <= 0 ? "-" : $"{(int)span.TotalHours}h {span.Minutes:D2}m";
+    }
+
+    private static string FormatApprovalStatus(OutboundVisitApprovalStatus status) => status switch
+    {
+        OutboundVisitApprovalStatus.Draft => "Draft",
+        OutboundVisitApprovalStatus.PendingApproval => "Pending Approval",
+        OutboundVisitApprovalStatus.Approved => "Approved",
+        OutboundVisitApprovalStatus.ChangesRequested => "Changes Requested",
+        OutboundVisitApprovalStatus.Rejected => "Rejected",
+        _ => status.ToString()
+    };
+
+    private static string ApprovalTone(OutboundVisitApprovalStatus status) => status switch
+    {
+        OutboundVisitApprovalStatus.Draft => "gray",
+        OutboundVisitApprovalStatus.PendingApproval => "amber",
+        OutboundVisitApprovalStatus.Approved => "green",
+        OutboundVisitApprovalStatus.ChangesRequested => "orange",
+        OutboundVisitApprovalStatus.Rejected => "red",
+        _ => "gray"
+    };
+
+    private static string FormatExecutionStatus(OutboundVisitExecutionStatus status) => status switch
+    {
+        OutboundVisitExecutionStatus.NotScheduled => "Not Scheduled",
+        OutboundVisitExecutionStatus.Scheduled => "Scheduled",
+        OutboundVisitExecutionStatus.InProgress => "In Progress",
+        OutboundVisitExecutionStatus.Completed => "Completed",
+        OutboundVisitExecutionStatus.Cancelled => "Cancelled",
+        _ => status.ToString()
+    };
+
+    private static string ExecutionTone(OutboundVisitExecutionStatus status) => status switch
+    {
+        OutboundVisitExecutionStatus.NotScheduled => "gray",
+        OutboundVisitExecutionStatus.Scheduled => "blue",
+        OutboundVisitExecutionStatus.InProgress => "teal",
+        OutboundVisitExecutionStatus.Completed => "green",
+        OutboundVisitExecutionStatus.Cancelled => "red",
+        _ => "gray"
+    };
+}

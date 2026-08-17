@@ -1,0 +1,39 @@
+@implements IDisposable
+@inject VMS.Web.Services.ToastService Toasts
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+    @foreach (var toast in Toasts.Messages.ToList())
+    {
+        <div class="toast show align-items-center border-0 mb-2 @ToneClass(toast.Tone)" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">@toast.Message</div>
+                <button type="button" class="btn-close @CloseButtonClass(toast.Tone) me-2 m-auto" aria-label="Close notification" @onclick="() => Toasts.Dismiss(toast.Id)"></button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Toasts.OnChange += HandleChange;
+    }
+
+    private void HandleChange() => InvokeAsync(StateHasChanged);
+
+    private static string ToneClass(VMS.Web.Services.ToastTone tone) => tone switch
+    {
+        VMS.Web.Services.ToastTone.Success => "text-bg-success",
+        VMS.Web.Services.ToastTone.Warning => "text-bg-warning",
+        VMS.Web.Services.ToastTone.Danger => "text-bg-danger",
+        _ => "text-bg-primary"
+    };
+
+    private static string CloseButtonClass(VMS.Web.Services.ToastTone tone) =>
+        tone == VMS.Web.Services.ToastTone.Warning ? string.Empty : "btn-close-white";
+
+    public void Dispose()
+    {
+        Toasts.OnChange -= HandleChange;
+    }
+}

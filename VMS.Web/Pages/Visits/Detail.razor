@@ -4,8 +4,6 @@
 
 <PageTitle>Visit Details</PageTitle>
 
-<h1 class="mb-4">Visit Information</h1>
-
 @if (isLoading)
 {
     <LoadingSpinner />
@@ -21,126 +19,161 @@ else if (visit is null)
 else
 {
     var currentParking = visit.ParkingReservations.FirstOrDefault();
+    var statusPresentation = GetStatusPresentation(visit.Status);
 
-    <div class="d-flex justify-content-between align-items-start mb-3 gap-2 flex-wrap">
-        <p class="text-muted mb-0">Manage the current visit status.</p>
-        <div class="btn-group flex-wrap">
-            @if (MockAuth.HasPermission(DemoPermissions.VisitsNotifyHost))
-            {
-                <button class="btn btn-outline-primary" @onclick='() => ApplyActionAsync("notify-host")' disabled="@(isActing || visit.Status != VisitStatus.Registered)">Notify Host</button>
-            }
-            @if (MockAuth.HasPermission(DemoPermissions.VisitsHostAcknowledge))
-            {
-                <button class="btn btn-outline-success" @onclick='() => ApplyActionAsync("host-acknowledge")' disabled="@(isActing || visit.Status != VisitStatus.WaitingForHost)">Host Acknowledge</button>
-                <button class="btn btn-outline-danger" @onclick='() => ApplyActionAsync("deny")' disabled="@(isActing || visit.Status != VisitStatus.WaitingForHost)">Deny</button>
-            }
-            @if (MockAuth.HasPermission(DemoPermissions.VisitsProgress))
-            {
-                <button class="btn btn-outline-secondary" @onclick='() => ApplyActionAsync("mark-attended")' disabled="@(isActing || visit.Status != VisitStatus.HostAcknowledged)">Mark Attended</button>
-                <button class="btn btn-outline-secondary" @onclick='() => ApplyActionAsync("host-complete")' disabled="@(isActing || visit.Status != VisitStatus.Attended)">Host Complete</button>
-            }
-            @if (MockAuth.HasPermission(DemoPermissions.VisitsCheckOut))
-            {
-                <button class="btn btn-outline-primary" @onclick='() => ApplyActionAsync("checkout")' disabled="@(isActing || visit.Status != VisitStatus.AwaitingExit)">Check Out</button>
-            }
-            @if (MockAuth.HasPermission(DemoPermissions.VisitsClose))
-            {
-                <button class="btn btn-outline-dark" @onclick='() => ApplyActionAsync("close")' disabled="@(isActing || visit.Status != VisitStatus.Completed)">Close</button>
-            }
-            @if (MockAuth.HasPermission(DemoPermissions.VisitsCancel))
-            {
-                <button class="btn btn-outline-danger" @onclick='() => ApplyActionAsync("cancel")' disabled="@(isActing || !CancellableStatuses.Contains(visit.Status))">Cancel</button>
-            }
+    <div class="mb-3">
+        <h1 class="mb-1">Visit Information</h1>
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-muted">Visit #@visit.VisitNumber</span>
+            <span class="status-pill @statusPresentation.CssClass">@statusPresentation.Label</span>
         </div>
     </div>
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <dl class="row mb-0">
-                <dt class="col-sm-3">Visit Number</dt>
-                <dd class="col-sm-9">@visit.VisitNumber</dd>
+    <div class="card mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-info-circle text-muted"></i>
+                <span class="text-muted">@GetStatusMessage(visit.Status)</span>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var pill in BuildActionPills(visit))
+                {
+                    <button type="button" class="action-pill action-pill-@pill.Tone @(pill.Done ? "is-done" : "")" @onclick="() => ApplyActionAsync(pill.Key)" disabled="@(isActing || !pill.Enabled)">
+                        @if (pill.Done)
+                        {
+                            <i class="bi bi-check-lg"></i>
+                        }
+                        @pill.Label
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
 
-                <dt class="col-sm-3">Visitor</dt>
-                <dd class="col-sm-9">@visit.Visitor.FullName</dd>
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="form-section-label mb-3">Visit Details</div>
 
-                <dt class="col-sm-3">Host</dt>
-                <dd class="col-sm-9">@visit.HostEmployee.FullName</dd>
+                    <div class="detail-row">
+                        <span class="detail-row-label">Visitor</span>
+                        <span class="detail-row-value">@visit.Visitor.FullName</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-row-label">Host</span>
+                        <span class="detail-row-value">@visit.HostEmployee.FullName</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-row-label">Department</span>
+                        <span class="detail-row-value">@visit.Department.Name</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-row-label">Purpose</span>
+                        <span class="detail-row-value">
+                            <span class="status-pill status-pill-gray">@visit.Purpose@(string.IsNullOrWhiteSpace(visit.PurposeDescription) ? "" : $" · {visit.PurposeDescription}")</span>
+                        </span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-row-label">Staff Availability</span>
+                        <span class="detail-row-value @(visit.StaffAvailabilityStatus is null ? "text-muted" : "")">@(visit.StaffAvailabilityStatus?.ToString() ?? "Not specified")</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-row-label">Attachment</span>
+                        <span class="detail-row-value">
+                            @if (string.IsNullOrWhiteSpace(visit.AttachmentUrl))
+                            {
+                                <span class="text-muted">No attachment</span>
+                            }
+                            else if (HasValidAttachmentUrl(visit.AttachmentUrl))
+                            {
+                                <a class="btn btn-sm btn-primary rounded-pill me-2" href="@visit.AttachmentUrl" target="_blank" rel="noopener noreferrer">View</a>
+                                <a class="btn btn-sm btn-outline-secondary rounded-pill" href="@visit.AttachmentUrl" download>Download</a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Attachment unavailable</span>
+                            }
+                        </span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-row-label">Remarks</span>
+                        <span class="detail-row-value @(string.IsNullOrWhiteSpace(visit.Remarks) ? "text-muted" : "")">@(visit.Remarks ?? "None")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                <dt class="col-sm-3">Department</dt>
-                <dd class="col-sm-9">@visit.Department.Name</dd>
+        <div class="col-lg-6 d-flex flex-column gap-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="form-section-label mb-3">Vehicle &amp; Access</div>
+                    <div class="detail-row">
+                        <span class="detail-row-label">Vehicle</span>
+                        @{
+                            var hasVehicle = !string.IsNullOrWhiteSpace(visit.VehicleModel) || !string.IsNullOrWhiteSpace(visit.VehiclePlateNumber);
+                        }
+                        <span class="detail-row-value @(hasVehicle ? "" : "text-muted")">@(hasVehicle ? $"{visit.VehicleModel} · {visit.VehiclePlateNumber}" : "Not provided")</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-row-label">Badge</span>
+                        <span class="detail-row-value">
+                            @if (string.IsNullOrWhiteSpace(visit.BadgeNumber))
+                            {
+                                <span class="text-muted">Not issued</span>
+                            }
+                            else
+                            {
+                                <span class="status-pill status-pill-blue">@visit.BadgeNumber · @visit.BadgeStatus</span>
+                            }
+                        </span>
+                    </div>
+                </div>
+            </div>
 
-                <dt class="col-sm-3">Status</dt>
-                <dd class="col-sm-9">@visit.Status</dd>
+            <div class="card">
+                <div class="card-body">
+                    <div class="form-section-label mb-3">Expected Departure</div>
+                    <div class="detail-row">
+                        <span class="detail-row-label">Scheduled for</span>
+                        <span class="detail-row-value @(visit.ExpectedDepartureTime is null ? "text-muted" : "")">@(visit.ExpectedDepartureTime?.ToLocalTime().ToString("f") ?? "Not specified")</span>
+                    </div>
+                </div>
+            </div>
 
-                <dt class="col-sm-3">Staff Availability</dt>
-                <dd class="col-sm-9">@(visit.StaffAvailabilityStatus?.ToString() ?? "Not specified")</dd>
-
-                <dt class="col-sm-3">Purpose</dt>
-                <dd class="col-sm-9">@visit.Purpose@(string.IsNullOrWhiteSpace(visit.PurposeDescription) ? "" : $" - {visit.PurposeDescription}")</dd>
-
-                <dt class="col-sm-3">Attachment</dt>
-                <dd class="col-sm-9">
-                    @if (string.IsNullOrWhiteSpace(visit.AttachmentUrl))
-                    {
-                        <span>No attachment</span>
-                    }
-                    else if (HasValidAttachmentUrl(visit.AttachmentUrl))
-                    {
-                        <a class="btn btn-sm btn-outline-primary me-2" href="@visit.AttachmentUrl" target="_blank" rel="noopener noreferrer">View</a>
-                        <a class="btn btn-sm btn-outline-secondary" href="@visit.AttachmentUrl" download>Download</a>
-                    }
-                    else
-                    {
-                        <span>Attachment unavailable</span>
-                    }
-                </dd>
-
-                <dt class="col-sm-3">Arrival</dt>
-                <dd class="col-sm-9">@visit.ArrivalTime.ToLocalTime().ToString("f")</dd>
-
-                <dt class="col-sm-3">Expected Departure</dt>
-                <dd class="col-sm-9">@(visit.ExpectedDepartureTime?.ToLocalTime().ToString("f") ?? "Not specified")</dd>
-
-                <dt class="col-sm-3">Departure</dt>
-                <dd class="col-sm-9">@(visit.DepartureTime?.ToLocalTime().ToString("f") ?? "Not departed")</dd>
-
-                <dt class="col-sm-3">Host Acknowledged</dt>
-                <dd class="col-sm-9">@(visit.HostAcknowledgedAt?.ToLocalTime().ToString("f") ?? "Not yet")</dd>
-
-                <dt class="col-sm-3">Host Completed</dt>
-                <dd class="col-sm-9">@(visit.HostCompletedAt?.ToLocalTime().ToString("f") ?? "Not yet")</dd>
-
-                <dt class="col-sm-3">Vehicle</dt>
-                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(visit.VehicleModel) && string.IsNullOrWhiteSpace(visit.VehiclePlateNumber) ? "Not provided" : $"{visit.VehicleModel} {visit.VehiclePlateNumber}")</dd>
-
-                <dt class="col-sm-3">Badge</dt>
-                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(visit.BadgeNumber) ? "Not issued" : $"{visit.BadgeNumber} ({visit.BadgeStatus})")</dd>
-
-                <dt class="col-sm-3">Remarks</dt>
-                <dd class="col-sm-9">@(visit.Remarks ?? "None")</dd>
-
-                <dt class="col-sm-3">Closed At</dt>
-                <dd class="col-sm-9">@(visit.ClosedAt?.ToLocalTime().ToString("f") ?? "Not closed")</dd>
-
-                <dt class="col-sm-3">Parking Status</dt>
-                <dd class="col-sm-9">@(currentParking?.Status.ToString() ?? "No parking reservation")</dd>
-
-                <dt class="col-sm-3">Parking Slot</dt>
-                <dd class="col-sm-9">@(currentParking is null ? "No parking reservation" : string.IsNullOrWhiteSpace(currentParking.Zone) ? currentParking.SlotCode : $"{currentParking.SlotCode} ({currentParking.Zone})")</dd>
-
-                <dt class="col-sm-3">Reserved At</dt>
-                <dd class="col-sm-9">@(currentParking?.ReservedAt?.ToLocalTime().ToString("f") ?? "Not reserved")</dd>
-
-                <dt class="col-sm-3">Released At</dt>
-                <dd class="col-sm-9">@(currentParking?.ReleasedAt?.ToLocalTime().ToString("f") ?? "Not released")</dd>
-            </dl>
+            @if (currentParking is not null)
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <div class="form-section-label mb-3">Parking</div>
+                        <div class="detail-row">
+                            <span class="detail-row-label">Status</span>
+                            <span class="detail-row-value">@currentParking.Status</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-row-label">Slot</span>
+                            <span class="detail-row-value">@(string.IsNullOrWhiteSpace(currentParking.Zone) ? currentParking.SlotCode : $"{currentParking.SlotCode} ({currentParking.Zone})")</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-row-label">Reserved At</span>
+                            <span class="detail-row-value @(currentParking.ReservedAt is null ? "text-muted" : "")">@(currentParking.ReservedAt?.ToLocalTime().ToString("f") ?? "Not reserved")</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-row-label">Released At</span>
+                            <span class="detail-row-value @(currentParking.ReleasedAt is null ? "text-muted" : "")">@(currentParking.ReleasedAt?.ToLocalTime().ToString("f") ?? "Not released")</span>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 
     @if (visit.Items.Count > 0)
     {
-        <h2 class="h4 mb-3">Items</h2>
-        <div class="card shadow-sm mb-4">
+        <div class="card mb-4">
+            <div class="card-body pb-0">
+                <div class="form-section-label mb-3">Items</div>
+            </div>
             <div class="table-responsive">
                 <table class="table table-striped mb-0">
                     <thead>
@@ -169,14 +202,16 @@ else
         </div>
     }
 
-    <h2 class="h4 mb-3">Status History</h2>
-    @if (history.Count == 0)
-    {
-        <div class="alert alert-info">No status history yet.</div>
-    }
-    else
-    {
-        <div class="card shadow-sm">
+    <div class="card">
+        <div class="card-body @(history.Count == 0 ? "" : "pb-0")">
+            <div class="form-section-label @(history.Count == 0 ? "mb-0" : "mb-3")">Status History</div>
+            @if (history.Count == 0)
+            {
+                <p class="text-muted small mt-2 mb-0">No status history yet.</p>
+            }
+        </div>
+        @if (history.Count > 0)
+        {
             <div class="table-responsive">
                 <table class="table table-striped mb-0">
                     <thead>
@@ -200,8 +235,8 @@ else
                     </tbody>
                 </table>
             </div>
-        </div>
-    }
+        }
+    </div>
 }
 
 @code {
@@ -213,6 +248,14 @@ else
         VisitStatus.WaitingForHost,
         VisitStatus.HostAcknowledged,
         VisitStatus.Attended
+    ];
+
+    private static readonly VisitStatus[] AttendedOrLaterStatuses =
+    [
+        VisitStatus.Attended,
+        VisitStatus.AwaitingExit,
+        VisitStatus.Completed,
+        VisitStatus.Closed
     ];
 
     private VisitDto? visit;
@@ -254,7 +297,7 @@ else
 
         try
         {
-            var actorId = MockAuth.CurrentSession?.ActorId ?? 0;
+            var actorId = 1;
 
             visit = action switch
             {
@@ -286,4 +329,93 @@ else
         return Uri.TryCreate(url, UriKind.Absolute, out var uri)
             && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
     }
+
+    private static (string Label, string CssClass) GetStatusPresentation(VisitStatus status) => status switch
+    {
+        VisitStatus.Registered => ("Registered", "status-pill-amber"),
+        VisitStatus.WaitingForHost => ("Awaiting Host", "status-pill-amber"),
+        VisitStatus.HostAcknowledged => ("Host Acknowledged", "status-pill-blue"),
+        VisitStatus.Attended => ("Attended", "status-pill-green"),
+        VisitStatus.AwaitingExit => ("Departure Pending", "status-pill-blue"),
+        VisitStatus.Completed => ("Completed", "status-pill-teal"),
+        VisitStatus.Closed => ("Closed", "status-pill-gray"),
+        VisitStatus.Cancelled => ("Cancelled", "status-pill-gray"),
+        VisitStatus.Denied => ("Denied", "status-pill-red"),
+        _ => (status.ToString(), "status-pill-gray")
+    };
+
+    private static string GetStatusMessage(VisitStatus status) => status switch
+    {
+        VisitStatus.Registered => "Awaiting host notification.",
+        VisitStatus.WaitingForHost => "Waiting for the host to acknowledge this visitor.",
+        VisitStatus.HostAcknowledged => "Host has acknowledged — awaiting attendance.",
+        VisitStatus.Attended => "Visitor is currently with the host.",
+        VisitStatus.AwaitingExit => "Ready for checkout.",
+        VisitStatus.Completed => "Visit completed — ready to close.",
+        VisitStatus.Closed => "This visit is closed — actions are no longer available.",
+        VisitStatus.Cancelled => "This visit was cancelled — actions are no longer available.",
+        VisitStatus.Denied => "This visit was denied by the host — actions are no longer available.",
+        _ => string.Empty
+    };
+
+    private List<ActionPillInfo> BuildActionPills(VisitDto visit)
+    {
+        var pills = new List<ActionPillInfo>();
+
+        if (MockAuth.HasPermission(DemoPermissions.VisitsNotifyHost))
+        {
+            pills.Add(new ActionPillInfo("notify-host", "Notify Host", "blue",
+                Enabled: visit.Status == VisitStatus.Registered,
+                Done: visit.Status != VisitStatus.Registered));
+        }
+
+        if (MockAuth.HasPermission(DemoPermissions.VisitsHostAcknowledge))
+        {
+            pills.Add(new ActionPillInfo("host-acknowledge", "Host Acknowledge", "green",
+                Enabled: visit.Status == VisitStatus.WaitingForHost,
+                Done: visit.HostAcknowledgedAt.HasValue));
+            pills.Add(new ActionPillInfo("deny", "Deny", "red",
+                Enabled: visit.Status == VisitStatus.WaitingForHost,
+                Done: visit.Status == VisitStatus.Denied));
+        }
+
+        if (MockAuth.HasPermission(DemoPermissions.VisitsMarkAttended))
+        {
+            pills.Add(new ActionPillInfo("mark-attended", "Mark Attended", "neutral",
+                Enabled: visit.Status == VisitStatus.HostAcknowledged,
+                Done: AttendedOrLaterStatuses.Contains(visit.Status)));
+        }
+
+        if (MockAuth.HasPermission(DemoPermissions.VisitsHostComplete))
+        {
+            pills.Add(new ActionPillInfo("host-complete", "Host Complete", "neutral",
+                Enabled: visit.Status == VisitStatus.Attended,
+                Done: visit.HostCompletedAt.HasValue));
+        }
+
+        if (MockAuth.HasPermission(DemoPermissions.VisitsCheckOut))
+        {
+            pills.Add(new ActionPillInfo("checkout", "Check Out", "blue",
+                Enabled: visit.Status == VisitStatus.AwaitingExit,
+                Done: visit.DepartureTime.HasValue));
+        }
+
+        if (MockAuth.HasPermission(DemoPermissions.VisitsClose))
+        {
+            pills.Add(new ActionPillInfo("close", "Close", "dark",
+                Enabled: visit.Status == VisitStatus.Completed,
+                Done: visit.Status == VisitStatus.Closed));
+        }
+
+        if (MockAuth.HasPermission(DemoPermissions.VisitsCancel))
+        {
+            pills.Add(new ActionPillInfo("cancel", "Cancel", "red",
+                Enabled: CancellableStatuses.Contains(visit.Status),
+                Done: visit.Status == VisitStatus.Cancelled));
+        }
+
+        return pills;
+    }
+
+    private record ActionPillInfo(string Key, string Label, string Tone, bool Enabled, bool Done);
 }

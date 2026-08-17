@@ -1,14 +1,27 @@
+@implements IDisposable
 @inject NavigationManager NavigationManager
 @inject VMS.Web.Auth.MockAuthService MockAuth
 
-<div class="sidebar bg-dark text-white p-3  " style="width: 280px;">
+<div class="sidebar bg-dark text-white p-3  " style="width: var(--vms-sidebar-width);">
     <h4 class="mb-1 fw-bold">VMS</h4>
     <p class="small text-white-50 mb-4">@MockAuth.CurrentSession?.DisplayName</p>
 
     <nav class="nav flex-column gap-1">
         @if (CanAccess(DemoPermissions.VisitsRead))
         {
-            <NavLink class="nav-link" href="/visits" Match="NavLinkMatch.All"><i class="bi bi-calendar-check"></i> Visits</NavLink>
+            @if (CanAccess(DemoPermissions.OutboundVisitsRead))
+            {
+                <NavLink class="@VisitsLinkClass" href="/visits" Match="NavLinkMatch.All"><i class="bi bi-calendar-check"></i> Visits</NavLink>
+
+                <div class="sub-nav">
+                    <NavLink class="nav-link sub-nav-link" href="/visits" Match="NavLinkMatch.All"><i class="bi bi-box-arrow-in-down-left"></i> Inbound Visits</NavLink>
+                    <NavLink class="nav-link sub-nav-link" href="/visits/outbound"><i class="bi bi-box-arrow-up-right"></i> Outbound Visits</NavLink>
+                </div>
+            }
+            else
+            {
+                <NavLink class="nav-link" href="/visits" Match="NavLinkMatch.All"><i class="bi bi-calendar-check"></i> Visits</NavLink>
+            }
         }
 
         @if (CanAccess(DemoPermissions.VisitsCreate))
@@ -34,6 +47,27 @@
 </div>
 
 @code {
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private bool IsVisitsSectionActive
+    {
+        get
+        {
+            var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).Split('?')[0];
+            return relativePath.StartsWith("visits", StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    private string VisitsLinkClass => IsVisitsSectionActive ? "nav-link nav-link-section-active" : "nav-link";
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
     private bool CanAccess(string permission) => MockAuth.HasPermission(permission);
 
     private void SwitchRole()
@@ -45,5 +79,10 @@
     {
         await MockAuth.LogoutAsync();
         NavigationManager.NavigateTo("/");
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
     }
 }

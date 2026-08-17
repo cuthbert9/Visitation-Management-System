@@ -160,13 +160,7 @@ else
                             <td class="text-truncate" style="max-width: 160px;">@visit.Purpose</td>
                             <td><span class="status-pill @presentation.CssClass">@presentation.Label</span></td>
                             <td class="text-end">
-                                <div class="d-flex gap-2 justify-content-end">
-                                    @if (nextAction is not null)
-                                    {
-                                        <button class="btn btn-sm @nextAction.Value.CssClass" disabled="@busy" @onclick="() => nextAction.Value.Action(visit)">
-                                            @(busy ? "Saving..." : nextAction.Value.Label)
-                                        </button>
-                                    }
+                                <div class="d-flex gap-2 justify-content-end">                               
                                     <a class="btn btn-sm btn-outline-secondary" href="/visits/@visit.Id">View</a>
                                 </div>
                             </td>

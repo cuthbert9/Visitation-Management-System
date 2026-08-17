@@ -1,0 +1,572 @@
+@page "/visits/outbound/plan"
+@inject VMS.Web.Services.IOutboundVisitService OutboundVisitService
+@inject VMS.Web.Services.IEmployeeService EmployeeService
+@inject VMS.Web.Services.ToastService Toasts
+@inject VMS.Web.Auth.MockAuthService MockAuth
+@inject NavigationManager NavigationManager
+
+<PageTitle>Plan Outbound Visit</PageTitle>
+
+<div class="mb-3">
+    <a href="/visits/outbound" class="text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Back to Outbound Visits</a>
+</div>
+
+<h1 class="mb-1">Plan Outbound Visit</h1>
+<p class="text-muted mb-4">Register a new customer or stakeholder visit request.</p>
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (!MockAuth.HasPermission(DemoPermissions.OutboundVisitsCreate))
+{
+    <div class="alert alert-warning">You don't have permission to plan outbound visits.</div>
+}
+else
+{
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    @if (!isEditingApprovedVisit)
+    {
+        <div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
+            <i class="bi bi-info-circle-fill"></i>
+            <div>This visit cannot be scheduled until it has been reviewed and approved by an approver.</div>
+        </div>
+    }
+
+    <EditForm Model="formModel">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-1-circle text-primary"></i>
+                    <span class="form-section-label">Visit Information</span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label-sm">Visit Title</label>
+                        <InputText class="form-control" @bind-Value="formModel.Title" placeholder="e.g. Customer Relationship Visit — ABC Corporation" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Visit Purpose</label>
+                        <InputSelect class="form-select" @bind-Value="formModel.Purpose">
+                            @foreach (var purpose in Enum.GetValues<OutboundVisitPurpose>())
+                            {
+                                <option value="@purpose">@FormatPurpose(purpose)</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Priority</label>
+                        <InputSelect class="form-select" @bind-Value="formModel.Priority">
+                            @foreach (var priority in Enum.GetValues<OutboundVisitPriority>())
+                            {
+                                <option value="@priority">@priority</option>
+                            }
+                        </InputSelect>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label-sm mb-2">Visit Category</label>
+                        <div class="row g-2">
+                            @foreach (var category in Enum.GetValues<OutboundVisitCategory>())
+                            {
+                                <div class="col-md-4">
+                                    <div class="option-card @(formModel.Category == category ? "selected" : "")" @onclick="() => formModel.Category = category">
+                                        <div class="option-card-title">
+                                            @category
+                                            @if (formModel.Category == category)
+                                            {
+                                                <i class="bi bi-check-circle-fill text-primary"></i>
+                                            }
+                                        </div>
+                                        <div class="option-card-description">@CategoryDescription(category)</div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label-sm">Description / Agenda</label>
+                        <InputTextArea class="form-control" rows="3" @bind-Value="formModel.Agenda" placeholder="What will be discussed or demonstrated?" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label-sm">Proposed Date</label>
+                        <InputDate class="form-control" @bind-Value="formModel.ProposedDate" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label-sm">Start Time</label>
+                        <InputDate TValue="TimeOnly" Type="InputDateType.Time" class="form-control" @bind-Value="formModel.StartTime" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label-sm">Expected End Time</label>
+                        <InputDate TValue="TimeOnly?" Type="InputDateType.Time" class="form-control" @bind-Value="formModel.EndTime" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-2-circle text-primary"></i>
+                    <span class="form-section-label">Customer / Stakeholder</span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label-sm">Load from CRM</label>
+                        <select class="form-select" @bind="crmAccountIdValue" @bind:after="ApplyCrmAccount">
+                            <option value="">Not in CRM — enter details manually</option>
+                            @foreach (var account in crmAccounts)
+                            {
+                                <option value="@account.Id">@account.Organization</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label-sm">Stakeholder Type</label>
+                        <InputSelect class="form-select" @bind-Value="formModel.StakeholderType">
+                            @foreach (var type in Enum.GetValues<StakeholderType>())
+                            {
+                                <option value="@type">@type</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label-sm">Organization</label>
+                        <InputText class="form-control" @bind-Value="formModel.Organization" placeholder="Company or organization name" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Contact Person</label>
+                        <InputText class="form-control" @bind-Value="formModel.ContactPerson" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Contact Number</label>
+                        <InputText class="form-control" @bind-Value="formModel.ContactNumber" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Meeting Location</label>
+                        <InputText class="form-control" @bind-Value="formModel.MeetingLocation" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Address</label>
+                        <InputText class="form-control" @bind-Value="formModel.Address" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-3-circle text-primary"></i>
+                    <span class="form-section-label">Visit Team</span>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Visit Owner / Team Leader</label>
+                        <select class="form-select" @bind="ownerIdValue" @bind:after="ApplyOwner">
+                            <option value="0">Select an employee...</option>
+                            @foreach (var employee in employees)
+                            {
+                                <option value="@employee.Id">@employee.FullName — @employee.Position</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Department</label>
+                        <input class="form-control" value="@formModel_DepartmentName" readonly />
+                    </div>
+                </div>
+
+                <label class="form-label-sm">Add Team Members</label>
+                <input class="form-control mb-2" placeholder="Search by name, position or department..." @bind="teamSearchTerm" @bind:event="oninput" />
+
+                @if (!string.IsNullOrWhiteSpace(teamSearchTerm) && TeamSearchResults.Any())
+                {
+                    <div class="list-group mb-3">
+                        @foreach (var employee in TeamSearchResults)
+                        {
+                            <button type="button" class="list-group-item list-group-item-action" @onclick="() => AddTeamMember(employee)">
+                                <div class="fw-semibold">@employee.FullName</div>
+                                <div class="text-muted small">@employee.Position &middot; @employee.DepartmentName</div>
+                            </button>
+                        }
+                    </div>
+                }
+
+                @if (selectedTeamMembers.Count == 0)
+                {
+                    <p class="text-muted small mb-0">No team members added — the visit owner will travel alone.</p>
+                }
+                else
+                {
+                    <div class="row g-2">
+                        @foreach (var member in selectedTeamMembers)
+                        {
+                            <div class="col-md-6">
+                                <div class="team-chip">
+                                    <Avatar FullName="@member.FullName" Size="sm" />
+                                    <div>
+                                        <div class="fw-semibold small">@member.FullName</div>
+                                        <div class="text-muted small">@member.Position &middot; @member.DepartmentName</div>
+                                    </div>
+                                    <button type="button" class="team-chip-remove" aria-label="Remove @member.FullName" @onclick="() => RemoveTeamMember(member)"><i class="bi bi-x-lg"></i></button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-4-circle text-primary"></i>
+                    <span class="form-section-label">Business Justification</span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label-sm">Business Objective</label>
+                        <InputTextArea class="form-control" rows="2" @bind-Value="formModel.BusinessObjective" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label-sm">Expected Outcome</label>
+                        <InputTextArea class="form-control" rows="2" @bind-Value="formModel.ExpectedOutcome" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label-sm">Justification</label>
+                        <InputTextArea class="form-control" rows="3" @bind-Value="formModel.Justification" />
+                        <div class="form-text">This is the field approvers weigh most heavily — be specific about why this visit matters now.</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label-sm">Additional Notes</label>
+                        <InputTextArea class="form-control" rows="2" @bind-Value="formModel.AdditionalNotes" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label-sm">Supporting Documents</label>
+                        <div class="file-drop">
+                            <InputFile class="form-control" multiple OnChange="HandleFilesSelected" />
+                        </div>
+                        @if (formModel.DocumentFileNames.Count > 0)
+                        {
+                            <ul class="list-unstyled mt-2 mb-0">
+                                @foreach (var fileName in formModel.DocumentFileNames)
+                                {
+                                    <li class="small text-muted"><i class="bi bi-paperclip me-1"></i>@fileName</li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </EditForm>
+
+    <div class="form-sticky-footer">
+        <div class="small text-muted">@(isEditingApprovedVisit ? string.Empty : MissingFieldsMessage)</div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary" @onclick="GoToList" disabled="@isSaving">Cancel</button>
+            @if (isEditingApprovedVisit)
+            {
+                <button type="button" class="btn btn-primary" @onclick="SaveChangesAsync" disabled="@(isSaving || !CanSaveDraft)">@(isSaving ? "Saving..." : "Save Changes")</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-outline-primary" @onclick="SaveDraftAsync" disabled="@(isSaving || !CanSaveDraft)">@(isSaving ? "Saving..." : "Save Draft")</button>
+                <button type="button" class="btn btn-primary" @onclick="SubmitAsync" disabled="@(isSaving || !CanSubmit)">@(isSaving ? "Submitting..." : (wasChangesRequested ? "Resubmit for Approval" : "Submit for Approval"))</button>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private PlanOutboundVisitRequest formModel = new()
+    {
+        ProposedDate = DateOnly.FromDateTime(DateTime.Today).AddDays(3),
+        StartTime = new TimeOnly(9, 0)
+    };
+
+    private List<EmployeeDto> employees = [];
+    private List<CrmAccountDto> crmAccounts = [];
+    private List<EmployeeDto> selectedTeamMembers = [];
+    private string crmAccountIdValue = string.Empty;
+    private string ownerIdValue = "0";
+    private string teamSearchTerm = string.Empty;
+    private bool isLoading = true;
+    private bool isSaving;
+    private bool isEditingApprovedVisit;
+    private bool wasChangesRequested;
+    private string? errorMessage;
+
+    private string formModel_DepartmentName = string.Empty;
+
+    [SupplyParameterFromQuery(Name = "id")]
+    public string? EditId { get; set; }
+
+    private IEnumerable<EmployeeDto> TeamSearchResults => employees
+        .Where(e => formModel.Owner is null || e.Id != formModel.Owner.Id)
+        .Where(e => !selectedTeamMembers.Any(m => m.Id == e.Id))
+        .Where(e =>
+            e.FullName.Contains(teamSearchTerm, StringComparison.OrdinalIgnoreCase) ||
+            (e.Position ?? string.Empty).Contains(teamSearchTerm, StringComparison.OrdinalIgnoreCase) ||
+            e.DepartmentName.Contains(teamSearchTerm, StringComparison.OrdinalIgnoreCase));
+
+    private bool CanSaveDraft => !string.IsNullOrWhiteSpace(formModel.Title);
+
+    private bool CanSubmit =>
+        !string.IsNullOrWhiteSpace(formModel.Title) &&
+        !string.IsNullOrWhiteSpace(formModel.Organization) &&
+        formModel.Owner is not null &&
+        !string.IsNullOrWhiteSpace(formModel.BusinessObjective) &&
+        !string.IsNullOrWhiteSpace(formModel.Justification);
+
+    private string MissingFieldsMessage
+    {
+        get
+        {
+            if (CanSubmit)
+            {
+                return "Ready to submit for approval.";
+            }
+
+            List<string> missing = [];
+            if (string.IsNullOrWhiteSpace(formModel.Title)) missing.Add("Visit Title");
+            if (string.IsNullOrWhiteSpace(formModel.Organization)) missing.Add("Organization");
+            if (formModel.Owner is null) missing.Add("Visit Owner");
+            if (string.IsNullOrWhiteSpace(formModel.BusinessObjective)) missing.Add("Business Objective");
+            if (string.IsNullOrWhiteSpace(formModel.Justification)) missing.Add("Justification");
+
+            return missing.Count == 0 ? string.Empty : $"Still needed to submit: {string.Join(", ", missing)}.";
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await MockAuth.InitializeAsync();
+
+        try
+        {
+            employees = (await EmployeeService.GetEmployeesAsync()).Where(e => e.IsActive).ToList();
+            crmAccounts = (await OutboundVisitService.GetCrmAccountsAsync()).ToList();
+
+            if (!string.IsNullOrWhiteSpace(EditId))
+            {
+                var existing = await OutboundVisitService.GetVisitAsync(EditId);
+                if (existing is not null)
+                {
+                    PopulateFromExisting(existing);
+                }
+            }
+        }
+        catch
+        {
+            errorMessage = "Failed to load form data.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void PopulateFromExisting(OutboundVisitDto existing)
+    {
+        formModel = new PlanOutboundVisitRequest
+        {
+            ExistingId = existing.Id,
+            Title = existing.Title,
+            Purpose = existing.Purpose,
+            Priority = existing.Priority,
+            Category = existing.Category,
+            Agenda = existing.Agenda,
+            ProposedDate = existing.ProposedDate,
+            StartTime = existing.StartTime,
+            EndTime = existing.EndTime,
+            StakeholderType = existing.StakeholderType,
+            Organization = existing.Organization,
+            ContactPerson = existing.ContactPerson,
+            ContactNumber = existing.ContactNumber,
+            MeetingLocation = existing.MeetingLocation,
+            Address = existing.Address,
+            Owner = existing.Owner.Id == 0 ? null : existing.Owner,
+            BusinessObjective = existing.BusinessObjective ?? string.Empty,
+            ExpectedOutcome = existing.ExpectedOutcome,
+            Justification = existing.Justification ?? string.Empty,
+            AdditionalNotes = existing.AdditionalNotes,
+            DocumentFileNames = existing.Documents.Select(d => d.FileName).ToList()
+        };
+
+        ownerIdValue = existing.Owner.Id == 0 ? "0" : existing.Owner.Id.ToString();
+        formModel_DepartmentName = existing.Owner.Id == 0 ? string.Empty : existing.Owner.DepartmentName;
+        selectedTeamMembers = existing.TeamMembers.ToList();
+        isEditingApprovedVisit = existing.ApprovalStatus == OutboundVisitApprovalStatus.Approved;
+        wasChangesRequested = existing.ApprovalStatus == OutboundVisitApprovalStatus.ChangesRequested;
+    }
+
+    private void ApplyCrmAccount()
+    {
+        if (!int.TryParse(crmAccountIdValue, out var accountId))
+        {
+            return;
+        }
+
+        var account = crmAccounts.FirstOrDefault(a => a.Id == accountId);
+        if (account is null)
+        {
+            return;
+        }
+
+        formModel.Organization = account.Organization;
+        formModel.StakeholderType = account.Type;
+        formModel.ContactPerson = account.ContactPerson;
+        formModel.ContactNumber = account.ContactNumber;
+        formModel.Address = account.Address;
+    }
+
+    private void ApplyOwner()
+    {
+        if (!int.TryParse(ownerIdValue, out var employeeId) || employeeId == 0)
+        {
+            formModel.Owner = null;
+            formModel_DepartmentName = string.Empty;
+            return;
+        }
+
+        var employee = employees.FirstOrDefault(e => e.Id == employeeId);
+        formModel.Owner = employee;
+        formModel_DepartmentName = employee?.DepartmentName ?? string.Empty;
+        selectedTeamMembers.RemoveAll(m => m.Id == employeeId);
+    }
+
+    private void AddTeamMember(EmployeeDto employee)
+    {
+        selectedTeamMembers.Add(employee);
+        teamSearchTerm = string.Empty;
+    }
+
+    private void RemoveTeamMember(EmployeeDto employee) => selectedTeamMembers.RemoveAll(m => m.Id == employee.Id);
+
+    private Task HandleFilesSelected(InputFileChangeEventArgs e)
+    {
+        foreach (var file in e.GetMultipleFiles(10))
+        {
+            formModel.DocumentFileNames.Add(file.Name);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private void GoToList() => NavigationManager.NavigateTo("/visits/outbound");
+
+    private async Task SaveDraftAsync()
+    {
+        if (!CanSaveDraft || isSaving)
+        {
+            return;
+        }
+
+        isSaving = true;
+        try
+        {
+            formModel.TeamMembers = selectedTeamMembers.ToList();
+            formModel.ActingEmployeeName = MockAuth.CurrentSession?.DisplayName?.Trim() ?? "Unknown";
+
+            var saved = await OutboundVisitService.SaveDraftAsync(formModel);
+            Toasts.Show($"Draft saved: {saved.Title}.");
+            NavigationManager.NavigateTo("/visits/outbound?tab=draft");
+        }
+        catch
+        {
+            errorMessage = "Failed to save the draft.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task SaveChangesAsync()
+    {
+        if (isSaving)
+        {
+            return;
+        }
+
+        isSaving = true;
+        try
+        {
+            formModel.TeamMembers = selectedTeamMembers.ToList();
+            formModel.ActingEmployeeName = MockAuth.CurrentSession?.DisplayName?.Trim() ?? "Unknown";
+
+            var updated = await OutboundVisitService.UpdateDetailsAsync(formModel);
+            Toasts.Show($"Changes saved for {updated.Title}.");
+            NavigationManager.NavigateTo($"/visits/outbound/{updated.Id}");
+        }
+        catch
+        {
+            errorMessage = "Failed to save changes.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        if (!CanSubmit || isSaving)
+        {
+            return;
+        }
+
+        isSaving = true;
+        try
+        {
+            formModel.TeamMembers = selectedTeamMembers.ToList();
+            formModel.ActingEmployeeName = MockAuth.CurrentSession?.DisplayName?.Trim() ?? "Unknown";
+
+            var submitted = await OutboundVisitService.SubmitForApprovalAsync(formModel);
+            Toasts.Show($"{submitted.Title} was submitted for approval. It can't be scheduled until an approver signs it off.");
+            NavigationManager.NavigateTo($"/visits/outbound/{submitted.Id}");
+        }
+        catch
+        {
+            errorMessage = "Failed to submit this visit for approval.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private static string FormatPurpose(OutboundVisitPurpose purpose) => purpose switch
+    {
+        OutboundVisitPurpose.CustomerRelationshipVisit => "Customer Relationship",
+        OutboundVisitPurpose.NewBusiness => "New Business",
+        OutboundVisitPurpose.AccountReview => "Account Review",
+        OutboundVisitPurpose.TechnicalSupport => "Technical Support",
+        OutboundVisitPurpose.PartnershipDevelopment => "Partnership Development",
+        OutboundVisitPurpose.AuditInspection => "Audit / Inspection",
+        OutboundVisitPurpose.SiteSurvey => "Site Survey",
+        OutboundVisitPurpose.ContractNegotiation => "Contract Negotiation",
+        _ => purpose.ToString()
+    };
+
+    private static string CategoryDescription(OutboundVisitCategory category) => category switch
+    {
+        OutboundVisitCategory.Routine => "Standard visit, normal approval path.",
+        OutboundVisitCategory.Urgent => "Time-sensitive — flagged for faster review.",
+        OutboundVisitCategory.SpecialEngagement => "High-profile visit requiring director sign-off.",
+        _ => string.Empty
+    };
+}

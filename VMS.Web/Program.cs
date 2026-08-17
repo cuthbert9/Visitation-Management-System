@@ -22,5 +22,7 @@ builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<IStorageService, SupabaseStorageService>();
+builder.Services.AddScoped<IOutboundVisitService, MockOutboundVisitService>();
+builder.Services.AddScoped<ToastService>();
 
 await builder.Build().RunAsync();
