@@ -32,6 +32,10 @@ public static class DemoPermissions
     public const string OutboundVisitsRead = "outbound_visits.read";
     public const string OutboundVisitsCreate = "outbound_visits.create";
     public const string OutboundVisitsApprove = "outbound_visits.approve";
+    public const string SecurityDashboardRead = "security.dashboard.read";
+    public const string GateVisitorsRead = "security.gate_visitors.read";
+    public const string GateVisitorsCreate = "security.gate_visitors.create";
+    public const string SecurityReportsRead = "security.reports.read";
 }
 
 public sealed class MockSession
@@ -55,10 +59,12 @@ public static class MockRoleCatalog
                 ActorId = 2,
                 Permissions =
                 [
-                    DemoPermissions.VisitsRead,
-                    DemoPermissions.VisitsCreate,
-                    DemoPermissions.VisitsCheckOut,
+                    DemoPermissions.SecurityDashboardRead,
+                    DemoPermissions.GateVisitorsRead,
+                    DemoPermissions.GateVisitorsCreate,
+                    DemoPermissions.SecurityReportsRead,
                     DemoPermissions.ParkingRead,
+                    DemoPermissions.ParkingReserve,
                     DemoPermissions.ParkingRelease
                 ]
             },

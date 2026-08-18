@@ -53,6 +53,22 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTG9naW4ucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/Pages/Security/Dashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvU2VjdXJpdHkvRGFzaGJvYXJkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/Pages/Security/Reports.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvU2VjdXJpdHkvUmVwb3J0cy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/Pages/Security/Visitors/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvU2VjdXJpdHkvVmlzaXRvcnMvSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/Pages/Security/Visitors/Register.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvU2VjdXJpdHkvVmlzaXRvcnMvUmVnaXN0ZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/Pages/Visitors/Create.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXMvVmlzaXRvcnMvQ3JlYXRlLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 

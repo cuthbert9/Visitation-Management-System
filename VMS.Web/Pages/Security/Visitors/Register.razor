@@ -1,0 +1,340 @@
+@page "/security/visitors/register"
+@inject VMS.Web.Services.IVisitorService VisitorService
+@inject VMS.Web.Services.IVisitService VisitService
+@inject VMS.Web.Services.IEmployeeService EmployeeService
+@inject VMS.Web.Services.IParkingService ParkingService
+@inject VMS.Web.Services.IVisitItemService VisitItemService
+@inject VMS.Web.Services.IGateTrackingService GateTrackingService
+@inject VMS.Web.Services.ToastService Toasts
+@inject VMS.Web.Auth.MockAuthService MockAuth
+@inject NavigationManager NavigationManager
+
+<PageTitle>Register Gate Visitor</PageTitle>
+
+<div class="mb-3">
+    <a href="/security/visitors" class="text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Back to Manage Visitors</a>
+</div>
+
+<h1 class="mb-1">Register Gate Visitor</h1>
+<p class="text-muted mb-4">Captured by security at the gate, prior to reception handover.</p>
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (!MockAuth.HasPermission(DemoPermissions.GateVisitorsCreate))
+{
+    <div class="alert alert-warning">Your current demo role cannot register gate visitors.</div>
+}
+else
+{
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <EditForm Model="newVisitorRequest" OnValidSubmit="HandleSubmitAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-person-vcard text-primary"></i>
+                    <span class="form-section-label">Visitor Details</span>
+                </div>
+                <VisitorFieldsEditor Visitor="newVisitorRequest" />
+
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Host</label>
+                        <InputSelect class="form-select" @bind-Value="visit.HostEmployeeId" @bind-Value:after="HandleHostChanged">
+                            <option value="0">Select host</option>
+                            @foreach (var employee in employees)
+                            {
+                                <option value="@employee.Id">@employee.FullName@(string.IsNullOrWhiteSpace(employee.Position) ? "" : $" ({employee.Position})")</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Purpose of Visit</label>
+                        <InputSelect class="form-select" @bind-Value="visit.Purpose">
+                            @foreach (var purpose in Enum.GetValues<VisitPurposeType>())
+                            {
+                                <option value="@purpose">@EnumLabels.Format(purpose)</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-car-front text-primary"></i>
+                    <span class="form-section-label">Vehicle &amp; Parking</span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label-sm">License Plate</label>
+                        <InputText class="form-control" placeholder="e.g. T 123 ABC" @bind-Value="visit.VehiclePlateNumber" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Parking Slot / Area</label>
+                        <select class="form-select" @bind="selectedSlotIdValue">
+                            <option value="0">No parking needed</option>
+                            @foreach (var slot in availableSlots)
+                            {
+                                <option value="@slot.Id">@slot.Code@(string.IsNullOrWhiteSpace(slot.Zone) ? "" : $" ({slot.Zone})")</option>
+                            }
+                        </select>
+                        @if (availableSlots.Count == 0)
+                        {
+                            <div class="form-text">No parking slots currently available.</div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-bag text-primary"></i>
+                    <span class="form-section-label">Items Carried</span>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var itemType in Enum.GetValues<VisitItemType>())
+                    {
+                        var isSelected = selectedItemTypes.Contains(itemType);
+                        <button type="button" class="status-pill @(isSelected ? "status-pill-blue" : "status-pill-gray")" @onclick="() => ToggleItemType(itemType)">
+                            @if (isSelected)
+                            {
+                                <i class="bi bi-check-lg me-1"></i>
+                            }
+                            @EnumLabels.Format(itemType)
+                        </button>
+                    }
+                </div>
+                @if (selectedItemTypes.Count == 0)
+                {
+                    <p class="text-muted small mt-2 mb-0">No items declared — tap a tag to add one.</p>
+                }
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-laptop text-primary"></i>
+                    <span class="form-section-label">Equipment (Compliance-Critical)</span>
+                </div>
+
+                <div class="form-check form-switch mb-3 d-flex align-items-start gap-2">
+                    <input class="form-check-input flex-shrink-0" type="checkbox" role="switch" id="hasLaptop" @bind="hasLaptop" />
+                    <label class="form-check-label" for="hasLaptop">
+                        <div>Visitor has a laptop / PC?</div>
+                        <div class="text-muted small">Required — this office verifies equipment on exit</div>
+                    </label>
+                </div>
+
+                @if (hasLaptop)
+                {
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label-sm">PC / Device Type</label>
+                            <select class="form-select" @bind="deviceType">
+                                <option value="">Select type</option>
+                                <option value="Laptop — Company issued">Laptop — Company issued</option>
+                                <option value="Laptop — Personal">Laptop — Personal</option>
+                                <option value="Tablet">Tablet</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-sm">Brand</label>
+                            <select class="form-select" @bind="deviceBrand">
+                                <option value="">Select brand</option>
+                                <option value="Dell">Dell</option>
+                                <option value="HP">HP</option>
+                                <option value="Lenovo">Lenovo</option>
+                                <option value="Apple">Apple</option>
+                                <option value="Asus">Asus</option>
+                                <option value="Acer">Acer</option>
+                                <option value="Microsoft">Microsoft</option>
+                                <option value="Samsung">Samsung</option>
+                                <option value="MSI">MSI</option>
+                                <option value="Toshiba">Toshiba</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-sm">Asset / Serial Tag</label>
+                            <input class="form-control" placeholder="Optional — e.g. Tag #4471" @bind="assetTag" />
+                        </div>
+                    </div>
+                    <div class="alert alert-info d-flex align-items-start gap-2 mt-3 mb-0">
+                        <i class="bi bi-info-circle mt-1"></i>
+                        <div class="small">This device will be checked against the exit log. If the visitor leaves without it, or with an untagged device, the <strong>PC Mismatch</strong> flag is raised for the gate to resolve before departure is finalized.</div>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted small mb-0">No device will be recorded for this visitor.</p>
+                }
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary" type="submit" disabled="@isSaving">
+                @(isSaving ? "Registering..." : "Register at Gate")
+            </button>
+            <a class="btn btn-outline-secondary" href="/security/visitors">Cancel</a>
+        </div>
+    </EditForm>
+}
+
+@code {
+    private CreateVisitorDto newVisitorRequest = new();
+    private VisitCreateDto visit = new();
+    private List<EmployeeDto> employees = [];
+    private List<ParkingSlotDto> availableSlots = [];
+    private string selectedSlotIdValue = "0";
+    private HashSet<VisitItemType> selectedItemTypes = [];
+    private bool hasLaptop;
+    private string deviceType = string.Empty;
+    private string deviceBrand = string.Empty;
+    private string assetTag = string.Empty;
+    private bool isLoading = true;
+    private bool isSaving;
+    private string? errorMessage;
+
+    private EmployeeDto? SelectedEmployee => employees.FirstOrDefault(employee => employee.Id == visit.HostEmployeeId);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await MockAuth.InitializeAsync();
+
+        try
+        {
+            employees = (await EmployeeService.GetEmployeesAsync()).Where(employee => employee.IsActive).ToList();
+            var slots = await ParkingService.GetSlotsAsync();
+            availableSlots = slots.Where(slot => slot.Status == ParkingSlotStatus.Available).ToList();
+        }
+        catch
+        {
+            errorMessage = "Failed to load form data.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void HandleHostChanged()
+    {
+        var employee = SelectedEmployee;
+        visit.DepartmentId = employee?.DepartmentId ?? 0;
+    }
+
+    private void ToggleItemType(VisitItemType itemType)
+    {
+        if (!selectedItemTypes.Add(itemType))
+        {
+            selectedItemTypes.Remove(itemType);
+        }
+    }
+
+    private string? ComposeBrandAndTag()
+    {
+        var parts = new[] { deviceBrand, assetTag }.Where(part => !string.IsNullOrWhiteSpace(part));
+        var combined = string.Join(" — ", parts);
+        return string.IsNullOrWhiteSpace(combined) ? null : combined;
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        if (visit.HostEmployeeId == 0)
+        {
+            errorMessage = "Select a host.";
+            return;
+        }
+
+        isSaving = true;
+        errorMessage = null;
+
+        try
+        {
+            var createdVisitor = await VisitorService.CreateVisitorAsync(newVisitorRequest);
+            if (createdVisitor is null)
+            {
+                errorMessage = "Failed to register visitor.";
+                return;
+            }
+
+            visit.VisitorId = createdVisitor.Id;
+            visit.CheckedInById = 1;
+
+            var createdVisit = await VisitService.CreateVisitAsync(visit);
+            if (createdVisit is null)
+            {
+                errorMessage = "Failed to register the visit.";
+                return;
+            }
+
+            if (int.TryParse(selectedSlotIdValue, out var slotId) && slotId != 0)
+            {
+                try
+                {
+                    await ParkingService.CreateReservationAsync(new CreateParkingReservationDto
+                    {
+                        VisitId = createdVisit.Id,
+                        SlotId = slotId,
+                        VehiclePlate = visit.VehiclePlateNumber
+                    });
+                }
+                catch
+                {
+                    Toasts.Show("Visitor registered, but the parking slot could not be reserved.", VMS.Web.Services.ToastTone.Warning);
+                }
+            }
+
+            foreach (var itemType in selectedItemTypes)
+            {
+                try
+                {
+                    await VisitItemService.CreateAsync(new CreateVisitItemDto
+                    {
+                        VisitId = createdVisit.Id,
+                        ItemName = itemType.ToString(),
+                        ItemType = itemType,
+                        MovementType = ItemMovementType.BroughtIn,
+                        Quantity = 1
+                    });
+                }
+                catch
+                {
+                    // Best-effort — one failed item shouldn't block the rest of check-in.
+                }
+            }
+
+            await GateTrackingService.SaveInfoAsync(createdVisit.Id, hasLaptop, deviceType, ComposeBrandAndTag());
+
+            Toasts.Show($"{createdVisitor.FullName} registered at the gate and ready for handover to reception.");
+            NavigationManager.NavigateTo("/security/visitors");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = string.IsNullOrWhiteSpace(ex.Message) ? "Failed to register gate visitor." : ex.Message;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

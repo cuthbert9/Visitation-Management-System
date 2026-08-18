@@ -938,3 +938,28 @@ h1, h2, h3, h4, h5, h6 {
     text-transform: uppercase;
     white-space: nowrap;
 }
+
+.print-only {
+    display: none;
+}
+
+@media print {
+    .sidebar,
+    .no-print,
+    .toast-container {
+        display: none !important;
+    }
+
+    main {
+        flex: none !important;
+        width: 100% !important;
+    }
+
+    .container {
+        max-width: 100% !important;
+    }
+
+    .print-only {
+        display: block !important;
+    }
+}

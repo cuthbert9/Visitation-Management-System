@@ -29,6 +29,21 @@
             <NavLink class="nav-link" href="/visits/create"><i class="bi bi-plus-circle"></i> Register Visit</NavLink>
         }
 
+        @if (CanAccess(DemoPermissions.SecurityDashboardRead))
+        {
+            <NavLink class="nav-link" href="/security/dashboard" Match="NavLinkMatch.All"><i class="bi bi-speedometer2"></i> Dashboard</NavLink>
+        }
+
+        @if (CanAccess(DemoPermissions.GateVisitorsRead))
+        {
+            <NavLink class="nav-link" href="/security/visitors"><i class="bi bi-shield-check"></i> Manage Visitors</NavLink>
+        }
+
+        @if (CanAccess(DemoPermissions.SecurityReportsRead))
+        {
+            <NavLink class="nav-link" href="/security/reports" Match="NavLinkMatch.All"><i class="bi bi-file-earmark-bar-graph"></i> Reports</NavLink>
+        }
+
         @if (CanAccess(DemoPermissions.VisitorsRead))
         {
             <NavLink class="nav-link" href="/visitors" Match="NavLinkMatch.All"><i class="bi bi-people"></i> Visitors</NavLink>

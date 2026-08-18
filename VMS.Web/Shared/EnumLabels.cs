@@ -27,4 +27,16 @@ public static class EnumLabels
         VisitPurposeType.Other => "Other",
         _ => purpose.ToString()
     };
+
+    public static string Format(VisitItemType itemType) => itemType switch
+    {
+        VisitItemType.Personal => "Bag",
+        VisitItemType.Document => "Folder / Documents",
+        VisitItemType.Delivery => "Parcel",
+        VisitItemType.Tool => "Tools",
+        VisitItemType.Equipment => "Equipment",
+        VisitItemType.ElectronicDevice => "Electronic Device",
+        VisitItemType.Other => "Other",
+        _ => itemType.ToString()
+    };
 }

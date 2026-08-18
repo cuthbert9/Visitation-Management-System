@@ -86,6 +86,22 @@ public class VisitItemDto
     public DateTime CreatedAt { get; set; }
 }
 
+public class CreateVisitItemDto
+{
+    [Required]
+    public int VisitId { get; set; }
+
+    [Required]
+    public string ItemName { get; set; } = string.Empty;
+
+    public VisitItemType? ItemType { get; set; }
+    public ItemMovementType? MovementType { get; set; }
+    public string? Description { get; set; }
+    public string? SerialNumber { get; set; }
+    public int Quantity { get; set; } = 1;
+    public string? Remarks { get; set; }
+}
+
 public class VisitStatusHistoryDto
 {
     public int Id { get; set; }
