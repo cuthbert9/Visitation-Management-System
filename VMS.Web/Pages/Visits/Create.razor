@@ -1,7 +1,6 @@
 @page "/visits/create"
 @inject VMS.Web.Services.IVisitService VisitService
 @inject VMS.Web.Services.IVisitorService VisitorService
-@inject VMS.Web.Services.IDepartmentService DepartmentService
 @inject VMS.Web.Services.IEmployeeService EmployeeService
 @inject VMS.Web.Services.IStorageService StorageService
 @inject VMS.Web.Auth.MockAuthService MockAuth
@@ -100,18 +99,17 @@ else
 
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label-sm">Department</label>
-                        <InputSelect class="form-select" @bind-Value="request.DepartmentId" @bind-Value:after="HandleDepartmentChangedAsync">
-                            <option value="0">Select department</option>
-                            @foreach (var department in departments)
+                        <label class="form-label-sm">Purpose</label>
+                        <InputSelect class="form-select" @bind-Value="request.Purpose">
+                            @foreach (var purpose in Enum.GetValues<VisitPurposeType>())
                             {
-                                <option value="@department.Id">@department.Name (@department.Code)</option>
+                                <option value="@purpose">@EnumLabels.Format(purpose)</option>
                             }
                         </InputSelect>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label-sm">Host</label>
-                        <InputSelect class="form-select" @bind-Value="request.HostEmployeeId" disabled="@(request.DepartmentId == 0)">
+                        <InputSelect class="form-select" @bind-Value="request.HostEmployeeId" @bind-Value:after="HandleHostChanged">
                             <option value="0">Select host</option>
                             @foreach (var employee in employees)
                             {
@@ -130,23 +128,20 @@ else
 
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label-sm">Purpose</label>
-                        <InputSelect class="form-select" @bind-Value="request.Purpose">
-                            @foreach (var purpose in Enum.GetValues<VisitPurposeType>())
-                            {
-                                <option value="@purpose">@purpose</option>
-                            }
-                        </InputSelect>
+                        <label class="form-label-sm">Purpose Details</label>
+                        <InputTextArea class="form-control" placeholder="Optional — additional context" @bind-Value="request.PurposeDescription" />
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Department</label>
+                        <input class="form-control" value="@selectedHostDepartmentName" readonly placeholder="Select a host to auto-fill" />
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <label class="form-label-sm">Expected Departure</label>
                         <InputDate class="form-control" @bind-Value="expectedDepartureDate" />
                     </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label-sm">Purpose Details</label>
-                    <InputTextArea class="form-control" placeholder="Optional — additional context" @bind-Value="request.PurposeDescription" />
                 </div>
 
                 <div class="row g-3 mb-3">
@@ -192,8 +187,8 @@ else
     private string searchTerm = string.Empty;
     private DateTime? expectedDepartureDate;
     private List<VisitorDto> visitors = [];
-    private List<DepartmentDto> departments = [];
     private List<EmployeeDto> employees = [];
+    private string selectedHostDepartmentName = string.Empty;
     private IBrowserFile? selectedFile;
     private bool isLoading = true;
     private bool isSaving;
@@ -215,7 +210,7 @@ else
         try
         {
             visitors = (await VisitorService.GetVisitorsAsync()).ToList();
-            departments = (await DepartmentService.GetDepartmentsAsync()).ToList();
+            employees = (await EmployeeService.GetEmployeesAsync()).Where(employee => employee.IsActive).ToList();
         }
         catch
         {
@@ -239,24 +234,11 @@ else
         searchTerm = string.Empty;
     }
 
-    private async Task HandleDepartmentChangedAsync()
+    private void HandleHostChanged()
     {
-        request.HostEmployeeId = 0;
-        employees = [];
-
-        if (request.DepartmentId == 0)
-        {
-            return;
-        }
-
-        try
-        {
-            employees = (await EmployeeService.GetEmployeesByDepartmentAsync(request.DepartmentId)).ToList();
-        }
-        catch
-        {
-            errorMessage = "Failed to load employees for the selected department.";
-        }
+        var employee = SelectedEmployee;
+        request.DepartmentId = employee?.DepartmentId ?? 0;
+        selectedHostDepartmentName = employee?.DepartmentName ?? string.Empty;
     }
 
     private void HandleFileSelected(InputFileChangeEventArgs args)

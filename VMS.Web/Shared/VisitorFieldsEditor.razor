@@ -26,7 +26,7 @@
         <InputSelect class="form-select" @bind-Value="Visitor.IdentificationType">
             @foreach (var type in Enum.GetValues<IdentificationType>())
             {
-                <option value="@type">@type</option>
+                <option value="@type">@EnumLabels.Format(type)</option>
             }
         </InputSelect>
     </div>

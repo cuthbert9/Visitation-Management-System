@@ -47,7 +47,7 @@ else
                 <dd class="col-sm-9">@visitor.Email</dd>
 
                 <dt class="col-sm-3">Identification</dt>
-                <dd class="col-sm-9">@visitor.IdentificationType - @visitor.IdentificationNumber</dd>
+                <dd class="col-sm-9">@EnumLabels.Format(visitor.IdentificationType) - @visitor.IdentificationNumber</dd>
 
                 <dt class="col-sm-3">Organization</dt>
                 <dd class="col-sm-9">@visitor.Organization</dd>

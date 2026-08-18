@@ -52,7 +52,7 @@ else
                     <InputSelect class="form-select" @bind-Value="request.IdentificationType">
                         @foreach (var type in Enum.GetValues<IdentificationType>())
                         {
-                            <option value="@type">@type</option>
+                            <option value="@type">@EnumLabels.Format(type)</option>
                         }
                     </InputSelect>
                 </div>

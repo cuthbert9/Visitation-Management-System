@@ -30,10 +30,10 @@ public enum VisitPurposeType
     Interview = 2,
     Delivery = 3,
     Maintenance = 4,
-    OfficialBusiness = 5,
-    Training = 6,
-    ContractorWork = 7,
-    Personal = 8,
+    Official = 5,
+    Personal = 6,
+    Training = 7,
+    ContractorWork = 8,
     Other = 9
 }
 

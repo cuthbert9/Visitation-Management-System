@@ -30,7 +30,7 @@ else
         <div class="col-12 col-sm-6 col-lg">
             <div class="stat-card">
                 <div>
-                    <div class="stat-label">Total Visits Today</div>
+                    <div class="stat-label">Total Visitors Today</div>
                     <div class="stat-value">@(dashboard?.TotalVisitsToday ?? 0)</div>
                 </div>
                 <div class="stat-icon stat-icon-blue"><i class="bi bi-calendar-check"></i></div>
@@ -39,13 +39,13 @@ else
         <div class="col-12 col-sm-6 col-lg">
             <div class="stat-card">
                 <div>
-                    <div class="stat-label">Awaiting Host</div>
+                    <div class="stat-label">Host Attending Guests</div>
                     <div class="stat-value">@(dashboard?.AwaitingHost ?? 0)</div>
                 </div>
                 <div class="stat-icon stat-icon-amber"><i class="bi bi-hourglass-split"></i></div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-lg">
+        @* <div class="col-12 col-sm-6 col-lg">
             <div class="stat-card">
                 <div>
                     <div class="stat-label">On-site Now</div>
@@ -53,17 +53,17 @@ else
                 </div>
                 <div class="stat-icon stat-icon-green"><i class="bi bi-person-check"></i></div>
             </div>
-        </div>
+        </div> *@
         <div class="col-12 col-sm-6 col-lg">
             <div class="stat-card">
                 <div>
-                    <div class="stat-label">Overdue</div>
+                    <div class="stat-label">Over Stay</div>
                     <div class="stat-value">@(dashboard?.Overdue ?? 0)</div>
                 </div>
                 <div class="stat-icon stat-icon-red"><i class="bi bi-exclamation-triangle"></i></div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-lg">
+        @* <div class="col-12 col-sm-6 col-lg">
             <div class="stat-card">
                 <div>
                     <div class="stat-label">Closed Today</div>
@@ -71,7 +71,7 @@ else
                 </div>
                 <div class="stat-icon stat-icon-gray"><i class="bi bi-archive"></i></div>
             </div>
-        </div>
+        </div> *@
     </div>
 
     @if ((dashboard?.Overdue ?? 0) > 0)
