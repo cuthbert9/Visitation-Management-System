@@ -7,6 +7,7 @@ public enum VisitPurposeType
     Delivery = 3,
     Maintenance = 4,
     Official = 5,
+    OfficialBusiness = 5,
     Personal = 6,
     Training = 7,
     ContractorWork = 8,

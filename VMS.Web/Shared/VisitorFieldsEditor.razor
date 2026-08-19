@@ -3,22 +3,28 @@
         <label class="form-label-sm">Full Name</label>
         <InputText class="form-control" placeholder="e.g. Jane Doe" @bind-Value="Visitor.FullName" />
     </div>
-    <div class="col-md-6">
-        <label class="form-label-sm">Phone Number</label>
-        <InputText class="form-control" placeholder="+255 7xx xxx xxx" @bind-Value="Visitor.PhoneNumber" />
-    </div>
+    @if (ShowContactDetails)
+    {
+        <div class="col-md-6">
+            <label class="form-label-sm">Phone Number</label>
+            <InputText class="form-control" placeholder="+255 7xx xxx xxx" @bind-Value="Visitor.PhoneNumber" />
+        </div>
+    }
 </div>
 
-<div class="row g-3 mb-3">
-    <div class="col-md-6">
-        <label class="form-label-sm">Email</label>
-        <InputText class="form-control" placeholder="Optional" @bind-Value="Visitor.Email" />
+@if (ShowContactDetails)
+{
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <label class="form-label-sm">Email</label>
+            <InputText class="form-control" placeholder="Optional" @bind-Value="Visitor.Email" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label-sm">Organization</label>
+            <InputText class="form-control" placeholder="Optional" @bind-Value="Visitor.Organization" />
+        </div>
     </div>
-    <div class="col-md-6">
-        <label class="form-label-sm">Organization</label>
-        <InputText class="form-control" placeholder="Optional" @bind-Value="Visitor.Organization" />
-    </div>
-</div>
+}
 
 <div class="row g-3 mb-3">
     <div class="col-md-6">
@@ -36,31 +42,53 @@
     </div>
 </div>
 
-<div class="row g-3 align-items-center">
-    <div class="col-auto">
-        <div class="photo-preview">
-            @if (HasValidPhotoUrl)
+@if (ShowAttachment)
+{
+    <div class="row g-3 align-items-center">
+        <div class="col-auto">
+            <div class="photo-preview">
+                @if (HasValidPhotoUrl)
+                {
+                    <img src="@Visitor.PhotoUrl" alt="Visitor photo preview" />
+                }
+                else
+                {
+                    <i class="bi bi-image text-muted"></i>
+                }
+            </div>
+        </div>
+        <div class="col">
+            <label class="form-label-sm">Attachment</label>
+            <div class="file-drop">
+                <InputFile class="form-control" OnChange="HandlePhotoFileSelected" />
+            </div>
+            @if (selectedPhotoFile is not null)
             {
-                <img src="@Visitor.PhotoUrl" alt="Visitor photo preview" />
-            }
-            else
-            {
-                <i class="bi bi-image text-muted"></i>
+                <div class="form-text">Selected file: @selectedPhotoFile.Name</div>
             }
         </div>
     </div>
-    <div class="col">
-        <label class="form-label-sm">Attachment</label>
-        <InputText class="form-control" placeholder="Optional — paste an image link" @bind-Value="Visitor.PhotoUrl" />
-    </div>
-</div>
+}
 
 @code {
     [Parameter, EditorRequired]
     public CreateVisitorDto Visitor { get; set; } = null!;
 
+    [Parameter]
+    public bool ShowContactDetails { get; set; } = true;
+
+    [Parameter]
+    public bool ShowAttachment { get; set; } = true;
+
+    private IBrowserFile? selectedPhotoFile;
+
     private bool HasValidPhotoUrl =>
         !string.IsNullOrWhiteSpace(Visitor.PhotoUrl) &&
         Uri.TryCreate(Visitor.PhotoUrl, UriKind.Absolute, out var uri) &&
         (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+
+    private void HandlePhotoFileSelected(InputFileChangeEventArgs args)
+    {
+        selectedPhotoFile = args.File;
+    }
 }

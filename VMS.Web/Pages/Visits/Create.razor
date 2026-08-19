@@ -137,24 +137,6 @@ else
                     </div>
                 </div>
 
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label-sm">Expected Departure</label>
-                        <InputDate class="form-control" @bind-Value="expectedDepartureDate" />
-                    </div>
-                </div>
-
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label-sm">Vehicle Model</label>
-                        <InputText class="form-control" placeholder="Optional" @bind-Value="request.VehicleModel" />
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label-sm">Vehicle Plate</label>
-                        <InputText class="form-control" placeholder="Optional" @bind-Value="request.VehiclePlateNumber" />
-                    </div>
-                </div>
-
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label-sm">Badge Number</label>
@@ -185,7 +167,6 @@ else
     private CreateVisitorDto newVisitorRequest = new();
     private VisitorDto? selectedVisitor;
     private string searchTerm = string.Empty;
-    private DateTime? expectedDepartureDate;
     private List<VisitorDto> visitors = [];
     private List<EmployeeDto> employees = [];
     private string selectedHostDepartmentName = string.Empty;
@@ -285,7 +266,6 @@ else
 
             request.VisitorId = selectedVisitor.Id;
             request.CheckedInById = 1;
-            request.ExpectedDepartureTime = expectedDepartureDate;
 
             if (selectedFile is not null)
             {

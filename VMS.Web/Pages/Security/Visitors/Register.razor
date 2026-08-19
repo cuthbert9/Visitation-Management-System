@@ -1,10 +1,5 @@
 @page "/security/visitors/register"
-@inject VMS.Web.Services.IVisitorService VisitorService
-@inject VMS.Web.Services.IVisitService VisitService
-@inject VMS.Web.Services.IEmployeeService EmployeeService
 @inject VMS.Web.Services.IParkingService ParkingService
-@inject VMS.Web.Services.IVisitItemService VisitItemService
-@inject VMS.Web.Services.IGateTrackingService GateTrackingService
 @inject VMS.Web.Services.ToastService Toasts
 @inject VMS.Web.Auth.MockAuthService MockAuth
 @inject NavigationManager NavigationManager
@@ -43,29 +38,7 @@ else
                     <i class="bi bi-person-vcard text-primary"></i>
                     <span class="form-section-label">Visitor Details</span>
                 </div>
-                <VisitorFieldsEditor Visitor="newVisitorRequest" />
-
-                <div class="row g-3 mt-1">
-                    <div class="col-md-6">
-                        <label class="form-label-sm">Host</label>
-                        <InputSelect class="form-select" @bind-Value="visit.HostEmployeeId" @bind-Value:after="HandleHostChanged">
-                            <option value="0">Select host</option>
-                            @foreach (var employee in employees)
-                            {
-                                <option value="@employee.Id">@employee.FullName@(string.IsNullOrWhiteSpace(employee.Position) ? "" : $" ({employee.Position})")</option>
-                            }
-                        </InputSelect>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label-sm">Purpose of Visit</label>
-                        <InputSelect class="form-select" @bind-Value="visit.Purpose">
-                            @foreach (var purpose in Enum.GetValues<VisitPurposeType>())
-                            {
-                                <option value="@purpose">@EnumLabels.Format(purpose)</option>
-                            }
-                        </InputSelect>
-                    </div>
-                </div>
+                <VisitorFieldsEditor Visitor="newVisitorRequest" ShowContactDetails="false" ShowAttachment="false" />
             </div>
         </div>
 
@@ -202,7 +175,6 @@ else
 @code {
     private CreateVisitorDto newVisitorRequest = new();
     private VisitCreateDto visit = new();
-    private List<EmployeeDto> employees = [];
     private List<ParkingSlotDto> availableSlots = [];
     private string selectedSlotIdValue = "0";
     private HashSet<VisitItemType> selectedItemTypes = [];
@@ -214,15 +186,12 @@ else
     private bool isSaving;
     private string? errorMessage;
 
-    private EmployeeDto? SelectedEmployee => employees.FirstOrDefault(employee => employee.Id == visit.HostEmployeeId);
-
     protected override async Task OnInitializedAsync()
     {
         await MockAuth.InitializeAsync();
 
         try
         {
-            employees = (await EmployeeService.GetEmployeesAsync()).Where(employee => employee.IsActive).ToList();
             var slots = await ParkingService.GetSlotsAsync();
             availableSlots = slots.Where(slot => slot.Status == ParkingSlotStatus.Available).ToList();
         }
@@ -236,12 +205,6 @@ else
         }
     }
 
-    private void HandleHostChanged()
-    {
-        var employee = SelectedEmployee;
-        visit.DepartmentId = employee?.DepartmentId ?? 0;
-    }
-
     private void ToggleItemType(VisitItemType itemType)
     {
         if (!selectedItemTypes.Add(itemType))
@@ -250,87 +213,20 @@ else
         }
     }
 
-    private string? ComposeBrandAndTag()
-    {
-        var parts = new[] { deviceBrand, assetTag }.Where(part => !string.IsNullOrWhiteSpace(part));
-        var combined = string.Join(" — ", parts);
-        return string.IsNullOrWhiteSpace(combined) ? null : combined;
-    }
-
+    // Mocked: Host/Department/Purpose are no longer captured at the gate, so a real
+    // Visitor/Visit can't be created yet — this is a flow-only walkthrough until reception
+    // handover (where Host + Purpose will actually get assigned) is designed and wired up.
     private async Task HandleSubmitAsync()
     {
-        if (visit.HostEmployeeId == 0)
-        {
-            errorMessage = "Select a host.";
-            return;
-        }
-
         isSaving = true;
         errorMessage = null;
 
         try
         {
-            var createdVisitor = await VisitorService.CreateVisitorAsync(newVisitorRequest);
-            if (createdVisitor is null)
-            {
-                errorMessage = "Failed to register visitor.";
-                return;
-            }
+            await Task.Delay(400);
 
-            visit.VisitorId = createdVisitor.Id;
-            visit.CheckedInById = 1;
-
-            var createdVisit = await VisitService.CreateVisitAsync(visit);
-            if (createdVisit is null)
-            {
-                errorMessage = "Failed to register the visit.";
-                return;
-            }
-
-            if (int.TryParse(selectedSlotIdValue, out var slotId) && slotId != 0)
-            {
-                try
-                {
-                    await ParkingService.CreateReservationAsync(new CreateParkingReservationDto
-                    {
-                        VisitId = createdVisit.Id,
-                        SlotId = slotId,
-                        VehiclePlate = visit.VehiclePlateNumber
-                    });
-                }
-                catch
-                {
-                    Toasts.Show("Visitor registered, but the parking slot could not be reserved.", VMS.Web.Services.ToastTone.Warning);
-                }
-            }
-
-            foreach (var itemType in selectedItemTypes)
-            {
-                try
-                {
-                    await VisitItemService.CreateAsync(new CreateVisitItemDto
-                    {
-                        VisitId = createdVisit.Id,
-                        ItemName = itemType.ToString(),
-                        ItemType = itemType,
-                        MovementType = ItemMovementType.BroughtIn,
-                        Quantity = 1
-                    });
-                }
-                catch
-                {
-                    // Best-effort — one failed item shouldn't block the rest of check-in.
-                }
-            }
-
-            await GateTrackingService.SaveInfoAsync(createdVisit.Id, hasLaptop, deviceType, ComposeBrandAndTag());
-
-            Toasts.Show($"{createdVisitor.FullName} registered at the gate and ready for handover to reception.");
+            Toasts.Show($"{newVisitorRequest.FullName} registered at the gate and ready for handover to reception.");
             NavigationManager.NavigateTo("/security/visitors");
-        }
-        catch (Exception ex)
-        {
-            errorMessage = string.IsNullOrWhiteSpace(ex.Message) ? "Failed to register gate visitor." : ex.Message;
         }
         finally
         {
