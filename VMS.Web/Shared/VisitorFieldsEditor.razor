@@ -45,18 +45,7 @@
 @if (ShowAttachment)
 {
     <div class="row g-3 align-items-center">
-        <div class="col-auto">
-            <div class="photo-preview">
-                @if (HasValidPhotoUrl)
-                {
-                    <img src="@Visitor.PhotoUrl" alt="Visitor photo preview" />
-                }
-                else
-                {
-                    <i class="bi bi-image text-muted"></i>
-                }
-            </div>
-        </div>
+
         <div class="col">
             <label class="form-label-sm">Attachment</label>
             <div class="file-drop">
