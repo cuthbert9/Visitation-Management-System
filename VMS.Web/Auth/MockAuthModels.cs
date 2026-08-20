@@ -4,7 +4,8 @@ public enum DemoRole
 {
     Security,
     Receptionist,
-    Admin
+    Admin,
+    SalesPersonnel
 }
 
 public static class DemoPermissions
@@ -90,8 +91,19 @@ public static class MockRoleCatalog
                     DemoPermissions.ParkingRead,
                     DemoPermissions.ParkingReserve,
                     DemoPermissions.ParkingRelease,
+                   
+                ]
+            },
+            DemoRole.SalesPersonnel => new MockSession
+            {
+                Role = role,
+                DisplayName = " Sales Personnel",
+                ActorId = 4,
+                Permissions =
+                [
                     DemoPermissions.OutboundVisitsRead,
-                    DemoPermissions.OutboundVisitsCreate
+                    DemoPermissions.OutboundVisitsCreate,
+                    DemoPermissions.OutboundVisitsApprove
                 ]
             },
             _ => new MockSession

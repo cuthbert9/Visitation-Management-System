@@ -44,6 +44,15 @@
                         </span>
                         <i class="bi bi-chevron-right role-option-chevron"></i>
                     </button>
+
+                    <button type="button" class="role-option role-option-sales" @onclick="() => SelectRoleAsync(DemoRole.SalesPersonnel)">
+                        <span class="role-option-icon"><i class="bi bi-graph-up-arrow"></i></span>
+                        <span>
+                            <span class="d-block role-option-title">Continue as Sales Personnel</span>
+                            <span class="d-block role-option-subtitle">Plan &amp; track customer visits</span>
+                        </span>
+                        <i class="bi bi-chevron-right role-option-chevron"></i>
+                    </button>
                 </div>
 
                 <div class="role-divider"><span>Role Simulation</span></div>
@@ -65,13 +74,16 @@
         await MockAuth.InitializeAsync();
         if (MockAuth.IsAuthenticated)
         {
-            NavigationManager.NavigateTo("/visits");
+            NavigationManager.NavigateTo(HomeRouteFor(MockAuth.CurrentSession!.Role));
         }
     }
 
     private async Task SelectRoleAsync(DemoRole role)
     {
         await MockAuth.LoginAsAsync(role);
-        NavigationManager.NavigateTo("/visits");
+        NavigationManager.NavigateTo(HomeRouteFor(role));
     }
+
+    private static string HomeRouteFor(DemoRole role) =>
+        role == DemoRole.SalesPersonnel ? "/visits/outbound" : "/visits";
 }

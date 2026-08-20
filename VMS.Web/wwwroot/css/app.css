@@ -784,6 +784,11 @@ h1, h2, h3, h4, h5, h6 {
    Login page
    --------------------------------- */
 .login-page {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    padding-left: clamp(1rem, 4vw, 3rem);
+    padding-right: clamp(1rem, 4vw, 3rem);
+    box-sizing: border-box;
     min-height: calc(100vh - 3rem);
     display: flex;
     flex-direction: column;
@@ -816,11 +821,12 @@ h1, h2, h3, h4, h5, h6 {
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    padding-right: clamp(3rem, 15vw, 14rem);
 }
 
 .login-card {
     width: 100%;
-    max-width: 420px;
+    max-width: 480px;
     padding: 1.5rem;
 }
 
@@ -913,6 +919,20 @@ h1, h2, h3, h4, h5, h6 {
 
 .role-option-host:hover {
     border-color: var(--vms-primary);
+}
+
+.role-option-sales {
+    background-color: #fffbeb;
+    border-color: #fde68a;
+}
+
+.role-option-sales .role-option-icon {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.role-option-sales .role-option-title {
+    color: #92400e;
 }
 
 .role-divider {

@@ -79,6 +79,11 @@ else
                     <span class="form-section-label">Items Carried</span>
                 </div>
 
+                <div class="input-group mb-3" style="max-width: 320px;">
+                    <input class="form-control" placeholder="Type an item, press Enter" @bind="newItemName" @bind:event="oninput" @onkeydown="HandleItemKeyDown" />
+                    <button type="button" class="btn btn-outline-secondary" @onclick="AddCustomItem">Add</button>
+                </div>
+
                 <div class="d-flex flex-wrap gap-2">
                     @foreach (var itemType in Enum.GetValues<VisitItemType>())
                     {
@@ -91,10 +96,19 @@ else
                             @EnumLabels.Format(itemType)
                         </button>
                     }
+                    @foreach (var item in customItems)
+                    {
+                        <span class="status-pill status-pill-blue">
+                            @item
+                            <button type="button" class="btn btn-link p-0 ms-1 border-0 lh-1" style="color: inherit;" @onclick="() => RemoveCustomItem(item)" aria-label="Remove @item">
+                                <i class="bi bi-x-lg small"></i>
+                            </button>
+                        </span>
+                    }
                 </div>
-                @if (selectedItemTypes.Count == 0)
+                @if (selectedItemTypes.Count == 0 && customItems.Count == 0)
                 {
-                    <p class="text-muted small mt-2 mb-0">No items declared — tap a tag to add one.</p>
+                    <p class="text-muted small mt-2 mb-0">No items declared — type one above or tap a tag to add.</p>
                 }
             </div>
         </div>
@@ -178,6 +192,8 @@ else
     private List<ParkingSlotDto> availableSlots = [];
     private string selectedSlotIdValue = "0";
     private HashSet<VisitItemType> selectedItemTypes = [];
+    private List<string> customItems = [];
+    private string newItemName = string.Empty;
     private bool hasLaptop;
     private string deviceType = string.Empty;
     private string deviceBrand = string.Empty;
@@ -211,6 +227,43 @@ else
         {
             selectedItemTypes.Remove(itemType);
         }
+    }
+
+    private void HandleItemKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddCustomItem();
+        }
+    }
+
+    private void AddCustomItem()
+    {
+        var name = newItemName.Trim();
+        newItemName = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return;
+        }
+
+        var matchingPreset = Enum.GetValues<VisitItemType>()
+            .Cast<VisitItemType?>()
+            .FirstOrDefault(itemType => string.Equals(EnumLabels.Format(itemType!.Value), name, StringComparison.OrdinalIgnoreCase));
+
+        if (matchingPreset is { } preset)
+        {
+            selectedItemTypes.Add(preset);
+        }
+        else if (!customItems.Any(existing => string.Equals(existing, name, StringComparison.OrdinalIgnoreCase)))
+        {
+            customItems.Add(name);
+        }
+    }
+
+    private void RemoveCustomItem(string name)
+    {
+        customItems.Remove(name);
     }
 
     // Mocked: Host/Department/Purpose are no longer captured at the gate, so a real

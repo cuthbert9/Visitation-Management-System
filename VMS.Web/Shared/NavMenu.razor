@@ -9,24 +9,27 @@
     <nav class="nav flex-column gap-1">
         @if (CanAccess(DemoPermissions.VisitsRead))
         {
-            @if (CanAccess(DemoPermissions.OutboundVisitsRead))
-            {
-                <NavLink class="@VisitsLinkClass" href="/visits" Match="NavLinkMatch.All"><i class="bi bi-calendar-check"></i> Visits</NavLink>
-
-                <div class="sub-nav">
-                    <NavLink class="nav-link sub-nav-link" href="/visits" Match="NavLinkMatch.All"><i class="bi bi-box-arrow-in-down-left"></i> Inbound Visits</NavLink>
-                    <NavLink class="nav-link sub-nav-link" href="/visits/outbound"><i class="bi bi-box-arrow-up-right"></i> Outbound Visits</NavLink>
-                </div>
-            }
-            else
-            {
-                <NavLink class="nav-link" href="/visits" Match="NavLinkMatch.All"><i class="bi bi-calendar-check"></i> Visits</NavLink>
-            }
+            <NavLink class="nav-link" href="/visits" Match="NavLinkMatch.All"><i class="bi bi-calendar-check"></i> Visits</NavLink>
         }
 
         @if (CanAccess(DemoPermissions.VisitsCreate))
         {
             <NavLink class="nav-link" href="/visits/create"><i class="bi bi-plus-circle"></i> Register Visit</NavLink>
+        }
+
+        @if (CanAccess(DemoPermissions.OutboundVisitsCreate))
+        {
+            <NavLink class="nav-link" href="/visits/outbound/plan"><i class="bi bi-plus-circle"></i> Plan Outbound Visit</NavLink>
+        }
+
+        @if (CanAccess(DemoPermissions.OutboundVisitsRead))
+        {
+            <NavLink class="nav-link" href="/visits/outbound" Match="NavLinkMatch.All"><i class="bi bi-box-arrow-up-right"></i> Outbound Visits</NavLink>
+        }
+
+        @if (CanAccess(DemoPermissions.OutboundVisitsApprove))
+        {
+            <NavLink class="nav-link" href="/visits/outbound/approvals" Match="NavLinkMatch.All"><i class="bi bi-check2-square"></i> Approvals</NavLink>
         }
 
         @if (CanAccess(DemoPermissions.SecurityDashboardRead))
@@ -66,17 +69,6 @@
     {
         NavigationManager.LocationChanged += OnLocationChanged;
     }
-
-    private bool IsVisitsSectionActive
-    {
-        get
-        {
-            var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).Split('?')[0];
-            return relativePath.StartsWith("visits", StringComparison.OrdinalIgnoreCase);
-        }
-    }
-
-    private string VisitsLinkClass => IsVisitsSectionActive ? "nav-link nav-link-section-active" : "nav-link";
 
     private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
