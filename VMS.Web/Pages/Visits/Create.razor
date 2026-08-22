@@ -58,32 +58,32 @@ else
                     <div class="input-icon-wrapper mb-3">
                         <i class="bi bi-search"></i>
                         <input class="form-control" placeholder="Search by name, phone, or ID number" @bind="searchTerm" @bind:event="oninput" />
+
+                        @if (!string.IsNullOrWhiteSpace(searchTerm))
+                        {
+                            var matches = FilteredVisitors.Take(8).ToList();
+
+                            @if (matches.Count > 0)
+                            {
+                                <div class="list-group search-suggestions">
+                                    @foreach (var visitor in matches)
+                                    {
+                                        <button type="button" class="list-group-item list-group-item-action" @onclick="() => SelectVisitor(visitor)">
+                                            <strong>@visitor.FullName</strong> — @visitor.PhoneNumber
+                                            @if (!string.IsNullOrWhiteSpace(visitor.IdentificationNumber))
+                                            {
+                                                <span class="text-muted"> · @visitor.IdentificationNumber</span>
+                                            }
+                                        </button>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="search-suggestions p-2 text-muted small">No matching visitor found. Fill in the details below to register a new one.</div>
+                            }
+                        }
                     </div>
-
-                    @if (!string.IsNullOrWhiteSpace(searchTerm))
-                    {
-                        var matches = FilteredVisitors.Take(8).ToList();
-
-                        @if (matches.Count > 0)
-                        {
-                            <div class="list-group mb-3">
-                                @foreach (var visitor in matches)
-                                {
-                                    <button type="button" class="list-group-item list-group-item-action" @onclick="() => SelectVisitor(visitor)">
-                                        <strong>@visitor.FullName</strong> — @visitor.PhoneNumber
-                                        @if (!string.IsNullOrWhiteSpace(visitor.IdentificationNumber))
-                                        {
-                                            <span class="text-muted"> · @visitor.IdentificationNumber</span>
-                                        }
-                                    </button>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="form-text mb-3">No matching visitor found Fill in the details below to register a new one.</div>
-                        }
-                    }
 
                     <VisitorFieldsEditor Visitor="newVisitorRequest" />
                 }
@@ -107,18 +107,45 @@ else
                     </div>
                     <div class="col-md-6">
                         <label class="form-label-sm">Host</label>
-                        <InputSelect class="form-select" @bind-Value="request.HostEmployeeId" @bind-Value:after="HandleHostChanged">
-                            <option value="0">Select host</option>
-                            @foreach (var employee in employees)
-                            {
-                                <option value="@employee.Id">@employee.FullName@(string.IsNullOrWhiteSpace(employee.Position) ? "" : $" ({employee.Position})")</option>
-                            }
-                        </InputSelect>
                         @if (SelectedEmployee is not null)
                         {
-                            <div class="mt-2">
-                                <span class="text-muted small">Presence:</span>
-                                <span class="status-pill @(SelectedEmployee.IsActive ? "status-pill-green" : "status-pill-gray")">@(SelectedEmployee.IsActive ? "Active" : "Inactive")</span>
+                            <div class="alert alert-info d-flex justify-content-between align-items-center mb-0">
+                                <div>
+                                    <strong>@SelectedEmployee.FullName</strong>@(string.IsNullOrWhiteSpace(SelectedEmployee.Position) ? "" : $" — {SelectedEmployee.Position}")
+                                    <div class="mt-1">
+                                        <span class="text-muted small">Presence:</span>
+                                        <span class="status-pill @(SelectedEmployee.IsActive ? "status-pill-green" : "status-pill-gray")">@(SelectedEmployee.IsActive ? "Active" : "Inactive")</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="ClearSelectedHost">Change</button>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="input-icon-wrapper">
+                                <i class="bi bi-search"></i>
+                                <input class="form-control" placeholder="Search host by name" @bind="hostSearchTerm" @bind:event="oninput" />
+
+                                @if (!string.IsNullOrWhiteSpace(hostSearchTerm))
+                                {
+                                    var hostMatches = FilteredEmployees.Take(8).ToList();
+
+                                    @if (hostMatches.Count > 0)
+                                    {
+                                        <div class="list-group search-suggestions">
+                                            @foreach (var employee in hostMatches)
+                                            {
+                                                <button type="button" class="list-group-item list-group-item-action" @onclick="() => SelectHost(employee)">
+                                                    <strong>@employee.FullName</strong>@(string.IsNullOrWhiteSpace(employee.Position) ? "" : $" — {employee.Position}")
+                                                </button>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="search-suggestions p-2 text-muted small">No matching host found.</div>
+                                    }
+                                }
                             </div>
                         }
                     </div>
@@ -165,6 +192,7 @@ else
     private CreateVisitorDto newVisitorRequest = new();
     private VisitorDto? selectedVisitor;
     private string searchTerm = string.Empty;
+    private string hostSearchTerm = string.Empty;
     private List<VisitorDto> visitors = [];
     private List<EmployeeDto> employees = [];
     private string selectedHostDepartmentName = string.Empty;
@@ -181,6 +209,11 @@ else
             visitor.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
             visitor.PhoneNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
             visitor.IdentificationNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+
+    private IEnumerable<EmployeeDto> FilteredEmployees =>
+        employees.Where(employee =>
+            employee.FullName.Contains(hostSearchTerm, StringComparison.OrdinalIgnoreCase) ||
+            (!string.IsNullOrWhiteSpace(employee.Position) && employee.Position.Contains(hostSearchTerm, StringComparison.OrdinalIgnoreCase)));
 
     protected override async Task OnInitializedAsync()
     {
@@ -213,11 +246,20 @@ else
         searchTerm = string.Empty;
     }
 
-    private void HandleHostChanged()
+    private void SelectHost(EmployeeDto employee)
     {
-        var employee = SelectedEmployee;
-        request.DepartmentId = employee?.DepartmentId ?? 0;
-        selectedHostDepartmentName = employee?.DepartmentName ?? string.Empty;
+        request.HostEmployeeId = employee.Id;
+        request.DepartmentId = employee.DepartmentId;
+        selectedHostDepartmentName = employee.DepartmentName ?? string.Empty;
+        hostSearchTerm = string.Empty;
+    }
+
+    private void ClearSelectedHost()
+    {
+        request.HostEmployeeId = 0;
+        request.DepartmentId = 0;
+        selectedHostDepartmentName = string.Empty;
+        hostSearchTerm = string.Empty;
     }
 
     private void HandleFileSelected(InputFileChangeEventArgs args)

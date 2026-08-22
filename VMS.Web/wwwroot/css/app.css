@@ -346,6 +346,20 @@ h1, h2, h3, h4, h5, h6 {
     padding-left: 2.25rem;
 }
 
+.search-suggestions {
+    position: absolute;
+    top: calc(100% + 0.25rem);
+    left: 0;
+    right: 0;
+    z-index: 20;
+    max-height: 260px;
+    overflow-y: auto;
+    background: var(--vms-card-bg);
+    border: 1px solid var(--vms-card-border);
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+}
+
 .photo-preview {
     width: 3.5rem;
     height: 3.5rem;

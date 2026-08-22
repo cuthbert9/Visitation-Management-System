@@ -143,20 +143,24 @@ else
                         </div>
                         <div class="col-md-6">
                             <label class="form-label-sm">Brand</label>
-                            <select class="form-select" @bind="deviceBrand">
-                                <option value="">Select brand</option>
-                                <option value="Dell">Dell</option>
-                                <option value="HP">HP</option>
-                                <option value="Lenovo">Lenovo</option>
-                                <option value="Apple">Apple</option>
-                                <option value="Asus">Asus</option>
-                                <option value="Acer">Acer</option>
-                                <option value="Microsoft">Microsoft</option>
-                                <option value="Samsung">Samsung</option>
-                                <option value="MSI">MSI</option>
-                                <option value="Toshiba">Toshiba</option>
-                                <option value="Other">Other</option>
-                            </select>
+                            <div class="input-icon-wrapper">
+                                <i class="bi bi-search"></i>
+                                <input class="form-control" placeholder="Type or search a brand" @bind="deviceBrand" @bind:event="oninput" />
+
+                                @if (!string.IsNullOrWhiteSpace(deviceBrand) && !KnownBrands.Contains(deviceBrand, StringComparer.OrdinalIgnoreCase))
+                                {
+                                    var brandMatches = FilteredBrands.Take(8).ToList();
+                                    @if (brandMatches.Count > 0)
+                                    {
+                                        <div class="list-group search-suggestions">
+                                            @foreach (var brand in brandMatches)
+                                            {
+                                                <button type="button" class="list-group-item list-group-item-action" @onclick="() => SelectBrand(brand)">@brand</button>
+                                            }
+                                        </div>
+                                    }
+                                }
+                            </div>
                         </div>
                     </div>
                     <div class="row g-3">
@@ -198,6 +202,19 @@ else
     private string deviceType = string.Empty;
     private string deviceBrand = string.Empty;
     private string assetTag = string.Empty;
+
+    private static readonly string[] KnownBrands =
+    [
+        "Dell", "HP", "Lenovo", "Apple", "Asus", "Acer", "Microsoft", "Samsung", "MSI", "Toshiba"
+    ];
+
+    private IEnumerable<string> FilteredBrands =>
+        KnownBrands.Where(brand => brand.Contains(deviceBrand, StringComparison.OrdinalIgnoreCase));
+
+    private void SelectBrand(string brand)
+    {
+        deviceBrand = brand;
+    }
     private bool isLoading = true;
     private bool isSaving;
     private string? errorMessage;
