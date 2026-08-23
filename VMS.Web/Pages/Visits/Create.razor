@@ -99,7 +99,7 @@ else
                     <div class="col-md-6">
                         <label class="form-label-sm">Purpose</label>
                         <InputSelect class="form-select" @bind-Value="request.Purpose">
-                            @foreach (var purpose in Enum.GetValues<VisitPurposeType>())
+                            @foreach (var purpose in EnumLabels.SelectableVisitPurposes)
                             {
                                 <option value="@purpose">@EnumLabels.Format(purpose)</option>
                             }

@@ -4,6 +4,24 @@ namespace VMS.Web.Shared;
 
 public static class EnumLabels
 {
+    // VisitPurposeType has legacy aliases sharing values with their renamed counterparts
+    // (e.g. Meeting == OfficialMeeting) so old rows still deserialize — Enum.GetValues would
+    // list both and render duplicate-looking options, so dropdowns should enumerate this
+    // canonical list instead.
+    public static readonly VisitPurposeType[] SelectableVisitPurposes =
+    [
+        VisitPurposeType.OfficialMeeting,
+        VisitPurposeType.Interview,
+        VisitPurposeType.Delivery,
+        VisitPurposeType.Maintenance,
+        VisitPurposeType.Official,
+        VisitPurposeType.Personal,
+        VisitPurposeType.Facilitator,
+        VisitPurposeType.Technician,
+        VisitPurposeType.Other,
+        VisitPurposeType.ExternalAuditor
+    ];
+
     public static string Format(IdentificationType type) => type switch
     {
         IdentificationType.NationalId => "National ID",
@@ -16,15 +34,16 @@ public static class EnumLabels
 
     public static string Format(VisitPurposeType purpose) => purpose switch
     {
-        VisitPurposeType.Meeting => "Meeting",
+        VisitPurposeType.OfficialMeeting => "Official Meeting",
         VisitPurposeType.Interview => "Interview",
         VisitPurposeType.Delivery => "Delivery",
         VisitPurposeType.Maintenance => "Maintenance",
         VisitPurposeType.Official => "Official",
         VisitPurposeType.Personal => "Personal",
-        VisitPurposeType.Training => "Training",
-        VisitPurposeType.ContractorWork => "Contractor Work",
+        VisitPurposeType.Facilitator => "Facilitator",
+        VisitPurposeType.Technician => "Technician",
         VisitPurposeType.Other => "Other",
+        VisitPurposeType.ExternalAuditor => "External Auditor",
         _ => purpose.ToString()
     };
 

@@ -48,7 +48,7 @@ else
                     <label class="form-label-sm">Purpose</label>
                     <select class="form-select" @bind="selectedPurpose">
                         <option value="All">All purposes</option>
-                        @foreach (var purpose in Enum.GetValues<VisitPurposeType>())
+                        @foreach (var purpose in EnumLabels.SelectableVisitPurposes)
                         {
                             <option value="@purpose">@EnumLabels.Format(purpose)</option>
                         }

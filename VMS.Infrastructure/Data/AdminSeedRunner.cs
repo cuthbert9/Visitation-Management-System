@@ -1,55 +1,68 @@
 using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Domain.Entities;
 
-
 namespace VisitorManagementSystem.Infrastructure.Data;
 
 public static class AdminSeedRunner
 {
-    public static async Task<int> SeedSingleAdminAsync(
+    private static readonly (string Number, string FullName, string Position)[] SeedEmployees =
+    [
+        ("EMP-DG-01", "Grace Mwangi", "DirectorGeneral"),
+        ("EMP-DIR-01", "Daniel Okafor", "Director"),
+        ("EMP-MGR-01", "Fatima Ali", "Manager"),
+        ("EMP-OFF-01", "Peter Kimani", "Officer"),
+    ];
+
+    public static async Task SeedEmployeePositionsAsync(
         AppDbContext context,
-        string fullName,
-        string email,
-        string password,
         CancellationToken cancellationToken = default)
     {
         await context.Database.MigrateAsync(cancellationToken);
 
-        var existingUser = await context.Users.FirstOrDefaultAsync(cancellationToken);
-        if (existingUser is not null)
-        {
-            return existingUser.Id;
-        }
+        var department = await context.Departments
+            .FirstOrDefaultAsync(department => department.Code == "EXEC", cancellationToken);
 
-        var adminRole = await context.Roles
-            .FirstOrDefaultAsync(role => role.Name == "Admin", cancellationToken);
-
-        if (adminRole is null)
+        if (department is null)
         {
-            adminRole = new Role
+            var seedNow = DateTime.UtcNow;
+            department = new Department
             {
-                Name = "Admin",
-                Description = "System administrator"
+                Code = "EXEC",
+                Name = "Executive Office",
+                CreatedAt = seedNow,
+                UpdatedAt = seedNow
             };
 
-            context.Roles.Add(adminRole);
+            context.Departments.Add(department);
             await context.SaveChangesAsync(cancellationToken);
         }
 
-        var now = DateTime.UtcNow;
-        var adminUser = new User
+        foreach (var seed in SeedEmployees)
         {
-            FullName = fullName.Trim(),
-            Email = email.Trim().ToLowerInvariant(),
-            PasswordHash = password,
-            RoleId = adminRole.Id,
-            CreatedAt = now,
-            UpdatedAt = now
-        };
+            var existing = await context.Employees
+                .FirstOrDefaultAsync(employee => employee.EmployeeNumber == seed.Number, cancellationToken);
 
-        context.Users.Add(adminUser);
+            if (existing is null)
+            {
+                var now = DateTime.UtcNow;
+                context.Employees.Add(new Employee
+                {
+                    EmployeeNumber = seed.Number,
+                    FullName = seed.FullName,
+                    Position = seed.Position,
+                    DepartmentId = department.Id,
+                    IsActive = true,
+                    CreatedAt = now,
+                    UpdatedAt = now
+                });
+            }
+            else if (existing.DepartmentId != department.Id)
+            {
+                existing.DepartmentId = department.Id;
+                existing.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+
         await context.SaveChangesAsync(cancellationToken);
-
-        return adminUser.Id;
     }
 }

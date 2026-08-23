@@ -53,18 +53,8 @@ var app = builder.Build();
 // using (var scope = app.Services.CreateScope())
 // {
 //     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-//     const string adminFullName = "System Admin";
-//     const string adminEmail = "admin@vms.local";
-//     const string adminPassword = "Admin@123";
-
-//     var adminUserId = await AdminSeedRunner.SeedSingleAdminAsync(
-//         context,
-//         adminFullName,
-//         adminEmail,
-//         adminPassword);
-
-//     Console.WriteLine($"Admin user ready. UserId={adminUserId}, Email={adminEmail}");
+//     await AdminSeedRunner.SeedEmployeePositionsAsync(context);
+//     Console.WriteLine("Employee position seed complete.");
 // }
 
 app.UseCors("WebClient");

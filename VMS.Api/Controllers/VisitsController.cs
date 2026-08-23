@@ -4,6 +4,7 @@ using VisitorManagementSystem.Api.Models;
 using VisitorManagementSystem.Api.Services;
 using VisitorManagementSystem.Domain.Entities;
 using VisitorManagementSystem.Domain.Enums;
+using VisitorManagementSystem.Domain.Policies;
 using VisitorManagementSystem.Infrastructure.Data;
 
 namespace VisitorManagementSystem.Api.Controllers;
@@ -22,24 +23,32 @@ public class VisitsController : ControllerBase
 
     private readonly AppDbContext _context;
     private readonly IAuditLogService _auditLog;
+    private readonly IEmailService _emailService;
+    private readonly ILogger<VisitsController> _logger;
 
-    public VisitsController(AppDbContext context, IAuditLogService auditLog)
+    public VisitsController(
+        AppDbContext context,
+        IAuditLogService auditLog,
+        IEmailService emailService,
+        ILogger<VisitsController> logger)
     {
         _context = context;
         _auditLog = auditLog;
+        _emailService = emailService;
+        _logger = logger;
     }
 
     [HttpPost]
     public async Task<ActionResult<VisitDto>> Create([FromBody] VisitCreateDto request)
     {
-        var visitorExists = await _context.Visitors.AnyAsync(visitor => visitor.Id == request.VisitorId);
-        if (!visitorExists)
+        var visitor = await _context.Visitors.FirstOrDefaultAsync(visitor => visitor.Id == request.VisitorId);
+        if (visitor is null)
         {
             return BadRequest(new { message = "Visitor does not exist." });
         }
 
-        var hostEmployeeExists = await _context.Employees.AnyAsync(employee => employee.Id == request.HostEmployeeId);
-        if (!hostEmployeeExists)
+        var hostEmployee = await _context.Employees.FirstOrDefaultAsync(employee => employee.Id == request.HostEmployeeId);
+        if (hostEmployee is null)
         {
             return BadRequest(new { message = "Host employee does not exist." });
         }
@@ -59,6 +68,7 @@ public class VisitsController : ControllerBase
 
         var now = DateTime.UtcNow;
         var hasBadge = !string.IsNullOrWhiteSpace(request.BadgeNumber);
+        var proposedDuration = VisitDurationPolicy.TryGetProposedDuration(request.Purpose, hostEmployee.Position);
 
         var visit = new Visit
         {
@@ -70,7 +80,7 @@ public class VisitsController : ControllerBase
             PurposeDescription = request.PurposeDescription,
             Status = VisitStatus.Registered,
             ArrivalTime = now,
-            ExpectedDepartureTime = request.ExpectedDepartureTime,
+            ExpectedDepartureTime = request.ExpectedDepartureTime ?? (proposedDuration.HasValue ? now.Add(proposedDuration.Value) : null),
             VehicleModel = request.VehicleModel,
             VehiclePlateNumber = request.VehiclePlateNumber,
             BadgeNumber = request.BadgeNumber,
@@ -99,6 +109,76 @@ public class VisitsController : ControllerBase
         if (hasBadge)
         {
             await _auditLog.LogAsync(AuditAction.BadgeAssigned, nameof(Visit), visit.Id, request.CheckedInById, $"Badge {visit.BadgeNumber} issued.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(visitor.Email))
+        {
+            _logger.LogInformation("Registration email requested for visit {VisitId} to {Email}.", visit.Id, visitor.Email);
+
+            try
+            {
+                var eastAfricaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Africa/Nairobi");
+                var arrivalDisplay = TimeZoneInfo.ConvertTimeFromUtc(visit.ArrivalTime, eastAfricaTimeZone);
+                var expectedDepartureDisplay = visit.ExpectedDepartureTime.HasValue
+                    ? TimeZoneInfo.ConvertTimeFromUtc(visit.ExpectedDepartureTime.Value, eastAfricaTimeZone).ToString("yyyy-MM-dd HH:mm:ss")
+                    : "Not specified";
+
+                var subject = "Visit registration successful";
+
+                var body = $"""
+                    <div style="margin:0;padding:32px 16px;background-color:#f4f7fb;font-family:Arial,Helvetica,sans-serif;">
+                        <div style="max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(15,76,129,0.08);">
+                            <div style="padding:28px 24px 18px 24px;text-align:center;background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);border-bottom:1px solid #eef2f7;">
+                                <img src="https://zdqixwcixanigsaucwek.supabase.co/storage/v1/object/public/Attachments/magerp-logo.svg" alt="MagERP Logo" style="max-width:160px;width:100%;height:auto;display:block;margin:0 auto 16px auto;" />
+                                <div style="font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:#0f4c81;font-weight:700;">MagERP VMS</div>
+                                <h2 style="margin:10px 0 0 0;font-size:24px;line-height:1.3;color:#111827;">Visit Registration Successful</h2>
+                            </div>
+
+                            <div style="padding:28px 24px;color:#1f2937;line-height:1.7;">
+                                <p style="margin:0 0 14px 0;font-size:16px;color:#111827;">
+                                    <strong>{visitor.FullName}</strong>, Thank you for using MagERP.
+                                </p>
+
+                                <p style="margin:0 0 22px 0;font-size:15px;color:#4b5563;">
+                                    Your visit registration was completed successfully. Please find your registration details below.
+                                </p>
+
+                                <div style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:18px 16px;margin-bottom:22px;">
+                                    <p style="margin:0 0 12px 0;font-size:15px;color:#374151;">
+                                        <strong style="color:#111827;">Registration ID:</strong> {visit.VisitNumber}
+                                    </p>
+                                    <p style="margin:0 0 12px 0;font-size:15px;color:#374151;">
+                                        <strong style="color:#111827;">Registered At :</strong> {arrivalDisplay:yyyy-MM-dd HH:mm:ss}
+                                    </p>
+                                    <p style="margin:0;font-size:15px;color:#374151;">
+                                        <strong style="color:#111827;">Expected Departure :</strong> {expectedDepartureDisplay}
+                                    </p>
+                                </div>
+
+                                <p style="margin:0;font-size:14px;color:#6b7280;">
+                                    Please keep this email for your records. If you need any assistance, kindly contact the administrator.
+                                </p>
+                            </div>
+
+                            <div style="padding:16px 24px;background-color:#f9fafb;border-top:1px solid #e5e7eb;text-align:center;">
+                                <p style="margin:0;font-size:13px;color:#6b7280;">Powered by <strong style="color:#0f4c81;">MagERP VMS</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                """;
+
+                await _emailService.SendEmailAsync(visitor.Email, subject, body);
+
+                _logger.LogInformation("Registration email successfully sent for visit {VisitId} to {Email}.", visit.Id, visitor.Email);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Failed to send registration email for visit {VisitId} to {Email}.", visit.Id, visitor.Email);
+            }
+        }
+        else
+        {
+            _logger.LogInformation("Registration email skipped for visit {VisitId} because the visitor has no email address.", visit.Id);
         }
 
         var createdVisit = await GetVisitEntity(visit.Id);

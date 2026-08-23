@@ -49,7 +49,7 @@ else
                         <td>@employee.FullName</td>
                         <td>@employee.DepartmentName</td>
                         <td>@employee.Position</td>
-                        <td>@(employee.IsActive ? "Yes" : "No")</td>
+                        <td><StatusPill Label="@(employee.IsActive ? "Active" : "Inactive")" Tone="@(employee.IsActive ? "green" : "gray")" IconClass="bi-circle-fill" /></td>
                         <td class="text-end">
                             <div class="btn-group btn-group-sm" role="group">
                                 <a class="btn btn-outline-primary" href="/employees/@employee.Id">View</a>
