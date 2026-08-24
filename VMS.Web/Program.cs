@@ -25,7 +25,7 @@ builder.Services.AddScoped<IStorageService, SupabaseStorageService>();
 builder.Services.AddScoped<IOutboundVisitService, MockOutboundVisitService>();
 builder.Services.AddScoped<IParkingService, ParkingService>();
 builder.Services.AddScoped<IVisitItemService, VisitItemService>();
-builder.Services.AddScoped<IGateTrackingService, MockGateTrackingService>();
+builder.Services.AddScoped<IGateTrackingService, GateTrackingService>();
 builder.Services.AddScoped<ToastService>();
 
 await builder.Build().RunAsync();

@@ -142,13 +142,19 @@ else
                                     <span class="text-muted small">No device</span>
                                 }
                             </td>
-                            <td>@visit.HostEmployee.FullName</td>
+                            <td>@(visit.HostEmployee?.FullName ?? "Awaiting handover")</td>
                             <td>
                                 <div>@visit.ArrivalTime.ToLocalTime().ToString("dd MMM yyyy HH:mm")</div>
                             </td>
                             <td><span class="status-pill @presentation.CssClass">@presentation.Label</span></td>
                             <td class="text-end">
-                                <a class="btn btn-sm btn-outline-secondary" href="/visits/@visit.Id">Open</a>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a class="btn btn-outline-secondary" href="/visits/@visit.Id">Open</a>
+                                    @if (MockAuth.HasPermission(DemoPermissions.GateVisitorsCreate))
+                                    {
+                                        <a class="btn btn-outline-secondary" href="/security/visitors/@visit.Id/edit">Edit</a>
+                                    }
+                                </div>
                             </td>
                         </tr>
                     }

@@ -86,8 +86,8 @@ else
                     @foreach (var visit in visits)
                     {
                         <tr>
-                            <td>@visit.HostEmployee.FullName</td>
-                            <td>@visit.Department.Name</td>
+                            <td>@(visit.HostEmployee?.FullName ?? "Awaiting handover")</td>
+                            <td>@(visit.Department?.Name ?? "Awaiting handover")</td>
                             <td>@visit.ArrivalTime.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
                             <td>@visit.Status</td>
                             <td>@visit.Purpose</td>

@@ -1,4 +1,5 @@
 @page "/visits"
+@using System.Text.Json
 @inject VMS.Web.Services.IVisitService VisitService
 @inject VMS.Web.Services.IAnalyticsService AnalyticsService
 @inject VMS.Web.Auth.MockAuthService MockAuth
@@ -150,8 +151,8 @@ else
                             </td>
                             <td class="text-muted small">@visit.VisitNumber</td>
                             <td>
-                                <div class="fw-semibold">@visit.HostEmployee.FullName</div>
-                                <div class="text-muted small">@visit.Department.Name</div>
+                                <div class="fw-semibold">@(visit.HostEmployee?.FullName ?? "Awaiting handover")</div>
+                                <div class="text-muted small">@(visit.Department?.Name ?? "Awaiting handover")</div>
                             </td>
                             <td>
                                 <div>@visit.ArrivalTime.ToLocalTime().ToString("dd MMM yyyy HH:mm")</div>
@@ -160,7 +161,13 @@ else
                             <td class="text-truncate" style="max-width: 160px;">@visit.Purpose</td>
                             <td><span class="status-pill @presentation.CssClass">@presentation.Label</span></td>
                             <td class="text-end">
-                                <div class="d-flex gap-2 justify-content-end">                               
+                                <div class="d-flex gap-2 justify-content-end">
+                                    @if (nextAction is not null)
+                                    {
+                                        <button class="btn btn-sm @nextAction.Value.CssClass" disabled="@busy" @onclick="() => nextAction.Value.Action(visit)">
+                                            @(busy ? "Saving..." : nextAction.Value.Label)
+                                        </button>
+                                    }
                                     <a class="btn btn-sm btn-outline-secondary" href="/visits/@visit.Id">View</a>
                                 </div>
                             </td>
@@ -199,7 +206,7 @@ else
         visits.Where(visit =>
             (string.IsNullOrWhiteSpace(searchTerm) ||
              visit.Visitor.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-             visit.HostEmployee.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+             (visit.HostEmployee?.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
              visit.VisitNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
             (SelectedStatus is null || visit.Status == SelectedStatus));
 
@@ -285,12 +292,12 @@ else
 
     private (string Label, string CssClass, Func<VisitDto, Task> Action)? GetNextAction(VisitDto visit) => visit.Status switch
     {
-        VisitStatus.Registered => ("Notify Host", "btn-outline-primary", NotifyHostAsync),
-        VisitStatus.WaitingForHost => ("Host Acknowledge", "btn-outline-primary", HostAcknowledgeAsync),
-        VisitStatus.HostAcknowledged => ("Mark Attended", "btn-success", MarkAttendedAsync),
-        VisitStatus.Attended => ("Host Complete", "btn-primary", HostCompleteAsync),
-        VisitStatus.AwaitingExit => ("Confirm Departure", "btn-primary", CheckOutAsync),
-        VisitStatus.Completed => ("Close Visit", "btn-primary", CloseVisitAsync),
+        VisitStatus.Registered when MockAuth.HasPermission(DemoPermissions.VisitsNotifyHost) => ("Notify Host", "btn-outline-primary", NotifyHostAsync),
+        VisitStatus.WaitingForHost when MockAuth.HasPermission(DemoPermissions.VisitsHostAcknowledge) => ("Host Acknowledge", "btn-outline-primary", HostAcknowledgeAsync),
+        VisitStatus.HostAcknowledged when MockAuth.HasPermission(DemoPermissions.VisitsMarkAttended) => ("Mark Attended", "btn-success", MarkAttendedAsync),
+        VisitStatus.Attended when MockAuth.HasPermission(DemoPermissions.VisitsHostComplete) => ("Host Complete", "btn-primary", HostCompleteAsync),
+        VisitStatus.AwaitingExit when MockAuth.HasPermission(DemoPermissions.VisitsCheckOut) => ("Confirm Departure", "btn-primary", CheckOutAsync),
+        VisitStatus.Completed when MockAuth.HasPermission(DemoPermissions.VisitsClose) => ("Close Visit", "btn-primary", CloseVisitAsync),
         _ => null
     };
 
@@ -342,13 +349,42 @@ else
                 // Keep the previous dashboard numbers if the refresh call fails.
             }
         }
-        catch
+        catch (HttpRequestException ex)
         {
-            errorMessage = "Failed to update visit status.";
+            errorMessage = TryExtractMessage(ex.Message) ?? "Failed to update visit status.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = string.IsNullOrWhiteSpace(ex.Message)
+                ? "Failed to update visit status."
+                : ex.Message;
         }
         finally
         {
             busyVisitIds.Remove(visit.Id);
         }
+    }
+
+    private static string? TryExtractMessage(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return null;
+        }
+
+        try
+        {
+            var payload = JsonSerializer.Deserialize<ApiErrorResponse>(raw);
+            return string.IsNullOrWhiteSpace(payload?.Message) ? raw : payload.Message;
+        }
+        catch
+        {
+            return raw;
+        }
+    }
+
+    private sealed class ApiErrorResponse
+    {
+        public string? Message { get; set; }
     }
 }

@@ -48,16 +48,52 @@ else
                             {
                                 <span> · @selectedVisitor.IdentificationType: @selectedVisitor.IdentificationNumber</span>
                             }
+                            @if (selectedGateVisit is not null)
+                            {
+                                <i class="bi bi-shield-check ms-1" style="font-size:0.75em;color:var(--vms-primary);" title="Registered at the gate — continue their check-in"></i>
+                            }
                         </div>
                         <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="ClearSelectedVisitor">Change</button>
                     </div>
+
+                    @if (selectedGateVisit is not null)
+                    {
+                        <div class="alert alert-light border small mb-0 mt-2">
+                            <strong>Already captured at the gate:</strong>
+                            <ul class="mb-0 mt-1">
+                                @if (!string.IsNullOrWhiteSpace(selectedGateVisit.VehiclePlateNumber))
+                                {
+                                    <li>Vehicle: @selectedGateVisit.VehiclePlateNumber</li>
+                                }
+                                @if (selectedGateVisit.ParkingReservations.Count > 0)
+                                {
+                                    <li>Parking: @selectedGateVisit.ParkingReservations.First().SlotCode</li>
+                                }
+                                @if (selectedGateVisit.Items.Count > 0)
+                                {
+                                    <li>Items: @string.Join(", ", selectedGateVisit.Items.Select(item => item.ItemName))</li>
+                                }
+                                @if (selectedGateVisit.Equipment is { HasLaptop: true } equipment)
+                                {
+                                    <li>Device: @equipment.DeviceType@(string.IsNullOrWhiteSpace(equipment.DeviceBrand) ? "" : $" — {equipment.DeviceBrand}")</li>
+                                }
+                                @if (string.IsNullOrWhiteSpace(selectedGateVisit.VehiclePlateNumber)
+                                    && selectedGateVisit.ParkingReservations.Count == 0
+                                    && selectedGateVisit.Items.Count == 0
+                                    && selectedGateVisit.Equipment is not { HasLaptop: true })
+                                {
+                                    <li class="text-muted">Nothing else declared.</li>
+                                }
+                            </ul>
+                        </div>
+                    }
                 }
                 else
                 {
                     <label class="form-label-sm">Search Existing Visitor</label>
                     <div class="input-icon-wrapper mb-3">
                         <i class="bi bi-search"></i>
-                        <input class="form-control" placeholder="Search by name, phone, or ID number" @bind="searchTerm" @bind:event="oninput" />
+                        <input class="form-control" placeholder="Search by name, phone, or ID number" @bind="searchTerm" @bind:event="oninput" @onkeydown="SuppressEnterSubmit" @onkeydown:preventDefault="preventEnterSubmit" />
 
                         @if (!string.IsNullOrWhiteSpace(searchTerm))
                         {
@@ -68,8 +104,14 @@ else
                                 <div class="list-group search-suggestions">
                                     @foreach (var visitor in matches)
                                     {
-                                        <button type="button" class="list-group-item list-group-item-action" @onclick="() => SelectVisitor(visitor)">
-                                            <strong>@visitor.FullName</strong> — @visitor.PhoneNumber
+                                        var gateVisitId = GateVisitIdFor(visitor.Id);
+                                        <button type="button" class="list-group-item list-group-item-action" @onclick="() => SelectVisitor(visitor, gateVisitId)">
+                                            <strong>@visitor.FullName</strong>
+                                            @if (gateVisitId.HasValue)
+                                            {
+                                                <i class="bi bi-shield-check ms-1" style="font-size:0.75em;color:var(--vms-primary);" title="Registered at the gate — continue their check-in"></i>
+                                            }
+                                            — @visitor.PhoneNumber
                                             @if (!string.IsNullOrWhiteSpace(visitor.IdentificationNumber))
                                             {
                                                 <span class="text-muted"> · @visitor.IdentificationNumber</span>
@@ -99,6 +141,7 @@ else
                     <div class="col-md-6">
                         <label class="form-label-sm">Purpose</label>
                         <InputSelect class="form-select" @bind-Value="request.Purpose">
+                            <option value="">Select a purpose...</option>
                             @foreach (var purpose in EnumLabels.SelectableVisitPurposes)
                             {
                                 <option value="@purpose">@EnumLabels.Format(purpose)</option>
@@ -124,7 +167,7 @@ else
                         {
                             <div class="input-icon-wrapper">
                                 <i class="bi bi-search"></i>
-                                <input class="form-control" placeholder="Search host by name" @bind="hostSearchTerm" @bind:event="oninput" />
+                                <input class="form-control" placeholder="Search host by name" @bind="hostSearchTerm" @bind:event="oninput" @onkeydown="SuppressEnterSubmit" @onkeydown:preventDefault="preventEnterSubmit" />
 
                                 @if (!string.IsNullOrWhiteSpace(hostSearchTerm))
                                 {
@@ -191,9 +234,11 @@ else
     private VisitCreateDto request = new();
     private CreateVisitorDto newVisitorRequest = new();
     private VisitorDto? selectedVisitor;
+    private VisitDto? selectedGateVisit;
     private string searchTerm = string.Empty;
     private string hostSearchTerm = string.Empty;
     private List<VisitorDto> visitors = [];
+    private List<VisitDto> gateRegisteredVisits = [];
     private List<EmployeeDto> employees = [];
     private string selectedHostDepartmentName = string.Empty;
     private IBrowserFile? selectedFile;
@@ -210,6 +255,9 @@ else
             visitor.PhoneNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
             visitor.IdentificationNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
 
+    private int? GateVisitIdFor(int visitorId) =>
+        gateRegisteredVisits.FirstOrDefault(visit => visit.VisitorId == visitorId)?.Id;
+
     private IEnumerable<EmployeeDto> FilteredEmployees =>
         employees.Where(employee =>
             employee.FullName.Contains(hostSearchTerm, StringComparison.OrdinalIgnoreCase) ||
@@ -223,6 +271,7 @@ else
         {
             visitors = (await VisitorService.GetVisitorsAsync()).ToList();
             employees = (await EmployeeService.GetEmployeesAsync()).Where(employee => employee.IsActive).ToList();
+            gateRegisteredVisits = (await VisitService.GetGateRegisteredVisitsAsync()).ToList();
         }
         catch
         {
@@ -234,15 +283,26 @@ else
         }
     }
 
-    private void SelectVisitor(VisitorDto visitor)
+    private bool preventEnterSubmit;
+
+    private void SuppressEnterSubmit(KeyboardEventArgs e)
+    {
+        preventEnterSubmit = e.Key == "Enter";
+    }
+
+    private void SelectVisitor(VisitorDto visitor, int? gateVisitId)
     {
         selectedVisitor = visitor;
+        selectedGateVisit = gateVisitId.HasValue
+            ? gateRegisteredVisits.FirstOrDefault(visit => visit.Id == gateVisitId.Value)
+            : null;
         searchTerm = string.Empty;
     }
 
     private void ClearSelectedVisitor()
     {
         selectedVisitor = null;
+        selectedGateVisit = null;
         searchTerm = string.Empty;
     }
 
@@ -278,9 +338,15 @@ else
             return;
         }
 
-        if (request.HostEmployeeId == 0)
+        if (request.HostEmployeeId is null or 0)
         {
             errorMessage = "Select a host.";
+            return;
+        }
+
+        if (request.Purpose is null)
+        {
+            errorMessage = "Select a purpose.";
             return;
         }
 
@@ -290,6 +356,23 @@ else
 
         try
         {
+            if (selectedGateVisit is not null)
+            {
+                // Completing a gate handover — same VisitId, VisitNumber, and everything
+                // security already captured; this just fills in Host/Purpose/Badge.
+                await VisitService.CompleteHandoverAsync(selectedGateVisit.Id, new CompleteHandoverDto
+                {
+                    HostEmployeeId = request.HostEmployeeId.Value,
+                    DepartmentId = request.DepartmentId!.Value,
+                    Purpose = request.Purpose.Value,
+                    PurposeDescription = request.PurposeDescription,
+                    BadgeNumber = request.BadgeNumber
+                });
+
+                NavigationManager.NavigateTo("/visits");
+                return;
+            }
+
             if (selectedVisitor is null)
             {
                 var createdVisitor = await VisitorService.CreateVisitorAsync(newVisitorRequest);

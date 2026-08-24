@@ -13,6 +13,16 @@ public static class AdminSeedRunner
         ("EMP-OFF-01", "Peter Kimani", "Officer"),
     ];
 
+    // Order matters: Users.Id auto-increments from the one existing seed row (Id=1,
+    // matching Receptionist's MockRoleCatalog ActorId). These three land on 2/3/4 in
+    // insertion order, matching Security/Admin(Host)/SalesPersonnel's ActorId exactly.
+    private static readonly (string Email, string FullName)[] SeedUsers =
+    [
+        ("security.demo@vms.local", "Security Demo User"),
+        ("host.demo@vms.local", "Host Demo User"),
+        ("sales.demo@vms.local", "Sales Personnel Demo User"),
+    ];
+
     public static async Task SeedEmployeePositionsAsync(
         AppDbContext context,
         CancellationToken cancellationToken = default)
@@ -61,6 +71,52 @@ public static class AdminSeedRunner
                 existing.DepartmentId = department.Id;
                 existing.UpdatedAt = DateTime.UtcNow;
             }
+        }
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public static async Task SeedDemoUsersAsync(
+        AppDbContext context,
+        CancellationToken cancellationToken = default)
+    {
+        await context.Database.MigrateAsync(cancellationToken);
+
+        var adminRole = await context.Roles
+            .FirstOrDefaultAsync(role => role.Name == "Admin", cancellationToken);
+
+        if (adminRole is null)
+        {
+            adminRole = new Role
+            {
+                Name = "Admin",
+                Description = "System administrator"
+            };
+
+            context.Roles.Add(adminRole);
+            await context.SaveChangesAsync(cancellationToken);
+        }
+
+        foreach (var seed in SeedUsers)
+        {
+            var exists = await context.Users
+                .AnyAsync(user => user.Email == seed.Email, cancellationToken);
+
+            if (exists)
+            {
+                continue;
+            }
+
+            var now = DateTime.UtcNow;
+            context.Users.Add(new User
+            {
+                FullName = seed.FullName,
+                Email = seed.Email,
+                PasswordHash = "demo-not-a-real-login",
+                RoleId = adminRole.Id,
+                CreatedAt = now,
+                UpdatedAt = now
+            });
         }
 
         await context.SaveChangesAsync(cancellationToken);

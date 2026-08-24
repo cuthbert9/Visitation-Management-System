@@ -1,4 +1,5 @@
 @page "/visits/{Id:int}"
+@using System.Text.Json
 @inject VMS.Web.Services.IVisitService VisitService
 @inject VMS.Web.Auth.MockAuthService MockAuth
 
@@ -62,16 +63,16 @@ else
                     </div>
                     <div class="detail-row">
                         <span class="detail-row-label">Host</span>
-                        <span class="detail-row-value">@visit.HostEmployee.FullName</span>
+                        <span class="detail-row-value">@(visit.HostEmployee?.FullName ?? "Awaiting handover")</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-row-label">Department</span>
-                        <span class="detail-row-value">@visit.Department.Name</span>
+                        <span class="detail-row-value">@(visit.Department?.Name ?? "Awaiting handover")</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-row-label">Purpose</span>
                         <span class="detail-row-value">
-                            <span class="status-pill status-pill-gray">@visit.Purpose@(string.IsNullOrWhiteSpace(visit.PurposeDescription) ? "" : $" · {visit.PurposeDescription}")</span>
+                            <span class="status-pill status-pill-gray">@EnumLabels.Format(visit.Purpose)@(string.IsNullOrWhiteSpace(visit.PurposeDescription) ? "" : $" · {visit.PurposeDescription}")</span>
                         </span>
                     </div>
                     <div class="detail-row">
@@ -297,7 +298,7 @@ else
 
         try
         {
-            var actorId = 1;
+            var actorId = MockAuth.CurrentSession?.ActorId ?? 1;
 
             visit = action switch
             {
@@ -314,14 +315,43 @@ else
 
             history = visit is null ? [] : (await VisitService.GetVisitHistoryAsync(Id)).ToList();
         }
-        catch
+        catch (HttpRequestException ex)
         {
-            errorMessage = "Failed to update visit status.";
+            errorMessage = TryExtractMessage(ex.Message) ?? "Failed to update visit status.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = string.IsNullOrWhiteSpace(ex.Message)
+                ? "Failed to update visit status."
+                : ex.Message;
         }
         finally
         {
             isActing = false;
         }
+    }
+
+    private static string? TryExtractMessage(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return null;
+        }
+
+        try
+        {
+            var payload = JsonSerializer.Deserialize<ApiErrorResponse>(raw);
+            return string.IsNullOrWhiteSpace(payload?.Message) ? raw : payload.Message;
+        }
+        catch
+        {
+            return raw;
+        }
+    }
+
+    private sealed class ApiErrorResponse
+    {
+        public string? Message { get; set; }
     }
 
     private static bool HasValidAttachmentUrl(string? url)

@@ -21,6 +21,14 @@ public class VisitsController : ControllerBase
         VisitStatus.Attended
     ];
 
+    private static readonly VisitStatus[] ClosedStatuses =
+    [
+        VisitStatus.Completed,
+        VisitStatus.Closed,
+        VisitStatus.Cancelled,
+        VisitStatus.Denied
+    ];
+
     private readonly AppDbContext _context;
     private readonly IAuditLogService _auditLog;
     private readonly IEmailService _emailService;
@@ -47,20 +55,27 @@ public class VisitsController : ControllerBase
             return BadRequest(new { message = "Visitor does not exist." });
         }
 
-        var hostEmployee = await _context.Employees.FirstOrDefaultAsync(employee => employee.Id == request.HostEmployeeId);
-        if (hostEmployee is null)
+        Employee? hostEmployee = null;
+        if (request.HostEmployeeId.HasValue)
         {
-            return BadRequest(new { message = "Host employee does not exist." });
+            hostEmployee = await _context.Employees.FirstOrDefaultAsync(employee => employee.Id == request.HostEmployeeId.Value);
+            if (hostEmployee is null)
+            {
+                return BadRequest(new { message = "Host employee does not exist." });
+            }
         }
 
-        var departmentExists = await _context.Departments.AnyAsync(department => department.Id == request.DepartmentId);
-        if (!departmentExists)
+        if (request.DepartmentId.HasValue)
         {
-            return BadRequest(new { message = "Department does not exist." });
+            var departmentExists = await _context.Departments.AnyAsync(department => department.Id == request.DepartmentId.Value);
+            if (!departmentExists)
+            {
+                return BadRequest(new { message = "Department does not exist." });
+            }
         }
 
         var checkedInByExists = await _context.Users.AnyAsync(user => user.Id == request.CheckedInById);
-        
+
         if (!checkedInByExists)
         {
             return BadRequest(new { message = "Checking-in user does not exist." });
@@ -68,7 +83,10 @@ public class VisitsController : ControllerBase
 
         var now = DateTime.UtcNow;
         var hasBadge = !string.IsNullOrWhiteSpace(request.BadgeNumber);
-        var proposedDuration = VisitDurationPolicy.TryGetProposedDuration(request.Purpose, hostEmployee.Position);
+        var isFullyRegistered = request.HostEmployeeId.HasValue && request.DepartmentId.HasValue && request.Purpose.HasValue;
+        var proposedDuration = hostEmployee is not null
+            ? VisitDurationPolicy.TryGetProposedDuration(request.Purpose!.Value, hostEmployee.Position)
+            : null;
 
         var visit = new Visit
         {
@@ -78,7 +96,7 @@ public class VisitsController : ControllerBase
             DepartmentId = request.DepartmentId,
             Purpose = request.Purpose,
             PurposeDescription = request.PurposeDescription,
-            Status = VisitStatus.Registered,
+            Status = isFullyRegistered ? VisitStatus.Registered : VisitStatus.GateRegistered,
             ArrivalTime = now,
             ExpectedDepartureTime = request.ExpectedDepartureTime ?? (proposedDuration.HasValue ? now.Add(proposedDuration.Value) : null),
             VehicleModel = request.VehicleModel,
@@ -99,7 +117,7 @@ public class VisitsController : ControllerBase
         {
             VisitId = visit.Id,
             FromStatus = null,
-            ToStatus = VisitStatus.Registered,
+            ToStatus = visit.Status,
             ChangedByUserId = request.CheckedInById,
             ChangedAt = now
         });
@@ -111,7 +129,7 @@ public class VisitsController : ControllerBase
             await _auditLog.LogAsync(AuditAction.BadgeAssigned, nameof(Visit), visit.Id, request.CheckedInById, $"Badge {visit.BadgeNumber} issued.");
         }
 
-        if (!string.IsNullOrWhiteSpace(visitor.Email))
+        if (isFullyRegistered && !string.IsNullOrWhiteSpace(visitor.Email))
         {
             _logger.LogInformation("Registration email requested for visit {VisitId} to {Email}.", visit.Id, visitor.Email);
 
@@ -178,23 +196,163 @@ public class VisitsController : ControllerBase
         }
         else
         {
-            _logger.LogInformation("Registration email skipped for visit {VisitId} because the visitor has no email address.", visit.Id);
+            _logger.LogInformation(
+                "Registration email skipped for visit {VisitId}: fully registered = {IsFullyRegistered}, has email = {HasEmail}.",
+                visit.Id, isFullyRegistered, !string.IsNullOrWhiteSpace(visitor.Email));
         }
 
         var createdVisit = await GetVisitEntity(visit.Id);
         return CreatedAtAction(nameof(GetById), new { id = visit.Id }, VisitMappings.ToVisitDto(createdVisit!));
     }
 
+    [HttpPatch("{id:int}/complete-handover")]
+    public async Task<ActionResult<VisitDto>> CompleteHandover(int id, [FromBody] CompleteHandoverDto request)
+    {
+        var visit = await GetVisitEntity(id);
+        if (visit is null)
+        {
+            return NotFound();
+        }
+
+        if (visit.Status != VisitStatus.GateRegistered)
+        {
+            return Conflict(new { message = "Only visits awaiting reception handover can be completed this way." });
+        }
+
+        var hostEmployee = await _context.Employees.FirstOrDefaultAsync(employee => employee.Id == request.HostEmployeeId);
+        if (hostEmployee is null)
+        {
+            return BadRequest(new { message = "Host employee does not exist." });
+        }
+
+        var departmentExists = await _context.Departments.AnyAsync(department => department.Id == request.DepartmentId);
+        if (!departmentExists)
+        {
+            return BadRequest(new { message = "Department does not exist." });
+        }
+
+        var now = DateTime.UtcNow;
+        var proposedDuration = VisitDurationPolicy.TryGetProposedDuration(request.Purpose, hostEmployee.Position);
+        var hasBadge = !string.IsNullOrWhiteSpace(request.BadgeNumber);
+
+        visit.HostEmployeeId = request.HostEmployeeId;
+        visit.DepartmentId = request.DepartmentId;
+        visit.Purpose = request.Purpose;
+        visit.PurposeDescription = request.PurposeDescription;
+        visit.BadgeNumber = request.BadgeNumber;
+        visit.ExpectedDepartureTime ??= proposedDuration.HasValue ? visit.ArrivalTime.Add(proposedDuration.Value) : null;
+        if (hasBadge)
+        {
+            visit.BadgeStatus = BadgeStatus.Issued;
+            visit.BadgeIssuedAt = now;
+        }
+
+        AppendHistory(visit, VisitStatus.Registered, visit.CheckedInById, "Reception completed handover.");
+
+        await _context.SaveChangesAsync();
+        await _auditLog.LogAsync(AuditAction.StatusChanged, nameof(Visit), visit.Id, visit.CheckedInById, "Reception completed gate handover.");
+
+        if (!string.IsNullOrWhiteSpace(visit.Visitor.Email))
+        {
+            try
+            {
+                var eastAfricaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Africa/Nairobi");
+                var arrivalDisplay = TimeZoneInfo.ConvertTimeFromUtc(visit.ArrivalTime, eastAfricaTimeZone);
+                var expectedDepartureDisplay = visit.ExpectedDepartureTime.HasValue
+                    ? TimeZoneInfo.ConvertTimeFromUtc(visit.ExpectedDepartureTime.Value, eastAfricaTimeZone).ToString("yyyy-MM-dd HH:mm:ss")
+                    : "Not specified";
+
+                var subject = "Visit registration successful";
+
+                var body = $"""
+                    <div style="margin:0;padding:32px 16px;background-color:#f4f7fb;font-family:Arial,Helvetica,sans-serif;">
+                        <div style="max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(15,76,129,0.08);">
+                            <div style="padding:28px 24px 18px 24px;text-align:center;background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);border-bottom:1px solid #eef2f7;">
+                                <img src="https://zdqixwcixanigsaucwek.supabase.co/storage/v1/object/public/Attachments/magerp-logo.svg" alt="MagERP Logo" style="max-width:160px;width:100%;height:auto;display:block;margin:0 auto 16px auto;" />
+                                <div style="font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:#0f4c81;font-weight:700;">MagERP VMS</div>
+                                <h2 style="margin:10px 0 0 0;font-size:24px;line-height:1.3;color:#111827;">Visit Registration Successful</h2>
+                            </div>
+
+                            <div style="padding:28px 24px;color:#1f2937;line-height:1.7;">
+                                <p style="margin:0 0 14px 0;font-size:16px;color:#111827;">
+                                    <strong>{visit.Visitor.FullName}</strong>, Thank you for using MagERP.
+                                </p>
+
+                                <p style="margin:0 0 22px 0;font-size:15px;color:#4b5563;">
+                                    Your visit registration was completed successfully. Please find your registration details below.
+                                </p>
+
+                                <div style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:18px 16px;margin-bottom:22px;">
+                                    <p style="margin:0 0 12px 0;font-size:15px;color:#374151;">
+                                        <strong style="color:#111827;">Registration ID:</strong> {visit.VisitNumber}
+                                    </p>
+                                    <p style="margin:0 0 12px 0;font-size:15px;color:#374151;">
+                                        <strong style="color:#111827;">Registered At :</strong> {arrivalDisplay:yyyy-MM-dd HH:mm:ss}
+                                    </p>
+                                    <p style="margin:0;font-size:15px;color:#374151;">
+                                        <strong style="color:#111827;">Expected Departure :</strong> {expectedDepartureDisplay}
+                                    </p>
+                                </div>
+
+                                <p style="margin:0;font-size:14px;color:#6b7280;">
+                                    Please keep this email for your records. If you need any assistance, kindly contact the administrator.
+                                </p>
+                            </div>
+
+                            <div style="padding:16px 24px;background-color:#f9fafb;border-top:1px solid #e5e7eb;text-align:center;">
+                                <p style="margin:0;font-size:13px;color:#6b7280;">Powered by <strong style="color:#0f4c81;">MagERP VMS</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                """;
+
+                await _emailService.SendEmailAsync(visit.Visitor.Email, subject, body);
+                _logger.LogInformation("Registration email successfully sent for visit {VisitId} to {Email}.", visit.Id, visit.Visitor.Email);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Failed to send registration email for visit {VisitId} to {Email}.", visit.Id, visit.Visitor.Email);
+            }
+        }
+
+        return Ok(VisitMappings.ToVisitDto(visit));
+    }
+
+    [HttpPatch("{id:int}/gate-details")]
+    public async Task<ActionResult<VisitDto>> UpdateGateDetails(int id, [FromBody] UpdateGateDetailsDto request)
+    {
+        var visit = await GetVisitEntity(id);
+        if (visit is null)
+        {
+            return NotFound();
+        }
+
+        if (ClosedStatuses.Contains(visit.Status))
+        {
+            return Conflict(new { message = "This visit is already closed out and can no longer be edited." });
+        }
+
+        visit.VehicleModel = request.VehicleModel;
+        visit.VehiclePlateNumber = request.VehiclePlateNumber;
+        visit.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(VisitMappings.ToVisitDto(visit));
+    }
+
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<VisitDto>>> GetAll()
+    public async Task<ActionResult<IEnumerable<VisitDto>>> GetAll([FromQuery] VisitStatus? status = null)
     {
         var visits = await _context.Visits
             .AsNoTracking()
+            .Where(visit => status == null || visit.Status == status)
             .Include(visit => visit.Visitor)
-            .Include(visit => visit.HostEmployee).ThenInclude(employee => employee.Department)
+            .Include(visit => visit.HostEmployee).ThenInclude(employee => employee!.Department)
             .Include(visit => visit.Department)
             .Include(visit => visit.ParkingReservations).ThenInclude(reservation => reservation.Slot)
             .Include(visit => visit.Items)
+            .Include(visit => visit.Equipment)
             .OrderByDescending(visit => visit.ArrivalTime)
             .Select(visit => VisitMappings.ToVisitDto(visit))
             .ToListAsync();
@@ -550,10 +708,11 @@ public class VisitsController : ControllerBase
 
         return query
             .Include(visit => visit.Visitor)
-            .Include(visit => visit.HostEmployee).ThenInclude(employee => employee.Department)
+            .Include(visit => visit.HostEmployee).ThenInclude(employee => employee!.Department)
             .Include(visit => visit.Department)
             .Include(visit => visit.ParkingReservations).ThenInclude(reservation => reservation.Slot)
             .Include(visit => visit.Items)
+            .Include(visit => visit.Equipment)
             .FirstOrDefaultAsync(visit => visit.Id == id);
     }
 }
@@ -638,7 +797,7 @@ internal static class VisitMappings
                 CreatedAt = visit.Visitor.CreatedAt,
                 UpdatedAt = visit.Visitor.UpdatedAt
             },
-            HostEmployee = new EmployeeDto
+            HostEmployee = visit.HostEmployee is null ? null : new EmployeeDto
             {
                 Id = visit.HostEmployee.Id,
                 EmployeeNumber = visit.HostEmployee.EmployeeNumber,
@@ -652,7 +811,7 @@ internal static class VisitMappings
                 CreatedAt = visit.HostEmployee.CreatedAt,
                 UpdatedAt = visit.HostEmployee.UpdatedAt
             },
-            Department = new DepartmentDto
+            Department = visit.Department is null ? null : new DepartmentDto
             {
                 Id = visit.Department.Id,
                 Code = visit.Department.Code,
@@ -661,6 +820,16 @@ internal static class VisitMappings
                 IsActive = visit.Department.IsActive,
                 CreatedAt = visit.Department.CreatedAt,
                 UpdatedAt = visit.Department.UpdatedAt
+            },
+            Equipment = visit.Equipment is null ? null : new VisitEquipmentDto
+            {
+                Id = visit.Equipment.Id,
+                VisitId = visit.Equipment.VisitId,
+                HasLaptop = visit.Equipment.HasLaptop,
+                DeviceType = visit.Equipment.DeviceType,
+                DeviceBrand = visit.Equipment.DeviceBrand,
+                AssetTag = visit.Equipment.AssetTag,
+                PcConfirmedReturned = visit.Equipment.PcConfirmedReturned
             }
         };
     }

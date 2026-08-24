@@ -16,4 +16,10 @@ public class VisitItemService(HttpClient httpClient) : IVisitItemService
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<VisitItemDto>();
     }
+
+    public async Task DeleteAsync(int id)
+    {
+        var response = await httpClient.DeleteAsync($"api/visititems/{id}");
+        response.EnsureSuccessStatusCode();
+    }
 }

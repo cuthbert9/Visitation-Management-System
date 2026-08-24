@@ -154,7 +154,7 @@ else
                             <td>@visit.Visitor.FullName</td>
                             <td>@(string.IsNullOrWhiteSpace(visit.VehiclePlateNumber) ? "-" : visit.VehiclePlateNumber)</td>
                             <td>@(gateInfo is { HasLaptop: true } ? gateInfo.DeviceType : "No device")</td>
-                            <td>@visit.HostEmployee.FullName</td>
+                            <td>@(visit.HostEmployee?.FullName ?? "Awaiting handover")</td>
                             <td>@visit.ArrivalTime.ToLocalTime().ToString("dd MMM, HH:mm")</td>
                             <td><span class="status-pill @presentation.CssClass">@presentation.Label</span></td>
                         </tr>

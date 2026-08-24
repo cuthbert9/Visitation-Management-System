@@ -32,6 +32,9 @@ public static class EnumLabels
         _ => type.ToString()
     };
 
+    public static string Format(VisitPurposeType? purpose) =>
+        purpose.HasValue ? Format(purpose.Value) : "Awaiting handover";
+
     public static string Format(VisitPurposeType purpose) => purpose switch
     {
         VisitPurposeType.OfficialMeeting => "Official Meeting",

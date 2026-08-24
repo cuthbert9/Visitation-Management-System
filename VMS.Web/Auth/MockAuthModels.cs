@@ -66,7 +66,8 @@ public static class MockRoleCatalog
                     DemoPermissions.SecurityReportsRead,
                     DemoPermissions.ParkingRead,
                     DemoPermissions.ParkingReserve,
-                    DemoPermissions.ParkingRelease
+                    DemoPermissions.ParkingRelease,
+                    DemoPermissions.VisitsCheckOut
                 ]
             },
             DemoRole.Receptionist => new MockSession
@@ -127,9 +128,7 @@ public static class MockRoleCatalog
                     DemoPermissions.ParkingManageSlots,
                     DemoPermissions.ParkingReserve,
                     DemoPermissions.ParkingRelease,
-                    DemoPermissions.OutboundVisitsRead,
-                    DemoPermissions.OutboundVisitsCreate,
-                    DemoPermissions.OutboundVisitsApprove
+                   
                 ]
             }
         };

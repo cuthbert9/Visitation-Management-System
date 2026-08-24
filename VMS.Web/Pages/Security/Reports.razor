@@ -154,7 +154,7 @@ else
 
                             <tr>
                                 <td>@visit.Visitor.FullName</td>
-                                <td>@visit.HostEmployee.FullName</td>
+                                <td>@(visit.HostEmployee?.FullName ?? "Awaiting handover")</td>
                                 <td>@EnumLabels.Format(visit.Purpose)</td>
                                 <td>@visit.ArrivalTime.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
                                 <td>@(visit.DepartureTime.HasValue ? visit.DepartureTime.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm") : "-")</td>
@@ -251,7 +251,7 @@ else
             return (IReadOnlyList<string>)new[]
             {
                 visit.Visitor.FullName,
-                visit.HostEmployee.FullName,
+                visit.HostEmployee?.FullName ?? "Awaiting handover",
                 EnumLabels.Format(visit.Purpose),
                 visit.ArrivalTime.ToLocalTime().ToString("dd MMM yyyy HH:mm"),
                 visit.DepartureTime.HasValue ? visit.DepartureTime.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm") : "-",

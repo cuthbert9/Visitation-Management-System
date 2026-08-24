@@ -333,7 +333,7 @@ h1, h2, h3, h4, h5, h6 {
     position: relative;
 }
 
-.input-icon-wrapper i {
+.input-icon-wrapper > i {
     position: absolute;
     left: 0.85rem;
     top: 50%;

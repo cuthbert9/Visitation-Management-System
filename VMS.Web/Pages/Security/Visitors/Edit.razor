@@ -1,0 +1,477 @@
+@page "/security/visitors/{Id:int}/edit"
+@inject VMS.Web.Services.IVisitService VisitService
+@inject VMS.Web.Services.IVisitItemService VisitItemService
+@inject VMS.Web.Services.IParkingService ParkingService
+@inject VMS.Web.Services.IGateTrackingService GateTrackingService
+@inject VMS.Web.Services.ToastService Toasts
+@inject VMS.Web.Auth.MockAuthService MockAuth
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit Gate Details</PageTitle>
+
+<div class="mb-3">
+    <a href="/security/visitors" class="text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Back to Manage Visitors</a>
+</div>
+
+<h1 class="mb-1">Edit Gate Details</h1>
+<p class="text-muted mb-4">Update what security captured for this visitor at the gate.</p>
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (!MockAuth.HasPermission(DemoPermissions.GateVisitorsCreate))
+{
+    <div class="alert alert-warning">Your current demo role cannot edit gate details.</div>
+}
+else if (visit is null)
+{
+    <div class="alert alert-warning">Visit not found.</div>
+}
+else if (isClosed)
+{
+    <div class="alert alert-secondary">This visit is already closed out and can no longer be edited.</div>
+}
+else
+{
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <EditForm Model="visit" OnValidSubmit="HandleSubmitAsync">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-person-vcard text-primary"></i>
+                    <span class="form-section-label">Visitor Details</span>
+                </div>
+
+                <div class="alert alert-info d-flex justify-content-between align-items-center mb-0">
+                    <div>
+                        <strong>@visit.Visitor.FullName</strong>
+                        @if (!string.IsNullOrWhiteSpace(visit.Visitor.IdentificationNumber))
+                        {
+                            <span> · @visit.Visitor.IdentificationType: @visit.Visitor.IdentificationNumber</span>
+                        }
+                    </div>
+                    <a class="btn btn-sm btn-outline-secondary" href="@($"/visitors/{visit.VisitorId}/edit")">Edit Identity</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-car-front text-primary"></i>
+                    <span class="form-section-label">Vehicle &amp; Parking</span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label-sm">License Plate</label>
+                        <input class="form-control" placeholder="e.g. T 123 ABC" @bind="vehiclePlate" @onkeydown="SuppressEnterSubmit" @onkeydown:preventDefault="preventEnterSubmit" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Parking Slot / Area</label>
+                        <select class="form-select" @bind="selectedSlotIdValue">
+                            <option value="0">No parking needed</option>
+                            @foreach (var slot in availableSlots)
+                            {
+                                <option value="@slot.Id">@slot.Code@(string.IsNullOrWhiteSpace(slot.Zone) ? "" : $" ({slot.Zone})")</option>
+                            }
+                        </select>
+                        @if (availableSlots.Count == 0)
+                        {
+                            <div class="form-text">No parking slots currently available.</div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-bag text-primary"></i>
+                    <span class="form-section-label">Items Carried</span>
+                </div>
+
+                <div class="input-group mb-3" style="max-width: 320px;">
+                    <input class="form-control" placeholder="Type an item, press Enter" @bind="newItemName" @bind:event="oninput" @onkeydown="HandleItemKeyDown" @onkeydown:preventDefault="preventItemEnter" />
+                    <button type="button" class="btn btn-outline-secondary" @onclick="AddCustomItem">Add</button>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var itemType in Enum.GetValues<VisitItemType>())
+                    {
+                        var isSelected = selectedItemTypes.Contains(itemType);
+                        <button type="button" class="status-pill @(isSelected ? "status-pill-blue" : "status-pill-gray")" @onclick="() => ToggleItemType(itemType)">
+                            @if (isSelected)
+                            {
+                                <i class="bi bi-check-lg me-1"></i>
+                            }
+                            @EnumLabels.Format(itemType)
+                        </button>
+                    }
+                    @foreach (var item in customItems)
+                    {
+                        <span class="status-pill status-pill-blue">
+                            @item
+                            <button type="button" class="btn btn-link p-0 ms-1 border-0 lh-1" style="color: inherit;" @onclick="() => RemoveCustomItem(item)" aria-label="Remove @item">
+                                <i class="bi bi-x-lg small"></i>
+                            </button>
+                        </span>
+                    }
+                </div>
+                @if (selectedItemTypes.Count == 0 && customItems.Count == 0)
+                {
+                    <p class="text-muted small mt-2 mb-0">No items declared — type one above or tap a tag to add.</p>
+                }
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-laptop text-primary"></i>
+                    <span class="form-section-label">Equipment (Compliance-Critical)</span>
+                </div>
+
+                <div class="form-check form-switch mb-3 d-flex align-items-start gap-2">
+                    <input class="form-check-input flex-shrink-0" type="checkbox" role="switch" id="hasLaptop" @bind="hasLaptop" />
+                    <label class="form-check-label" for="hasLaptop">
+                        <div>Visitor has a laptop / PC?</div>
+                        <div class="text-muted small">Required — this office verifies equipment on exit</div>
+                    </label>
+                </div>
+
+                @if (hasLaptop)
+                {
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label-sm">PC / Device Type</label>
+                            <select class="form-select" @bind="deviceType">
+                                <option value="">Select type</option>
+                                <option value="Laptop — Company issued">Laptop — Company issued</option>
+                                <option value="Laptop — Personal">Laptop — Personal</option>
+                                <option value="Tablet">Tablet</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-sm">Brand</label>
+                            <div class="input-icon-wrapper">
+                                <i class="bi bi-search"></i>
+                                <input class="form-control" placeholder="Type or search a brand" @bind="deviceBrand" @bind:event="oninput" @onkeydown="SuppressEnterSubmit" @onkeydown:preventDefault="preventEnterSubmit" />
+
+                                @if (!string.IsNullOrWhiteSpace(deviceBrand) && !KnownBrands.Contains(deviceBrand, StringComparer.OrdinalIgnoreCase))
+                                {
+                                    var brandMatches = FilteredBrands.Take(8).ToList();
+                                    @if (brandMatches.Count > 0)
+                                    {
+                                        <div class="list-group search-suggestions">
+                                            @foreach (var brand in brandMatches)
+                                            {
+                                                <button type="button" class="list-group-item list-group-item-action" @onclick="() => SelectBrand(brand)">@brand</button>
+                                            }
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-sm">Asset / Serial Tag</label>
+                            <input class="form-control" placeholder="Optional — e.g. Tag #4471" @bind="assetTag" @onkeydown="SuppressEnterSubmit" @onkeydown:preventDefault="preventEnterSubmit" />
+                        </div>
+                    </div>
+                    <div class="alert alert-info d-flex align-items-start gap-2 mt-3 mb-0">
+                        <i class="bi bi-info-circle mt-1"></i>
+                        <div class="small">This device will be checked against the exit log. If the visitor leaves without it, or with an untagged device, the <strong>PC Mismatch</strong> flag is raised for the gate to resolve before departure is finalized.</div>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted small mb-0">No device will be recorded for this visitor.</p>
+                }
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary" type="submit" disabled="@isSaving">
+                @(isSaving ? "Saving..." : "Save Changes")
+            </button>
+            <a class="btn btn-outline-secondary" href="/security/visitors">Cancel</a>
+        </div>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private static readonly VisitStatus[] ClosedStatuses =
+    [
+        VisitStatus.Completed,
+        VisitStatus.Closed,
+        VisitStatus.Cancelled,
+        VisitStatus.Denied
+    ];
+
+    private VisitDto? visit;
+    private string vehiclePlate = string.Empty;
+    private List<ParkingSlotDto> availableSlots = [];
+    private string selectedSlotIdValue = "0";
+    private int? originalSlotId;
+    private int? originalReservationId;
+    private HashSet<VisitItemType> selectedItemTypes = [];
+    private List<string> customItems = [];
+    private Dictionary<string, int> existingItemIdsByName = new(StringComparer.OrdinalIgnoreCase);
+    private string newItemName = string.Empty;
+    private bool hasLaptop;
+    private string deviceType = string.Empty;
+    private string deviceBrand = string.Empty;
+    private string assetTag = string.Empty;
+
+    private static readonly string[] KnownBrands =
+    [
+        "Dell", "HP", "Lenovo", "Apple", "Asus", "Acer", "Microsoft", "Samsung", "MSI", "Toshiba"
+    ];
+
+    private IEnumerable<string> FilteredBrands =>
+        KnownBrands.Where(brand => brand.Contains(deviceBrand, StringComparison.OrdinalIgnoreCase));
+
+    private void SelectBrand(string brand)
+    {
+        deviceBrand = brand;
+    }
+
+    private bool isLoading = true;
+    private bool isSaving;
+    private bool preventItemEnter;
+    private bool preventEnterSubmit;
+    private string? errorMessage;
+
+    private bool isClosed => visit is not null && ClosedStatuses.Contains(visit.Status);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await MockAuth.InitializeAsync();
+
+        try
+        {
+            visit = await VisitService.GetVisitByIdAsync(Id);
+            if (visit is null)
+            {
+                return;
+            }
+
+            vehiclePlate = visit.VehiclePlateNumber ?? string.Empty;
+
+            var activeReservation = visit.ParkingReservations.FirstOrDefault(reservation => reservation.Status == ParkingReservationStatus.Reserved);
+            originalSlotId = activeReservation?.SlotId;
+            originalReservationId = activeReservation?.Id;
+            selectedSlotIdValue = originalSlotId?.ToString() ?? "0";
+
+            var slots = await ParkingService.GetSlotsAsync();
+            availableSlots = slots
+                .Where(slot => slot.Status == ParkingSlotStatus.Available || slot.Id == originalSlotId)
+                .ToList();
+
+            var items = await VisitItemService.GetByVisitAsync(Id);
+            foreach (var item in items)
+            {
+                existingItemIdsByName[item.ItemName] = item.Id;
+
+                var matchingPreset = Enum.GetValues<VisitItemType>()
+                    .Cast<VisitItemType?>()
+                    .FirstOrDefault(itemType => string.Equals(EnumLabels.Format(itemType!.Value), item.ItemName, StringComparison.OrdinalIgnoreCase));
+
+                if (matchingPreset is { } preset)
+                {
+                    selectedItemTypes.Add(preset);
+                }
+                else
+                {
+                    customItems.Add(item.ItemName);
+                }
+            }
+
+            var gateInfo = await GateTrackingService.GetInfoAsync(Id);
+            if (gateInfo is not null)
+            {
+                hasLaptop = gateInfo.HasLaptop;
+                deviceType = gateInfo.DeviceType ?? string.Empty;
+                deviceBrand = gateInfo.DeviceBrand ?? string.Empty;
+                assetTag = gateInfo.AssetTag ?? string.Empty;
+            }
+        }
+        catch
+        {
+            errorMessage = "Failed to load visit data.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ToggleItemType(VisitItemType itemType)
+    {
+        if (!selectedItemTypes.Add(itemType))
+        {
+            selectedItemTypes.Remove(itemType);
+        }
+    }
+
+    private void HandleItemKeyDown(KeyboardEventArgs e)
+    {
+        preventItemEnter = e.Key == "Enter";
+        if (preventItemEnter)
+        {
+            AddCustomItem();
+        }
+    }
+
+    private void SuppressEnterSubmit(KeyboardEventArgs e)
+    {
+        preventEnterSubmit = e.Key == "Enter";
+    }
+
+    private void AddCustomItem()
+    {
+        var name = newItemName.Trim();
+        newItemName = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return;
+        }
+
+        var matchingPreset = Enum.GetValues<VisitItemType>()
+            .Cast<VisitItemType?>()
+            .FirstOrDefault(itemType => string.Equals(EnumLabels.Format(itemType!.Value), name, StringComparison.OrdinalIgnoreCase));
+
+        if (matchingPreset is { } preset)
+        {
+            selectedItemTypes.Add(preset);
+        }
+        else if (!customItems.Any(existing => string.Equals(existing, name, StringComparison.OrdinalIgnoreCase)))
+        {
+            customItems.Add(name);
+        }
+    }
+
+    private void RemoveCustomItem(string name)
+    {
+        customItems.Remove(name);
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        if (visit is null)
+        {
+            return;
+        }
+
+        isSaving = true;
+        errorMessage = null;
+
+        try
+        {
+            await VisitService.UpdateGateDetailsAsync(Id, new UpdateGateDetailsDto
+            {
+                VehicleModel = visit.VehicleModel,
+                VehiclePlateNumber = vehiclePlate
+            });
+
+            int.TryParse(selectedSlotIdValue, out var newSlotId);
+            if (newSlotId != (originalSlotId ?? 0))
+            {
+                if (originalReservationId.HasValue)
+                {
+                    try
+                    {
+                        await ParkingService.ReleaseReservationAsync(originalReservationId.Value, new ReleaseParkingReservationDto());
+                    }
+                    catch
+                    {
+                        Toasts.Show("Could not release the previous parking slot.", VMS.Web.Services.ToastTone.Warning);
+                    }
+                }
+
+                if (newSlotId != 0)
+                {
+                    try
+                    {
+                        await ParkingService.CreateReservationAsync(new CreateParkingReservationDto
+                        {
+                            VisitId = Id,
+                            SlotId = newSlotId,
+                            VehiclePlate = vehiclePlate
+                        });
+                    }
+                    catch
+                    {
+                        Toasts.Show("Could not reserve the new parking slot.", VMS.Web.Services.ToastTone.Warning);
+                    }
+                }
+            }
+
+            var finalNames = selectedItemTypes.Select(EnumLabels.Format).Concat(customItems).ToList();
+
+            foreach (var name in finalNames.Where(name => !existingItemIdsByName.ContainsKey(name)))
+            {
+                var matchedPreset = selectedItemTypes
+                    .Cast<VisitItemType?>()
+                    .FirstOrDefault(type => string.Equals(EnumLabels.Format(type!.Value), name, StringComparison.OrdinalIgnoreCase));
+
+                try
+                {
+                    await VisitItemService.CreateAsync(new CreateVisitItemDto
+                    {
+                        VisitId = Id,
+                        ItemName = name,
+                        ItemType = matchedPreset ?? VisitItemType.Other,
+                        MovementType = ItemMovementType.BroughtIn,
+                        Quantity = 1
+                    });
+                }
+                catch
+                {
+                    // Best-effort — one failed item shouldn't block the rest of the save.
+                }
+            }
+
+            foreach (var (name, itemId) in existingItemIdsByName)
+            {
+                if (!finalNames.Any(final => string.Equals(final, name, StringComparison.OrdinalIgnoreCase)))
+                {
+                    try
+                    {
+                        await VisitItemService.DeleteAsync(itemId);
+                    }
+                    catch
+                    {
+                        // Best-effort — one failed removal shouldn't block the rest of the save.
+                    }
+                }
+            }
+
+            await GateTrackingService.SaveInfoAsync(Id, hasLaptop, deviceType, deviceBrand, assetTag);
+
+            Toasts.Show("Gate details updated.");
+            NavigationManager.NavigateTo("/security/visitors");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = string.IsNullOrWhiteSpace(ex.Message) ? "Failed to update gate details." : ex.Message;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

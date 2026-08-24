@@ -8,10 +8,10 @@ public class Visit
     public string VisitNumber { get; set; } = string.Empty;
 
     public int VisitorId { get; set; }
-    public int HostEmployeeId { get; set; }
-    public int DepartmentId { get; set; }
+    public int? HostEmployeeId { get; set; }
+    public int? DepartmentId { get; set; }
 
-    public VisitPurposeType Purpose { get; set; }
+    public VisitPurposeType? Purpose { get; set; }
     public string? PurposeDescription { get; set; }
 
     public VisitStatus Status { get; set; }
@@ -45,8 +45,8 @@ public class Visit
     public DateTime? ClosedAt { get; set; }
 
     public Visitor Visitor { get; set; } = null!;
-    public Employee HostEmployee { get; set; } = null!;
-    public Department Department { get; set; } = null!;
+    public Employee? HostEmployee { get; set; }
+    public Department? Department { get; set; }
     public User CheckedInBy { get; set; } = null!;
     public User? CheckedOutBy { get; set; }
 
@@ -54,4 +54,5 @@ public class Visit
     public ICollection<VisitStatusHistory> StatusHistory { get; set; } = new List<VisitStatusHistory>();
     public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
     public ICollection<ParkingReservation> ParkingReservations { get; set; } = new List<ParkingReservation>();
+    public VisitEquipment? Equipment { get; set; }
 }

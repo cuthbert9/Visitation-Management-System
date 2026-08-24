@@ -4,6 +4,7 @@ namespace VisitorManagementSystem.Shared.Models;
 
 public enum VisitStatus
 {
+    GateRegistered = 0,
     Registered = 1,
     WaitingForHost = 2,
     HostAcknowledged = 3,
@@ -135,10 +136,10 @@ public class VisitDto
     public string VisitNumber { get; set; } = string.Empty;
 
     public int VisitorId { get; set; }
-    public int HostEmployeeId { get; set; }
-    public int DepartmentId { get; set; }
+    public int? HostEmployeeId { get; set; }
+    public int? DepartmentId { get; set; }
 
-    public VisitPurposeType Purpose { get; set; }
+    public VisitPurposeType? Purpose { get; set; }
     public string? PurposeDescription { get; set; }
 
     public VisitStatus Status { get; set; }
@@ -175,8 +176,9 @@ public class VisitDto
     public List<VisitItemDto> Items { get; set; } = [];
 
     public VisitorDto Visitor { get; set; } = null!;
-    public EmployeeDto HostEmployee { get; set; } = null!;
-    public DepartmentDto Department { get; set; } = null!;
+    public EmployeeDto? HostEmployee { get; set; }
+    public DepartmentDto? Department { get; set; }
+    public VisitEquipmentDto? Equipment { get; set; }
 }
 
 public class VisitCreateDto
@@ -184,17 +186,13 @@ public class VisitCreateDto
     [Required]
     public int VisitorId { get; set; }
 
-    [Required]
-    public int HostEmployeeId { get; set; }
-
-    [Required]
-    public int DepartmentId { get; set; }
+    public int? HostEmployeeId { get; set; }
+    public int? DepartmentId { get; set; }
 
     [Required]
     public int CheckedInById { get; set; }
 
-    [Required]
-    public VisitPurposeType Purpose { get; set; }
+    public VisitPurposeType? Purpose { get; set; }
 
     public string? PurposeDescription { get; set; }
     public DateTime? ExpectedDepartureTime { get; set; }
@@ -202,6 +200,49 @@ public class VisitCreateDto
     public string? VehiclePlateNumber { get; set; }
     public string? BadgeNumber { get; set; }
     public string? AttachmentUrl { get; set; }
+}
+
+public class CompleteHandoverDto
+{
+    [Required]
+    public int HostEmployeeId { get; set; }
+
+    [Required]
+    public int DepartmentId { get; set; }
+
+    [Required]
+    public VisitPurposeType Purpose { get; set; }
+
+    public string? PurposeDescription { get; set; }
+    public string? BadgeNumber { get; set; }
+}
+
+public class UpdateGateDetailsDto
+{
+    public string? VehicleModel { get; set; }
+    public string? VehiclePlateNumber { get; set; }
+}
+
+public class VisitEquipmentDto
+{
+    public int Id { get; set; }
+    public int VisitId { get; set; }
+    public bool HasLaptop { get; set; }
+    public string? DeviceType { get; set; }
+    public string? DeviceBrand { get; set; }
+    public string? AssetTag { get; set; }
+    public bool PcConfirmedReturned { get; set; }
+}
+
+public class CreateVisitEquipmentDto
+{
+    [Required]
+    public int VisitId { get; set; }
+
+    public bool HasLaptop { get; set; }
+    public string? DeviceType { get; set; }
+    public string? DeviceBrand { get; set; }
+    public string? AssetTag { get; set; }
 }
 
 public class VisitNotifyHostDto

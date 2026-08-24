@@ -24,6 +24,7 @@ public class AppDbContext : DbContext
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<ParkingSlot> ParkingSlots => Set<ParkingSlot>();
     public DbSet<ParkingReservation> ParkingReservations => Set<ParkingReservation>();
+    public DbSet<VisitEquipment> VisitEquipment => Set<VisitEquipment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -145,8 +146,7 @@ public class AppDbContext : DbContext
 
             entity.Property(visit => visit.Purpose)
                 .HasConversion<string>()
-                .HasMaxLength(30)
-                .IsRequired();
+                .HasMaxLength(30);
 
             entity.Property(visit => visit.Status)
                 .HasConversion<string>()
@@ -177,11 +177,13 @@ public class AppDbContext : DbContext
             entity.HasOne(visit => visit.HostEmployee)
                 .WithMany(employee => employee.HostedVisits)
                 .HasForeignKey(visit => visit.HostEmployeeId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(visit => visit.Department)
                 .WithMany(department => department.Visits)
                 .HasForeignKey(visit => visit.DepartmentId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(visit => visit.CheckedInBy)
@@ -219,6 +221,23 @@ public class AppDbContext : DbContext
                 .WithMany(visit => visit.Items)
                 .HasForeignKey(item => item.VisitId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<VisitEquipment>(entity =>
+        {
+            entity.HasKey(equipment => equipment.Id);
+            entity.Property(equipment => equipment.DeviceType).HasMaxLength(100);
+            entity.Property(equipment => equipment.DeviceBrand).HasMaxLength(100);
+            entity.Property(equipment => equipment.AssetTag).HasMaxLength(100);
+            entity.Property(equipment => equipment.CreatedAt).IsRequired();
+            entity.Property(equipment => equipment.UpdatedAt).IsRequired();
+
+            entity.HasIndex(equipment => equipment.VisitId).IsUnique();
+
+            entity.HasOne(equipment => equipment.Visit)
+                .WithOne(visit => visit.Equipment)
+                .HasForeignKey<VisitEquipment>(equipment => equipment.VisitId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<VisitStatusHistory>(entity =>

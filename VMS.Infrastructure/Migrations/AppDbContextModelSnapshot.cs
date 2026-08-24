@@ -453,7 +453,7 @@ namespace VMS.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("DepartmentId")
+                    b.Property<int?>("DepartmentId")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime?>("DepartureTime")
@@ -472,11 +472,10 @@ namespace VMS.Infrastructure.Migrations
                     b.Property<DateTime?>("HostCompletedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("HostEmployeeId")
+                    b.Property<int?>("HostEmployeeId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Purpose")
-                        .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("TEXT");
 
@@ -541,6 +540,47 @@ namespace VMS.Infrastructure.Migrations
                     b.HasIndex("VisitorId");
 
                     b.ToTable("Visits");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.VisitEquipment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AssetTag")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DeviceBrand")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DeviceType")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("HasLaptop")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("PcConfirmedReturned")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("VisitId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VisitId")
+                        .IsUnique();
+
+                    b.ToTable("VisitEquipment");
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.VisitItem", b =>
@@ -797,14 +837,12 @@ namespace VMS.Infrastructure.Migrations
                     b.HasOne("VisitorManagementSystem.Domain.Entities.Department", "Department")
                         .WithMany("Visits")
                         .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("VisitorManagementSystem.Domain.Entities.Employee", "HostEmployee")
                         .WithMany("HostedVisits")
                         .HasForeignKey("HostEmployeeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("VisitorManagementSystem.Domain.Entities.Visitor", "Visitor")
                         .WithMany("Visits")
@@ -821,6 +859,17 @@ namespace VMS.Infrastructure.Migrations
                     b.Navigation("HostEmployee");
 
                     b.Navigation("Visitor");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.VisitEquipment", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Domain.Entities.Visit", "Visit")
+                        .WithOne("Equipment")
+                        .HasForeignKey("VisitorManagementSystem.Domain.Entities.VisitEquipment", "VisitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Visit");
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.VisitItem", b =>
@@ -898,6 +947,8 @@ namespace VMS.Infrastructure.Migrations
 
             modelBuilder.Entity("VisitorManagementSystem.Domain.Entities.Visit", b =>
                 {
+                    b.Navigation("Equipment");
+
                     b.Navigation("Items");
 
                     b.Navigation("Notifications");

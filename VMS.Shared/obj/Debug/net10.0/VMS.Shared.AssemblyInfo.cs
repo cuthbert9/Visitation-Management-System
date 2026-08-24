@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("VMS.Shared")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6dc4efa478f238f0af597888e12e88089e17280f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+696c34cc363e3d784edc939d4eef32fec8d74d1a")]
 [assembly: System.Reflection.AssemblyProductAttribute("VMS.Shared")]
 [assembly: System.Reflection.AssemblyTitleAttribute("VMS.Shared")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
