@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("VMS.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+696c34cc363e3d784edc939d4eef32fec8d74d1a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+60812fbb93aeef2d301e94ab3c12cca6ca5d28e0")]
 [assembly: System.Reflection.AssemblyProductAttribute("VMS.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("VMS.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
