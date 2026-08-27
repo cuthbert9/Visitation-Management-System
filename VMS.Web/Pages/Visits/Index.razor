@@ -193,7 +193,11 @@ else
     private VisitsDashboardDto? dashboard;
     private HashSet<int> busyVisitIds = [];
     private string searchTerm = string.Empty;
-    private string statusFilterValue = string.Empty;
+    @* private string statusFilterValue = string.Empty; *@
+    private string statusFilterValue = nameof(VisitStatus.Registered); // Default to showing only registered visits
+
+
+    
     private bool isLoading = true;
     private string? errorMessage;
 
