@@ -1,0 +1,25 @@
+## .NET build output
+bin/
+obj/
+out/
+
+## Visual Studio / VS Code
+.vs/
+.vscode/*
+!.vscode/extensions.json
+*.user
+*.suo
+
+## Rider
+.idea/
+
+## Runtime data
+*.db
+*.db-shm
+*.db-wal
+
+## Logs
+*.log
+
+## OS
+.DS_Store
