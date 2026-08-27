@@ -5,9 +5,10 @@ namespace VisitorManagementSystem.Api.Models;
 public class DepartmentDto
 {
     public int Id { get; set; }
+    public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public int OfficeId { get; set; }
+    public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
@@ -15,21 +16,22 @@ public class DepartmentDto
 public class CreateDepartmentDto
 {
     [Required]
+    public string Code { get; set; } = string.Empty;
+
+    [Required]
     public string Name { get; set; } = string.Empty;
 
     public string? Description { get; set; }
-
-    [Required]
-    public int OfficeId { get; set; }
 }
 
 public class UpdateDepartmentDto
 {
     [Required]
+    public string Code { get; set; } = string.Empty;
+
+    [Required]
     public string Name { get; set; } = string.Empty;
 
     public string? Description { get; set; }
-
-    [Required]
-    public int OfficeId { get; set; }
+    public bool IsActive { get; set; } = true;
 }

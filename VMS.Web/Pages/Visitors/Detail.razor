@@ -40,20 +40,23 @@ else
                 <dt class="col-sm-3">Full Name</dt>
                 <dd class="col-sm-9">@visitor.FullName</dd>
 
-                <dt class="col-sm-3">Phone</dt>
-                <dd class="col-sm-9">@visitor.Phone</dd>
+                <dt class="col-sm-3">Phone Number</dt>
+                <dd class="col-sm-9">@visitor.PhoneNumber</dd>
 
-                <dt class="col-sm-3">National ID</dt>
-                <dd class="col-sm-9">@visitor.NationalId</dd>
+                <dt class="col-sm-3">Email</dt>
+                <dd class="col-sm-9">@visitor.Email</dd>
 
-                <dt class="col-sm-3">Company</dt>
-                <dd class="col-sm-9">@visitor.Company</dd>
+                <dt class="col-sm-3">Identification</dt>
+                <dd class="col-sm-9">@EnumLabels.Format(visitor.IdentificationType) - @visitor.IdentificationNumber</dd>
 
-                <dt class="col-sm-3">Vehicle Plate</dt>
-                <dd class="col-sm-9">@visitor.VehiclePlate</dd>
+                <dt class="col-sm-3">Organization</dt>
+                <dd class="col-sm-9">@visitor.Organization</dd>
 
                 <dt class="col-sm-3">Photo URL</dt>
                 <dd class="col-sm-9">@visitor.PhotoUrl</dd>
+
+                <dt class="col-sm-3">Active</dt>
+                <dd class="col-sm-9">@(visitor.IsActive ? "Yes" : "No")</dd>
             </dl>
         </div>
     </div>
@@ -71,8 +74,9 @@ else
                 <table class="table table-striped mb-0">
                     <thead>
                         <tr>
-                            <th>Office</th>
-                            <th>Visit Date</th>
+                            <th>Host</th>
+                            <th>Department</th>
+                            <th>Arrival</th>
                             <th>Status</th>
                             <th>Purpose</th>
                             <th></th>
@@ -82,8 +86,9 @@ else
                     @foreach (var visit in visits)
                     {
                         <tr>
-                            <td>@visit.Office.Name</td>
-                            <td>@visit.VisitDate.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                            <td>@(visit.HostEmployee?.FullName ?? "Awaiting handover")</td>
+                            <td>@(visit.Department?.Name ?? "Awaiting handover")</td>
+                            <td>@visit.ArrivalTime.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
                             <td>@visit.Status</td>
                             <td>@visit.Purpose</td>
                             <td><a class="btn btn-sm btn-outline-primary" href="/visits/@visit.Id">View</a></td>

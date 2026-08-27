@@ -1,0 +1,289 @@
+@page "/security/dashboard"
+@using VMS.Web.Services
+@inject VMS.Web.Services.IVisitService VisitService
+@inject VMS.Web.Services.IAnalyticsService AnalyticsService
+@inject VMS.Web.Services.IGateTrackingService GateTrackingService
+@inject VMS.Web.Auth.MockAuthService MockAuth
+
+<PageTitle>Security Dashboard</PageTitle>
+
+<div class="mb-4">
+    <h1 class="mb-1">Security Dashboard</h1>
+    <p class="text-muted mb-0">Gate activity at a glance.</p>
+</div>
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else
+{
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Total Visitors Today</div>
+                    <div class="stat-value">@(dashboard?.TotalVisitsToday ?? 0)</div>
+                </div>
+                <div class="stat-icon stat-icon-blue"><i class="bi bi-calendar-check"></i></div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Currently On Site</div>
+                    <div class="stat-value">@(dashboard?.OnSiteNow ?? 0)</div>
+                </div>
+                <div class="stat-icon stat-icon-green"><i class="bi bi-person-check"></i></div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Overstaying</div>
+                    <div class="stat-value">@(dashboard?.Overdue ?? 0)</div>
+                </div>
+                <div class="stat-icon stat-icon-red"><i class="bi bi-exclamation-triangle"></i></div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Visitors With PC On Site</div>
+                    <div class="stat-value">@VisitorsWithPcOnSite</div>
+                </div>
+                <div class="stat-icon stat-icon-gray"><i class="bi bi-laptop"></i></div>
+            </div>
+        </div>
+    </div>
+
+    @if ((dashboard?.Overdue ?? 0) > 0)
+    {
+        <div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div><strong>@dashboard!.Overdue</strong> visitor@(dashboard.Overdue == 1 ? " has" : "s have") exceeded their expected duration. Follow up required.</div>
+        </div>
+    }
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="form-section-label mb-3">Visits This Week</div>
+                    @if (weeklyTrend.All(day => day.Count == 0))
+                    {
+                        <EmptyState IconClass="bi-bar-chart" Message="No visits recorded this week yet." />
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-end gap-2" style="height: 150px;">
+                            @foreach (var day in weeklyTrend)
+                            {
+                                <div class="d-flex flex-column align-items-center flex-fill h-100 justify-content-end">
+                                    <div class="text-muted small mb-1 fw-semibold">@day.Count</div>
+                                    <div style="width: 100%; height: @(day.HeightPercent)%; min-height: 3px; background: var(--vms-primary); border-radius: 0.35rem 0.35rem 0 0;"></div>
+                                    <div class="text-muted small mt-2">@day.Label</div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="form-section-label mb-3">Visit Purpose Breakdown (this week)</div>
+                    @if (purposeBreakdown.Count == 0)
+                    {
+                        <EmptyState IconClass="bi-pie-chart" Message="No visits recorded this week yet." />
+                    }
+                    else
+                    {
+                        @foreach (var item in purposeBreakdown)
+                        {
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <span>@item.Label</span>
+                                    <span class="text-muted">@item.Count (@item.Percent%)</span>
+                                </div>
+                                <div style="background: #f1f5f9; border-radius: 999px; height: 0.5rem; overflow: hidden;">
+                                    <div style="width: @(item.Percent)%; height: 100%; background: var(--vms-primary);"></div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body pb-0">
+            <div class="form-section-label mb-3">Recent Gate Activity</div>
+        </div>
+        @if (recentVisits.Count == 0)
+        {
+            <div class="card-body pt-0"><p class="text-muted small mb-0">No gate activity recorded yet.</p></div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Visitor</th>
+                            <th>Vehicle</th>
+                            <th>PC</th>
+                            <th>Host</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var visit in recentVisits)
+                    {
+                        var gateInfo = gateInfoByVisitId.GetValueOrDefault(visit.Id);
+                        var presentation = GetStatusPresentation(visit.Status);
+
+                        <tr>
+                            <td>@visit.Visitor.FullName</td>
+                            <td>@(string.IsNullOrWhiteSpace(visit.VehiclePlateNumber) ? "-" : visit.VehiclePlateNumber)</td>
+                            <td>@(gateInfo is { HasLaptop: true } ? gateInfo.DeviceType : "No device")</td>
+                            <td>@(visit.HostEmployee?.FullName ?? "Awaiting handover")</td>
+                            <td>@visit.ArrivalTime.ToLocalTime().ToString("dd MMM, HH:mm")</td>
+                            <td><span class="status-pill @presentation.CssClass">@presentation.Label</span></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private VisitsDashboardDto? dashboard;
+    private List<VisitDto> visits = [];
+    private List<VisitDto> recentVisits = [];
+    private Dictionary<int, GateTrackingInfo?> gateInfoByVisitId = [];
+    private List<DayTrend> weeklyTrend = [];
+    private List<PurposeShare> purposeBreakdown = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    private int VisitorsWithPcOnSite => visits.Count(v =>
+        gateInfoByVisitId.GetValueOrDefault(v.Id) is { HasLaptop: true } &&
+        v.Status is VisitStatus.Attended or VisitStatus.AwaitingExit or VisitStatus.HostAcknowledged or VisitStatus.WaitingForHost or VisitStatus.Registered);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await MockAuth.InitializeAsync();
+
+        try
+        {
+            dashboard = await AnalyticsService.GetVisitsDashboardAsync();
+            visits = (await VisitService.GetVisitsAsync()).ToList();
+            recentVisits = visits.OrderByDescending(v => v.ArrivalTime).Take(5).ToList();
+
+            foreach (var visit in visits)
+            {
+                gateInfoByVisitId[visit.Id] = await GateTrackingService.GetInfoAsync(visit.Id);
+            }
+
+            BuildWeeklyTrend();
+            BuildPurposeBreakdown();
+        }
+        catch
+        {
+            errorMessage = "Failed to load dashboard data.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void BuildWeeklyTrend()
+    {
+        var today = DateTime.UtcNow.Date;
+        var monday = today.AddDays(-(int)((7 + (int)today.DayOfWeek - 1) % 7));
+        var counts = new int[7];
+
+        for (var i = 0; i < 7; i++)
+        {
+            var day = monday.AddDays(i);
+            counts[i] = visits.Count(v => v.ArrivalTime.Date == day);
+        }
+
+        var max = Math.Max(1, counts.Max());
+        var labels = new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+
+        weeklyTrend = Enumerable.Range(0, 7)
+            .Select(i => new DayTrend
+            {
+                Label = labels[i],
+                Count = counts[i],
+                HeightPercent = counts[i] == 0 ? 0 : Math.Max(4, (int)Math.Round(counts[i] * 100.0 / max))
+            })
+            .ToList();
+    }
+
+    private void BuildPurposeBreakdown()
+    {
+        var today = DateTime.UtcNow.Date;
+        var monday = today.AddDays(-(int)((7 + (int)today.DayOfWeek - 1) % 7));
+
+        var weekVisits = visits.Where(v => v.ArrivalTime.Date >= monday).ToList();
+        var total = weekVisits.Count;
+
+        if (total == 0)
+        {
+            purposeBreakdown = [];
+            return;
+        }
+
+        purposeBreakdown = weekVisits
+            .GroupBy(v => v.Purpose)
+            .Select(group => new PurposeShare
+            {
+                Label = EnumLabels.Format(group.Key),
+                Count = group.Count(),
+                Percent = (int)Math.Round(group.Count() * 100.0 / total)
+            })
+            .OrderByDescending(item => item.Count)
+            .ToList();
+    }
+
+    private static (string Label, string CssClass) GetStatusPresentation(VisitStatus status) => status switch
+    {
+        VisitStatus.Registered => ("Registered", "status-pill-amber"),
+        VisitStatus.WaitingForHost => ("Awaiting Host", "status-pill-amber"),
+        VisitStatus.HostAcknowledged => ("Host Acknowledged", "status-pill-blue"),
+        VisitStatus.Attended => ("Attended", "status-pill-green"),
+        VisitStatus.AwaitingExit => ("Departure Pending", "status-pill-blue"),
+        VisitStatus.Completed => ("Completed", "status-pill-teal"),
+        VisitStatus.Closed => ("Closed", "status-pill-gray"),
+        VisitStatus.Cancelled => ("Cancelled", "status-pill-gray"),
+        VisitStatus.Denied => ("Denied", "status-pill-red"),
+        _ => (status.ToString(), "status-pill-gray")
+    };
+
+    private class DayTrend
+    {
+        public string Label { get; set; } = string.Empty;
+        public int Count { get; set; }
+        public int HeightPercent { get; set; }
+    }
+
+    private class PurposeShare
+    {
+        public string Label { get; set; } = string.Empty;
+        public int Count { get; set; }
+        public int Percent { get; set; }
+    }
+}

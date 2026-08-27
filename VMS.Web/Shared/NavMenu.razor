@@ -1,49 +1,80 @@
+@implements IDisposable
 @inject NavigationManager NavigationManager
 @inject VMS.Web.Auth.MockAuthService MockAuth
 
-<div class="bg-dark text-white p-3" style="width: 280px;">
-    <h4 class="mb-1">VMS</h4>
+<div class="sidebar bg-dark text-white p-3  " style="width: var(--vms-sidebar-width);">
+    <h4 class="mb-1 fw-bold">VMS</h4>
     <p class="small text-white-50 mb-4">@MockAuth.CurrentSession?.DisplayName</p>
 
-    <nav class="nav flex-column gap-2">
+    <nav class="nav flex-column gap-1">
         @if (CanAccess(DemoPermissions.VisitsRead))
         {
-            <NavLink class="nav-link text-white" href="/visits" Match="NavLinkMatch.All">Visits</NavLink>
+            <NavLink class="nav-link" href="/visits" Match="NavLinkMatch.All"><i class="bi bi-calendar-check"></i> Visits</NavLink>
         }
 
         @if (CanAccess(DemoPermissions.VisitsCreate))
         {
-            <NavLink class="nav-link text-white" href="/visits/create">Schedule Visit</NavLink>
+            <NavLink class="nav-link" href="/visits/create"><i class="bi bi-plus-circle"></i> Register Visit</NavLink>
+        }
+
+        @if (CanAccess(DemoPermissions.OutboundVisitsCreate))
+        {
+            <NavLink class="nav-link" href="/visits/outbound/plan"><i class="bi bi-plus-circle"></i> Plan Outbound Visit</NavLink>
+        }
+
+        @if (CanAccess(DemoPermissions.OutboundVisitsRead))
+        {
+            <NavLink class="nav-link" href="/visits/outbound" Match="NavLinkMatch.All"><i class="bi bi-box-arrow-up-right"></i> Outbound Visits</NavLink>
+        }
+
+        @if (CanAccess(DemoPermissions.OutboundVisitsApprove))
+        {
+            <NavLink class="nav-link" href="/visits/outbound/approvals" Match="NavLinkMatch.All"><i class="bi bi-check2-square"></i> Approvals</NavLink>
+        }
+
+        @if (CanAccess(DemoPermissions.SecurityDashboardRead))
+        {
+            <NavLink class="nav-link" href="/security/dashboard" Match="NavLinkMatch.All"><i class="bi bi-speedometer2"></i> Dashboard</NavLink>
+        }
+
+        @if (CanAccess(DemoPermissions.GateVisitorsRead))
+        {
+            <NavLink class="nav-link" href="/security/visitors"><i class="bi bi-shield-check"></i> Manage Visitors</NavLink>
+        }
+
+        @if (CanAccess(DemoPermissions.SecurityReportsRead))
+        {
+            <NavLink class="nav-link" href="/security/reports" Match="NavLinkMatch.All"><i class="bi bi-file-earmark-bar-graph"></i> Reports</NavLink>
         }
 
         @if (CanAccess(DemoPermissions.VisitorsRead))
         {
-            <NavLink class="nav-link text-white" href="/visitors" Match="NavLinkMatch.All">Visitors</NavLink>
+            <NavLink class="nav-link" href="/visitors" Match="NavLinkMatch.All"><i class="bi bi-people"></i> Visitors</NavLink>
         }
 
-        @if (CanAccess(DemoPermissions.VisitorsCreate))
+        @if (CanAccess(DemoPermissions.EmployeesRead))
         {
-            <NavLink class="nav-link text-white" href="/visitors/create">Add Visitor</NavLink>
+            <NavLink class="nav-link" href="/employees" Match="NavLinkMatch.All"><i class="bi bi-briefcase"></i> Hosts</NavLink>
         }
 
-        @if (CanAccess(DemoPermissions.OfficesRead))
-        {
-            <NavLink class="nav-link text-white" href="/offices" Match="NavLinkMatch.All">Offices</NavLink>
-        }
-
-        @if (CanAccess(DemoPermissions.OfficesManage))
-        {
-            <NavLink class="nav-link text-white" href="/offices/create">Add Office</NavLink>
-        }
     </nav>
 
-    <div class="mt-4 pt-3 border-top border-secondary d-grid gap-2">
-       
-        <button class="btn btn-danger btn-sm" @onclick="LogoutAsync">Exit </button>
+    <div class="mt-auto pt-3 border-top border-secondary d-grid gap-2">
+        <button class="btn btn-danger btn-sm" @onclick="LogoutAsync"><i class="bi bi-box-arrow-right"></i> Exit</button>
     </div>
 </div>
 
 @code {
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
     private bool CanAccess(string permission) => MockAuth.HasPermission(permission);
 
     private void SwitchRole()
@@ -55,5 +86,10 @@
     {
         await MockAuth.LogoutAsync();
         NavigationManager.NavigateTo("/");
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
     }
 }

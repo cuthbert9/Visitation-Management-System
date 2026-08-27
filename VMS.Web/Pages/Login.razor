@@ -6,40 +6,84 @@
 
 <PageTitle>Login</PageTitle>
 
-<div class="row justify-content-center align-items-center min-vh-100">
-    <div class="col-md-8 col-lg-6">
-        <div class="card shadow-lg border-0">
-            <div class="card-body p-5 text-center">
-                <h3 class="mb-3">Visitation Management System</h3>
-                <p class="text-muted mb-4">Choose Role to simulate the system Flow.</p>
-                <div class="d-grid gap-3">
-                    <button class="btn btn-outline-primary btn-lg" @onclick="() => SelectRoleAsync(DemoRole.Security)">
-                        Continue as Security
+<div class="login-page">
+    <div class="login-logo d-flex align-items-center gap-2">
+        <img src="https://zdqixwcixanigsaucwek.supabase.co/storage/v1/object/public/Attachments/magerp-logo.svg" alt="MagERP" style="width: 136px; height: 136px;" />
+    </div>
+
+    <div class="login-card-wrap">
+        <div class="card login-card">
+            <div class="card-body text-center">
+                <h2 class="mb-1">Visitation Management</h2>
+                <p class="text-muted mb-4">Choose a role to continue</p>
+
+                <div class="d-grid gap-2 text-start">
+                    <button type="button" class="role-option role-option-security" @onclick="() => SelectRoleAsync(DemoRole.Security)">
+                        <span class="role-option-icon"><i class="bi bi-shield-check"></i></span>
+                        <span>
+                            <span class="d-block role-option-title">Continue as Security</span>
+                            <span class="d-block role-option-subtitle">Gate checks &amp; visitor screening</span>
+                        </span>
+                        <i class="bi bi-chevron-right role-option-chevron"></i>
                     </button>
-                    <button class="btn btn-outline-success btn-lg" @onclick="() => SelectRoleAsync(DemoRole.Receptionist)">
-                        Continue as Receptionist
+
+                    <button type="button" class="role-option role-option-receptionist" @onclick="() => SelectRoleAsync(DemoRole.Receptionist)">
+                        <span class="role-option-icon"><i class="bi bi-person-badge"></i></span>
+                        <span>
+                            <span class="d-block role-option-title">Continue as Receptionist</span>
+                            <span class="d-block role-option-subtitle">Register &amp; badge visitors</span>
+                        </span>
+                        <i class="bi bi-chevron-right role-option-chevron"></i>
                     </button>
-                    <button class="btn btn-dark btn-lg" @onclick="() => SelectRoleAsync(DemoRole.Admin)">
-                        Continue as Admin
+
+                    <button type="button" class="role-option role-option-host" @onclick="() => SelectRoleAsync(DemoRole.Admin)">
+                        <span class="role-option-icon"><i class="bi bi-people"></i></span>
+                        <span>
+                            <span class="d-block role-option-title">Continue as Host / Staff</span>
+                            <span class="d-block role-option-subtitle">Approve &amp; track your visitors</span>
+                        </span>
+                        <i class="bi bi-chevron-right role-option-chevron"></i>
                     </button>
+
+                    <button type="button" class="role-option role-option-sales" @onclick="() => SelectRoleAsync(DemoRole.SalesPersonnel)">
+                        <span class="role-option-icon"><i class="bi bi-graph-up-arrow"></i></span>
+                        <span>
+                            <span class="d-block role-option-title">Continue as Sales Personnel</span>
+                            <span class="d-block role-option-subtitle">Plan &amp; track customer visits</span>
+                        </span>
+                        <i class="bi bi-chevron-right role-option-chevron"></i>
+                    </button>
+                </div>
+
+                <div class="role-divider"><span>Role Simulation</span></div>
+
+                <div class="d-flex justify-content-between small">
+                    <a href="/" class="link-primary text-decoration-none">Back to Login</a>
+                    <span class="link-primary text-decoration-none" style="cursor: default;">Need help?</span>
                 </div>
             </div>
         </div>
     </div>
+
+    <p class="text-center text-muted small mb-0">Powered by <strong>MagERP Solution</strong></p>
 </div>
+
 @code {
     protected override async Task OnInitializedAsync()
     {
         await MockAuth.InitializeAsync();
         if (MockAuth.IsAuthenticated)
         {
-            NavigationManager.NavigateTo("/visits");
+            NavigationManager.NavigateTo(HomeRouteFor(MockAuth.CurrentSession!.Role));
         }
     }
 
     private async Task SelectRoleAsync(DemoRole role)
     {
         await MockAuth.LoginAsAsync(role);
-        NavigationManager.NavigateTo("/visits");
+        NavigationManager.NavigateTo(HomeRouteFor(role));
     }
+
+    private static string HomeRouteFor(DemoRole role) =>
+        role == DemoRole.SalesPersonnel ? "/visits/outbound" : "/visits";
 }

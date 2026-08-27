@@ -35,8 +35,8 @@ else
                     <tr>
                         <th>Name</th>
                         <th>Phone</th>
-                        <th>Company</th>
-                        <th>Vehicle Plate</th>
+                        <th>Organization</th>
+                        <th>Active</th>
                         <th>Created</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -46,9 +46,9 @@ else
                 {
                     <tr>
                         <td>@visitor.FullName</td>
-                        <td>@visitor.Phone</td>
-                        <td>@visitor.Company</td>
-                        <td>@visitor.VehiclePlate</td>
+                        <td>@visitor.PhoneNumber</td>
+                        <td>@visitor.Organization</td>
+                        <td>@(visitor.IsActive ? "Yes" : "No")</td>
                         <td>@visitor.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</td>
                         <td class="text-end">
                             <div class="btn-group btn-group-sm" role="group">

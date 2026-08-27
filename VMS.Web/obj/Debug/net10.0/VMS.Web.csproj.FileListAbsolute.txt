@@ -1404,10 +1404,6 @@
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/dotnet.runtime.js.map.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/icudt_CJK.tjcz0u77k5.dat.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/dotnet.js.map.gz
-/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Shared.20ksaqeo3m.pdb
-/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Shared.abwxtdviyk.wasm
-/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Web.csom2zwvrz.wasm
-/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Web.mggikc0l2r.pdb
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/dotnet.js
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Reflection.Metadata.jppm5mm49v.wasm.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Security.Principal.Windows.w9a1l2myly.wasm.gz
@@ -1439,7 +1435,6 @@
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.ComponentModel.TypeConverter.le29ulsuyy.wasm.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Text.Json.t2y3tht3ok.wasm.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Net.Mail.533n6ks0cq.wasm.gz
-/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Web.mggikc0l2r.pdb.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.IO.Pipes.AccessControl.ddt7du9svb.wasm.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Security.AccessControl.3nwl7fw3mc.wasm.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Runtime.Numerics.ym3nhl4pae.wasm.gz
@@ -1453,7 +1448,6 @@
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Reflection.DispatchProxy.uhng0i33yv.wasm.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Runtime.CompilerServices.VisualC.lzt2t2jx25.wasm.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Diagnostics.DiagnosticSource.h063kza90u.wasm.gz
-/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Web.csom2zwvrz.wasm.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Net.WebSockets.Client.x9i7zul9bw.wasm.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Net.Security.xlqynrdyot.wasm.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/Microsoft.Extensions.Diagnostics.refdoc5eqj.wasm.gz
@@ -1489,7 +1483,6 @@
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Runtime.Extensions.bllnsrspwd.wasm.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/MimeMapping.gmxjevqz69.wasm.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Threading.Tasks.Dataflow.gsdu90uund.wasm.gz
-/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Shared.20ksaqeo3m.pdb.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/Microsoft.IdentityModel.Logging.6je01mzmwq.wasm.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Runtime.Serialization.sl1f80ke8z.wasm.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.IO.Compression.ZipFile.hq70g0m5k0.wasm.gz
@@ -1535,7 +1528,6 @@
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/Microsoft.JSInterop.WebAssembly.ktwcwt6yk1.wasm.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Data.s403jyj13x.wasm.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/Microsoft.Extensions.Primitives.dk3kgvcw99.wasm.gz
-/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Shared.abwxtdviyk.wasm.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Formats.Tar.9uzzbcwdi8.wasm.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Reflection.TypeExtensions.bw6raolkdi.wasm.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/System.Private.Xml.Linq.6ndmellwxq.wasm.gz
@@ -2098,8 +2090,6 @@
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/blazor.build.boot-extension.json
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/dotnet.js
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/3p2tjggydu-{0}-p2tktok1gl-p2tktok1gl.gz
-/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/n9owgykigm-{0}-8p8iuu9x01-8p8iuu9x01.gz
-/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/szbouumdj8-{0}-qfbnwpt71e-qfbnwpt71e.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/2x5pbfce5y-{0}-xw4wgiq9yv-xw4wgiq9yv.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/xgxlqs6zb3-{0}-oeqod8afhg-oeqod8afhg.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/30hhbv3om9-{0}-jiaynq97oc-jiaynq97oc.gz
@@ -2324,12 +2314,7 @@
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/n341ymf9pd-{0}-tjcz0u77k5-tjcz0u77k5.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/8n67gjtmqb-{0}-tptq2av103-tptq2av103.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/55zatunnrs-{0}-lfu7j35m59-lfu7j35m59.gz
-/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/kv8s68544h-{0}-abwxtdviyk-abwxtdviyk.gz
-/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/cp9z1zy72n-{0}-20ksaqeo3m-20ksaqeo3m.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/0omnv6cf3y-{0}-6royifkwlm-6royifkwlm.gz
-/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/7jlbfv3bvq-{0}-csom2zwvrz-csom2zwvrz.gz
-/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/4ktvhfm3cp-{0}-mggikc0l2r-mggikc0l2r.gz
-/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/oknhew2jd0-{0}-gco0c4nrse-gco0c4nrse.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/staticwebassets.build.json
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/staticwebassets.build.json.cache
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/staticwebassets.development.json
@@ -2340,4 +2325,19 @@
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/refint/VMS.Web.dll
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/VMS.Web.pdb
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/ref/VMS.Web.dll
+/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/szbouumdj8-{0}-avucivc6n9-avucivc6n9.gz
 /Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/9klbkvyeh4-{0}-1kyj4dtkx8-1kyj4dtkx8.gz
+/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/n9owgykigm-{0}-sm6p3zso98-sm6p3zso98.gz
+/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Shared.ks40v3v3ms.wasm
+/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Shared.sbv3yft6ic.pdb
+/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Web.26klr2qy3e.pdb
+/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Web.o0vo0a383n.wasm
+/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Web.26klr2qy3e.pdb.gz
+/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Web.o0vo0a383n.wasm.gz
+/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Shared.sbv3yft6ic.pdb.gz
+/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/bin/Debug/net10.0/wwwroot/_framework/VMS.Shared.ks40v3v3ms.wasm.gz
+/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/kv8s68544h-{0}-ks40v3v3ms-ks40v3v3ms.gz
+/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/cp9z1zy72n-{0}-sbv3yft6ic-sbv3yft6ic.gz
+/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/7jlbfv3bvq-{0}-o0vo0a383n-o0vo0a383n.gz
+/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/4ktvhfm3cp-{0}-26klr2qy3e-26klr2qy3e.gz
+/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/obj/Debug/net10.0/compressed/oknhew2jd0-{0}-iyx1dy46vk-iyx1dy46vk.gz

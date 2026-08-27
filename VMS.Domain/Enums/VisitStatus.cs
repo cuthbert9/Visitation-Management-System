@@ -2,11 +2,14 @@ namespace VisitorManagementSystem.Domain.Enums;
 
 public enum VisitStatus
 {
-    Pending = 1,
-    Approved = 2,
-    Rejected = 3,
-    CheckedIn = 4,
-    CheckedOut = 5,
+    GateRegistered = 0,
+    Registered = 1,
+    WaitingForHost = 2,
+    HostAcknowledged = 3,
+    Attended = 4,
+    AwaitingExit = 5,
     Completed = 6,
-    Cancelled = 7
+    Closed = 7,
+    Cancelled = 8,
+    Denied = 9
 }

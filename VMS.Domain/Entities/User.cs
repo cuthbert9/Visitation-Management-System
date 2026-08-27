@@ -11,8 +11,9 @@ public class User
     public DateTime UpdatedAt { get; set; }
 
     public Role Role { get; set; } = null!;
-    public ICollection<Visit> CreatedVisits { get; set; } = new List<Visit>();
-    public ICollection<Visit> ApprovedVisits { get; set; } = new List<Visit>();
-    public ICollection<VisitCheckIn> VisitCheckIns { get; set; } = new List<VisitCheckIn>();
-    public ICollection<VisitCheckOut> VisitCheckOuts { get; set; } = new List<VisitCheckOut>();
+    public ICollection<Visit> CheckedInVisits { get; set; } = new List<Visit>();
+    public ICollection<Visit> CheckedOutVisits { get; set; } = new List<Visit>();
+    public ICollection<VisitStatusHistory> VisitStatusChanges { get; set; } = new List<VisitStatusHistory>();
+    public ICollection<Notification> ReceivedNotifications { get; set; } = new List<Notification>();
+    public ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
 }

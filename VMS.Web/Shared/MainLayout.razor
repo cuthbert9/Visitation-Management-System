@@ -13,6 +13,8 @@
             @Body
         </div>
     </main>
+
+    <ToastHost />
 </div>
 
 @code {
@@ -51,7 +53,10 @@
 
         if (route == "/")
         {
-            NavigationManager.NavigateTo("/visits");
+            var landingRoute = MockAuth.CurrentSession?.Role == VMS.Web.Auth.DemoRole.Security
+                ? "/security/dashboard"
+                : "/visits";
+            NavigationManager.NavigateTo(landingRoute);
         }
     }
 

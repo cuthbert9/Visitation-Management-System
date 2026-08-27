@@ -15,13 +15,16 @@ public class AppDbContext : DbContext
     public DbSet<Permission> Permissions => Set<Permission>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<Visitor> Visitors => Set<Visitor>();
-    public DbSet<Office> Offices => Set<Office>();
     public DbSet<Department> Departments => Set<Department>();
+    public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<Visit> Visits => Set<Visit>();
-    public DbSet<VisitCheckIn> VisitCheckIns => Set<VisitCheckIn>();
-    public DbSet<VisitCheckOut> VisitCheckOuts => Set<VisitCheckOut>();
+    public DbSet<VisitItem> VisitItems => Set<VisitItem>();
+    public DbSet<VisitStatusHistory> VisitStatusHistories => Set<VisitStatusHistory>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<ParkingSlot> ParkingSlots => Set<ParkingSlot>();
     public DbSet<ParkingReservation> ParkingReservations => Set<ParkingReservation>();
+    public DbSet<VisitEquipment> VisitEquipment => Set<VisitEquipment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -76,110 +79,271 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Visitor>(entity =>
         {
             entity.HasKey(visitor => visitor.Id);
-            entity.Property(visitor => visitor.FullName).IsRequired().HasMaxLength(200);
-            entity.Property(visitor => visitor.Phone).HasMaxLength(50);
-            entity.Property(visitor => visitor.NationalId).HasMaxLength(100);
-            entity.Property(visitor => visitor.Company).HasMaxLength(200);
-            entity.Property(visitor => visitor.VehiclePlate).HasMaxLength(50);
+            entity.Property(visitor => visitor.FullName).IsRequired().HasMaxLength(150);
+            entity.Property(visitor => visitor.PhoneNumber).IsRequired().HasMaxLength(20);
+            entity.Property(visitor => visitor.Email).HasMaxLength(150);
+            entity.Property(visitor => visitor.IdentificationType)
+                .HasConversion<string>()
+                .HasMaxLength(30)
+                .IsRequired();
+            entity.Property(visitor => visitor.IdentificationNumber).IsRequired().HasMaxLength(50);
+            entity.Property(visitor => visitor.Organization).HasMaxLength(150);
             entity.Property(visitor => visitor.PhotoUrl).HasMaxLength(500);
             entity.Property(visitor => visitor.CreatedAt).IsRequired();
             entity.Property(visitor => visitor.UpdatedAt).IsRequired();
-        });
 
-        modelBuilder.Entity<Office>(entity =>
-        {
-            entity.HasKey(office => office.Id);
-            entity.Property(office => office.Name).IsRequired().HasMaxLength(200);
-            entity.Property(office => office.Floor).HasMaxLength(50);
-            entity.Property(office => office.OfficeCode).HasMaxLength(100);
-            entity.Property(office => office.CreatedAt).IsRequired();
-            entity.Property(office => office.UpdatedAt).IsRequired();
-            entity.HasIndex(office => office.OfficeCode).IsUnique();
+            entity.HasIndex(visitor => visitor.IdentificationNumber);
+            entity.HasIndex(visitor => visitor.PhoneNumber);
         });
 
         modelBuilder.Entity<Department>(entity =>
         {
             entity.HasKey(department => department.Id);
-            entity.Property(department => department.Name).IsRequired().HasMaxLength(200);
+            entity.Property(department => department.Code).IsRequired().HasMaxLength(30);
+            entity.Property(department => department.Name).IsRequired().HasMaxLength(100);
             entity.Property(department => department.Description).HasMaxLength(500);
             entity.Property(department => department.CreatedAt).IsRequired();
             entity.Property(department => department.UpdatedAt).IsRequired();
 
-            entity.HasOne(department => department.Office)
-                .WithMany(office => office.Departments)
-                .HasForeignKey(department => department.OfficeId)
+            entity.HasIndex(department => department.Code).IsUnique();
+        });
+
+        modelBuilder.Entity<Employee>(entity =>
+        {
+            entity.HasKey(employee => employee.Id);
+            entity.Property(employee => employee.EmployeeNumber).IsRequired().HasMaxLength(50);
+            entity.Property(employee => employee.FullName).IsRequired().HasMaxLength(150);
+            entity.Property(employee => employee.Email).HasMaxLength(150);
+            entity.Property(employee => employee.PhoneNumber).HasMaxLength(20);
+            entity.Property(employee => employee.Position).HasMaxLength(100);
+            entity.Property(employee => employee.CreatedAt).IsRequired();
+            entity.Property(employee => employee.UpdatedAt).IsRequired();
+
+            entity.HasIndex(employee => employee.EmployeeNumber).IsUnique();
+            entity.HasIndex(employee => employee.DepartmentId);
+            entity.HasIndex(employee => employee.FullName);
+
+            entity.HasOne(employee => employee.Department)
+                .WithMany(department => department.Employees)
+                .HasForeignKey(employee => employee.DepartmentId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Visit>(entity =>
         {
             entity.HasKey(visit => visit.Id);
-            entity.Property(visit => visit.Purpose).HasMaxLength(500);
+            entity.Property(visit => visit.VisitNumber).IsRequired().HasMaxLength(30);
+            entity.Property(visit => visit.PurposeDescription).HasMaxLength(500);
+            entity.Property(visit => visit.VehicleModel).HasMaxLength(100);
+            entity.Property(visit => visit.VehiclePlateNumber).HasMaxLength(30);
+            entity.Property(visit => visit.BadgeNumber).HasMaxLength(30);
+            entity.Property(visit => visit.ExitSignatureReference).HasMaxLength(500);
+            entity.Property(visit => visit.Remarks).HasMaxLength(1000);
             entity.Property(visit => visit.AttachmentUrl).HasMaxLength(500);
-            entity.Property(visit => visit.VisitDate).IsRequired();
-            entity.Property(visit => visit.ExpectedArrival);
-            entity.Property(visit => visit.Status)
-                .HasConversion<string>()
-                .HasMaxLength(50)
-                .IsRequired();
+            entity.Property(visit => visit.ArrivalTime).IsRequired();
             entity.Property(visit => visit.CreatedAt).IsRequired();
             entity.Property(visit => visit.UpdatedAt).IsRequired();
+
+            entity.Property(visit => visit.Purpose)
+                .HasConversion<string>()
+                .HasMaxLength(30);
+
+            entity.Property(visit => visit.Status)
+                .HasConversion<string>()
+                .HasMaxLength(30)
+                .IsRequired();
+
+            entity.Property(visit => visit.StaffAvailabilityStatus)
+                .HasConversion<string>()
+                .HasMaxLength(30);
+
+            entity.Property(visit => visit.BadgeStatus)
+                .HasConversion<string>()
+                .HasMaxLength(30);
+
+            entity.HasIndex(visit => visit.VisitNumber).IsUnique();
+            entity.HasIndex(visit => visit.VisitorId);
+            entity.HasIndex(visit => visit.HostEmployeeId);
+            entity.HasIndex(visit => visit.DepartmentId);
+            entity.HasIndex(visit => visit.Status);
+            entity.HasIndex(visit => visit.ArrivalTime);
+            entity.HasIndex(visit => visit.ExpectedDepartureTime);
 
             entity.HasOne(visit => visit.Visitor)
                 .WithMany(visitor => visitor.Visits)
                 .HasForeignKey(visit => visit.VisitorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasOne(visit => visit.Office)
-                .WithMany(office => office.Visits)
-                .HasForeignKey(visit => visit.OfficeId)
+            entity.HasOne(visit => visit.HostEmployee)
+                .WithMany(employee => employee.HostedVisits)
+                .HasForeignKey(visit => visit.HostEmployeeId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasOne(visit => visit.CreatedBy)
-                .WithMany(user => user.CreatedVisits)
-                .HasForeignKey(visit => visit.CreatedById)
+            entity.HasOne(visit => visit.Department)
+                .WithMany(department => department.Visits)
+                .HasForeignKey(visit => visit.DepartmentId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasOne(visit => visit.ApprovedBy)
-                .WithMany(user => user.ApprovedVisits)
-                .HasForeignKey(visit => visit.ApprovedById)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        modelBuilder.Entity<VisitCheckIn>(entity =>
-        {
-            entity.HasKey(checkIn => checkIn.Id);
-            entity.Property(checkIn => checkIn.CheckInTime).IsRequired();
-            entity.Property(checkIn => checkIn.Gate).HasMaxLength(100);
-            entity.Property(checkIn => checkIn.BadgeNumber).HasMaxLength(100);
-            entity.Property(checkIn => checkIn.CreatedAt).IsRequired();
-
-            entity.HasOne(checkIn => checkIn.Visit)
-                .WithMany(visit => visit.CheckIns)
-                .HasForeignKey(checkIn => checkIn.VisitId)
+            entity.HasOne(visit => visit.CheckedInBy)
+                .WithMany(user => user.CheckedInVisits)
+                .HasForeignKey(visit => visit.CheckedInById)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasOne(checkIn => checkIn.CheckedInBy)
-                .WithMany(user => user.VisitCheckIns)
-                .HasForeignKey(checkIn => checkIn.CheckedInById)
+            entity.HasOne(visit => visit.CheckedOutBy)
+                .WithMany(user => user.CheckedOutVisits)
+                .HasForeignKey(visit => visit.CheckedOutById)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<VisitCheckOut>(entity =>
+        modelBuilder.Entity<VisitItem>(entity =>
         {
-            entity.HasKey(checkOut => checkOut.Id);
-            entity.Property(checkOut => checkOut.CheckOutTime).IsRequired();
-            entity.Property(checkOut => checkOut.Remarks).HasMaxLength(1000);
-            entity.Property(checkOut => checkOut.CreatedAt).IsRequired();
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.ItemName).IsRequired().HasMaxLength(100);
+            entity.Property(item => item.Description).HasMaxLength(500);
+            entity.Property(item => item.SerialNumber).HasMaxLength(100);
+            entity.Property(item => item.Remarks).HasMaxLength(500);
+            entity.Property(item => item.Quantity).IsRequired();
+            entity.Property(item => item.CreatedAt).IsRequired();
 
-            entity.HasOne(checkOut => checkOut.Visit)
-                .WithMany(visit => visit.CheckOuts)
-                .HasForeignKey(checkOut => checkOut.VisitId)
+            entity.Property(item => item.ItemType)
+                .HasConversion<string>()
+                .HasMaxLength(30);
+
+            entity.Property(item => item.MovementType)
+                .HasConversion<string>()
+                .HasMaxLength(30);
+
+            entity.HasIndex(item => item.VisitId);
+
+            entity.HasOne(item => item.Visit)
+                .WithMany(visit => visit.Items)
+                .HasForeignKey(item => item.VisitId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<VisitEquipment>(entity =>
+        {
+            entity.HasKey(equipment => equipment.Id);
+            entity.Property(equipment => equipment.DeviceType).HasMaxLength(100);
+            entity.Property(equipment => equipment.DeviceBrand).HasMaxLength(100);
+            entity.Property(equipment => equipment.AssetTag).HasMaxLength(100);
+            entity.Property(equipment => equipment.CreatedAt).IsRequired();
+            entity.Property(equipment => equipment.UpdatedAt).IsRequired();
+
+            entity.HasIndex(equipment => equipment.VisitId).IsUnique();
+
+            entity.HasOne(equipment => equipment.Visit)
+                .WithOne(visit => visit.Equipment)
+                .HasForeignKey<VisitEquipment>(equipment => equipment.VisitId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<VisitStatusHistory>(entity =>
+        {
+            entity.HasKey(history => history.Id);
+            entity.Property(history => history.Remarks).HasMaxLength(500);
+            entity.Property(history => history.ChangedAt).IsRequired();
+
+            entity.Property(history => history.FromStatus)
+                .HasConversion<string>()
+                .HasMaxLength(30);
+
+            entity.Property(history => history.ToStatus)
+                .HasConversion<string>()
+                .HasMaxLength(30)
+                .IsRequired();
+
+            entity.HasIndex(history => history.VisitId);
+            entity.HasIndex(history => history.ToStatus);
+            entity.HasIndex(history => history.ChangedAt);
+
+            entity.HasOne(history => history.Visit)
+                .WithMany(visit => visit.StatusHistory)
+                .HasForeignKey(history => history.VisitId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasOne(checkOut => checkOut.CheckedOutBy)
-                .WithMany(user => user.VisitCheckOuts)
-                .HasForeignKey(checkOut => checkOut.CheckedOutById)
+            entity.HasOne(history => history.ChangedByUser)
+                .WithMany(user => user.VisitStatusChanges)
+                .HasForeignKey(history => history.ChangedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasKey(notification => notification.Id);
+            entity.Property(notification => notification.Title).IsRequired().HasMaxLength(150);
+            entity.Property(notification => notification.Message).IsRequired().HasMaxLength(1000);
+            entity.Property(notification => notification.ErrorMessage).HasMaxLength(1000);
+            entity.Property(notification => notification.RetryCount).IsRequired();
+            entity.Property(notification => notification.CreatedAt).IsRequired();
+
+            entity.Property(notification => notification.Type)
+                .HasConversion<string>()
+                .HasMaxLength(30)
+                .IsRequired();
+
+            entity.Property(notification => notification.Channel)
+                .HasConversion<string>()
+                .HasMaxLength(30)
+                .IsRequired();
+
+            entity.Property(notification => notification.Status)
+                .HasConversion<string>()
+                .HasMaxLength(30)
+                .IsRequired();
+
+            entity.HasIndex(notification => notification.VisitId);
+            entity.HasIndex(notification => notification.RecipientEmployeeId);
+            entity.HasIndex(notification => notification.Status);
+            entity.HasIndex(notification => notification.CreatedAt);
+
+            entity.HasOne(notification => notification.Visit)
+                .WithMany(visit => visit.Notifications)
+                .HasForeignKey(notification => notification.VisitId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(notification => notification.RecipientEmployee)
+                .WithMany(employee => employee.Notifications)
+                .HasForeignKey(notification => notification.RecipientEmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(notification => notification.RecipientUser)
+                .WithMany(user => user.ReceivedNotifications)
+                .HasForeignKey(notification => notification.RecipientUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.HasKey(auditLog => auditLog.Id);
+            entity.Property(auditLog => auditLog.EntityType).HasMaxLength(100);
+            entity.Property(auditLog => auditLog.Description).HasMaxLength(1000);
+            entity.Property(auditLog => auditLog.IpAddress).HasMaxLength(45);
+            entity.Property(auditLog => auditLog.UserAgent).HasMaxLength(500);
+            entity.Property(auditLog => auditLog.CorrelationId).HasMaxLength(100);
+            entity.Property(auditLog => auditLog.CreatedAt).IsRequired();
+
+            entity.Property(auditLog => auditLog.Action)
+                .HasConversion<string>()
+                .HasMaxLength(30)
+                .IsRequired();
+
+            entity.Property(auditLog => auditLog.ActorType)
+                .HasConversion<string>()
+                .HasMaxLength(30)
+                .IsRequired();
+
+            entity.HasIndex(auditLog => auditLog.UserId);
+            entity.HasIndex(auditLog => auditLog.EntityType);
+            entity.HasIndex(auditLog => auditLog.EntityId);
+            entity.HasIndex(auditLog => auditLog.Action);
+            entity.HasIndex(auditLog => auditLog.CreatedAt);
+
+            entity.HasOne(auditLog => auditLog.User)
+                .WithMany(user => user.AuditLogs)
+                .HasForeignKey(auditLog => auditLog.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 

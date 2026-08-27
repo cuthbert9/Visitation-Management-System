@@ -1,0 +1,862 @@
+@page "/visits/outbound/{Id}"
+@inject VMS.Web.Services.IOutboundVisitService OutboundVisitService
+@inject VMS.Web.Services.ToastService Toasts
+@inject VMS.Web.Auth.MockAuthService MockAuth
+@inject NavigationManager NavigationManager
+
+<PageTitle>Outbound Visit Detail</PageTitle>
+
+<div class="mb-3">
+    <a href="/visits/outbound" class="text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Back to Outbound Visits</a>
+</div>
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (visit is null)
+{
+    <div class="alert alert-warning">Outbound visit not found.</div>
+}
+else
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    <h1 class="mb-2 h3">@visit.Title</h1>
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <StatusPill Label="@FormatApprovalStatus(visit.ApprovalStatus)" Tone="@ApprovalTone(visit.ApprovalStatus)" />
+                        <StatusPill Label="@FormatExecutionStatus(visit.ExecutionStatus)" Tone="@ExecutionTone(visit.ExecutionStatus)" />
+                        <span class="status-pill status-pill-gray">@visit.Category</span>
+                        <span class="status-pill status-pill-gray">@visit.Priority priority</span>
+                    </div>
+                    <div class="text-muted small mb-1">@ScheduleLine()</div>
+                    <div class="text-muted small">@visit.RequestNo &middot; @visit.Organization &middot; @visit.StakeholderType</div>
+                </div>
+                <div class="text-end">
+                    <div class="d-flex align-items-center gap-2 justify-content-end">
+                        <Avatar FullName="@visit.Owner.FullName" />
+                        <div class="text-start">
+                            <div class="fw-semibold">@visit.Owner.FullName</div>
+                            <div class="text-muted small">@visit.DepartmentName</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <ol class="lifecycle-rail">
+                @foreach (var step in LifecycleSteps)
+                {
+                    <li class="lifecycle-step @(step.IsComplete ? "is-complete" : "") @(step.IsCurrent ? "is-current" : "") @(step.IsBlocked ? "is-blocked" : "")">
+                        <div class="lifecycle-dot">
+                            @if (step.IsBlocked)
+                            {
+                                <i class="bi bi-x-lg"></i>
+                            }
+                            else if (step.IsComplete)
+                            {
+                                <i class="bi bi-check-lg"></i>
+                            }
+                        </div>
+                        <div class="lifecycle-label">@step.Label</div>
+                        <div class="lifecycle-time">@(step.At.HasValue ? step.At.Value.ToLocalTime().ToString("dd MMM, HH:mm") : "")</div>
+                    </li>
+                }
+            </ol>
+
+            @if (visit.ApprovalStatus != OutboundVisitApprovalStatus.Approved)
+            {
+                <div class="alert alert-warning d-flex align-items-center gap-2 mt-3 mb-0">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <div>@ApprovalGateMessage()</div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+        @foreach (var action in ContextualActions())
+        {
+            <button type="button" class="btn btn-sm @action.CssClass" @onclick="action.OnClick" disabled="@isActing">@action.Label</button>
+        }
+        @if (CanCancel)
+        {
+            <button type="button" class="btn btn-sm btn-link text-danger text-decoration-none ms-auto" @onclick="OpenCancelDialog" disabled="@isActing">Cancel visit</button>
+        }
+    </div>
+
+    @if (showRescheduleForm)
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Reschedule visit</h2>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label-sm">Proposed Date</label>
+                        <input type="date" class="form-control" value="@rescheduleDate" @onchange="e => rescheduleDate = e.Value?.ToString() ?? string.Empty" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label-sm">Start Time</label>
+                        <input type="time" class="form-control" value="@rescheduleStart" @onchange="e => rescheduleStart = e.Value?.ToString() ?? string.Empty" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label-sm">End Time</label>
+                        <input type="time" class="form-control" value="@rescheduleEnd" @onchange="e => rescheduleEnd = e.Value?.ToString() ?? string.Empty" />
+                    </div>
+                    <div class="col-md-2 d-flex gap-2">
+                        <button type="button" class="btn btn-primary" @onclick="SaveRescheduleAsync" disabled="@isActing">Save</button>
+                        <button type="button" class="btn btn-outline-secondary" @onclick="() => showRescheduleForm = false" disabled="@isActing">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (showNoteForm)
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Add a note</h2>
+                <textarea class="form-control mb-2" rows="3" @bind="noteText" @bind:event="oninput" placeholder="What happened, or what should the team know?"></textarea>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-primary" @onclick="SaveNoteAsync" disabled="@(isActing || string.IsNullOrWhiteSpace(noteText))">Save note</button>
+                    <button type="button" class="btn btn-outline-secondary" @onclick="() => showNoteForm = false" disabled="@isActing">Cancel</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (showFollowUpForm)
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Create follow-up</h2>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label-sm">Follow-up Date</label>
+                        <input type="date" class="form-control" value="@followUpDate" @onchange="e => followUpDate = e.Value?.ToString() ?? string.Empty" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label-sm">Responsible Employee</label>
+                        <select class="form-select" @bind="followUpEmployeeIdValue">
+                            <option value="0">Select...</option>
+                            <option value="@visit.Owner.Id">@visit.Owner.FullName</option>
+                            @foreach (var member in visit.TeamMembers)
+                            {
+                                <option value="@member.Id">@member.FullName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end gap-2">
+                        <button type="button" class="btn btn-primary" @onclick="SaveFollowUpAsync" disabled="@isActing">Save</button>
+                        <button type="button" class="btn btn-outline-secondary" @onclick="() => showFollowUpForm = false" disabled="@isActing">Cancel</button>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label-sm">Follow-up Task</label>
+                        <input class="form-control" @bind="followUpTask" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <TabStrip Tabs="detailTabs" ActiveKey="activeTab" ActiveKeyChanged="key => activeTab = key" />
+
+    <div class="card">
+        <div class="card-body">
+            @if (activeTab == "overview")
+            {
+                <dl class="row mb-0">
+                    <dt class="col-sm-3">Purpose</dt>
+                    <dd class="col-sm-9">@FormatPurpose(visit.Purpose)</dd>
+
+                    <dt class="col-sm-3">Agenda</dt>
+                    <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(visit.Agenda) ? "Not provided" : visit.Agenda)</dd>
+
+                    <dt class="col-sm-3">Meeting Location</dt>
+                    <dd class="col-sm-9">@(visit.MeetingLocation ?? "Not provided")</dd>
+
+                    <dt class="col-sm-3">Contact Person</dt>
+                    <dd class="col-sm-9">@(visit.ContactPerson ?? "Not provided") @(string.IsNullOrWhiteSpace(visit.ContactNumber) ? "" : $"({visit.ContactNumber})")</dd>
+
+                    <dt class="col-sm-3">Address</dt>
+                    <dd class="col-sm-9">@(visit.Address ?? "Not provided")</dd>
+
+                    <dt class="col-sm-3">Business Objective</dt>
+                    <dd class="col-sm-9">@(visit.BusinessObjective ?? "Not provided")</dd>
+
+                    <dt class="col-sm-3">Expected Outcome</dt>
+                    <dd class="col-sm-9">@(visit.ExpectedOutcome ?? "Not provided")</dd>
+
+                    <dt class="col-sm-3">Justification</dt>
+                    <dd class="col-sm-9">@(visit.Justification ?? "Not provided")</dd>
+
+                    <dt class="col-sm-3">Additional Notes</dt>
+                    <dd class="col-sm-9" style="white-space: pre-wrap;">@(string.IsNullOrWhiteSpace(visit.AdditionalNotes) ? "None" : visit.AdditionalNotes)</dd>
+                </dl>
+            }
+            else if (activeTab == "team")
+            {
+                <h2 class="h6">Visit Owner</h2>
+                <div class="team-chip mb-3" style="max-width: 22rem;">
+                    <Avatar FullName="@visit.Owner.FullName" />
+                    <div>
+                        <div class="fw-semibold">@visit.Owner.FullName</div>
+                        <div class="text-muted small">@visit.Owner.Position &middot; @visit.DepartmentName</div>
+                    </div>
+                </div>
+
+                <h2 class="h6">Team Members</h2>
+                @if (visit.TeamMembers.Count == 0)
+                {
+                    <EmptyState IconClass="bi-person-x" Message="No team members added — the visit owner is travelling alone." />
+                }
+                else
+                {
+                    <div class="row g-2">
+                        @foreach (var member in visit.TeamMembers)
+                        {
+                            <div class="col-md-6">
+                                <div class="team-chip">
+                                    <Avatar FullName="@member.FullName" />
+                                    <div>
+                                        <div class="fw-semibold">@member.FullName</div>
+                                        <div class="text-muted small">@member.Position &middot; @member.DepartmentName</div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+            else if (activeTab == "approval")
+            {
+                <dl class="row mb-3">
+                    <dt class="col-sm-3">Approval Status</dt>
+                    <dd class="col-sm-9"><StatusPill Label="@FormatApprovalStatus(visit.ApprovalStatus)" Tone="@ApprovalTone(visit.ApprovalStatus)" /></dd>
+
+                    <dt class="col-sm-3">Current Stage</dt>
+                    <dd class="col-sm-9">@(visit.ApprovalStage ?? "Not yet submitted")</dd>
+
+                    <dt class="col-sm-3">Submitted By</dt>
+                    <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(visit.SubmittedBy) ? "Not yet submitted" : $"{visit.SubmittedBy} on {visit.SubmittedAt:dd MMM yyyy}")</dd>
+                </dl>
+
+                <Timeline Entries="ApprovalTimelineEntries" EmptyMessage="Not yet submitted for approval." />
+            }
+            else if (activeTab == "activity")
+            {
+                <Timeline Entries="ActivityTimelineEntries" EmptyMessage="No activity recorded yet." />
+            }
+            else if (activeTab == "documents")
+            {
+                @if (visit.Documents.Count == 0)
+                {
+                    <EmptyState IconClass="bi-file-earmark" Message="No documents attached to this visit." />
+                }
+                else
+                {
+                    <ul class="list-group">
+                        @foreach (var document in visit.Documents)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-file-earmark-text text-primary"></i>
+                                    <div>
+                                        <div class="fw-semibold">@document.FileName</div>
+                                        <div class="text-muted small">@FormatBytes(document.SizeBytes)</div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="ShowMockDocumentToast">Download</button>
+                            </li>
+                        }
+                    </ul>
+                }
+            }
+            else if (activeTab == "outcome")
+            {
+                @if (visit.Outcome is null)
+                {
+                    <EmptyState IconClass="bi-clipboard-data" Message="No outcome recorded yet — this appears once the visit is completed." />
+                }
+                else
+                {
+                    <dl class="row mb-4">
+                        <dt class="col-sm-3">Result</dt>
+                        <dd class="col-sm-9"><StatusPill Label="@FormatOutcome(visit.Outcome.Result)" Tone="@OutcomeTone(visit.Outcome.Result)" /></dd>
+
+                        <dt class="col-sm-3">Actual Duration</dt>
+                        <dd class="col-sm-9">@visit.Outcome.ActualStart.ToLocalTime().ToString("HH:mm") - @visit.Outcome.ActualEnd.ToLocalTime().ToString("HH:mm")</dd>
+
+                        <dt class="col-sm-3">Discussion Summary</dt>
+                        <dd class="col-sm-9">@visit.Outcome.DiscussionSummary</dd>
+
+                        <dt class="col-sm-3">Customer Feedback</dt>
+                        <dd class="col-sm-9">@(visit.Outcome.CustomerFeedback ?? "Not provided")</dd>
+
+                        <dt class="col-sm-3">Agreements Reached</dt>
+                        <dd class="col-sm-9">@(visit.Outcome.AgreementsReached ?? "None recorded")</dd>
+
+                        <dt class="col-sm-3">Actions Required</dt>
+                        <dd class="col-sm-9">@(visit.Outcome.ActionsRequired ?? "None recorded")</dd>
+                    </dl>
+
+                    <h2 class="h6">Follow-Up</h2>
+                    @if (visit.FollowUp is null)
+                    {
+                        <EmptyState IconClass="bi-calendar-plus" Message="No follow-up was required for this visit." />
+                    }
+                    else
+                    {
+                        <dl class="row mb-0">
+                            <dt class="col-sm-3">Follow-up Date</dt>
+                            <dd class="col-sm-9">@visit.FollowUp.FollowUpDate.ToString("dd MMM yyyy")</dd>
+
+                            <dt class="col-sm-3">Responsible</dt>
+                            <dd class="col-sm-9">@visit.FollowUp.ResponsibleEmployeeName</dd>
+
+                            <dt class="col-sm-3">Task</dt>
+                            <dd class="col-sm-9">@visit.FollowUp.Task</dd>
+
+                            <dt class="col-sm-3">Status</dt>
+                            <dd class="col-sm-9"><StatusPill Label="@(visit.FollowUp.IsCompleted ? "Completed" : "Pending")" Tone="@(visit.FollowUp.IsCompleted ? "green" : "amber")" /></dd>
+                        </dl>
+                    }
+                }
+            }
+        </div>
+    </div>
+}
+
+<ConfirmDialog @ref="cancelDialog"
+               Title="Cancel this outbound visit?"
+               Description="The visit owner and team will be notified that this visit has been cancelled."
+               ConfirmLabel="Cancel visit"
+               ConfirmButtonClass="btn-danger"
+               RequireReason="true"
+               ReasonLabel="Cancellation reason"
+               ReasonPlaceholder="Why is this visit being cancelled?" />
+
+@code {
+    [Parameter] public string Id { get; set; } = string.Empty;
+
+    [SupplyParameterFromQuery(Name = "tab")]
+    public string? TabParam { get; set; }
+
+    private static readonly HashSet<string> ValidDetailTabKeys = ["overview", "team", "approval", "activity", "documents", "outcome"];
+
+    private OutboundVisitDto? visit;
+    private bool isLoading = true;
+    private bool isActing;
+    private string? errorMessage;
+    private string activeTab = "overview";
+    private ConfirmDialog cancelDialog = null!;
+
+    private bool showRescheduleForm;
+    private string rescheduleDate = string.Empty;
+    private string rescheduleStart = string.Empty;
+    private string rescheduleEnd = string.Empty;
+
+    private bool showNoteForm;
+    private string noteText = string.Empty;
+
+    private bool showFollowUpForm;
+    private string followUpDate = string.Empty;
+    private string followUpEmployeeIdValue = "0";
+    private string followUpTask = string.Empty;
+
+    private static readonly IReadOnlyList<TabStripItem> detailTabs =
+    [
+        new() { Key = "overview", Label = "Overview" },
+        new() { Key = "team", Label = "Team" },
+        new() { Key = "approval", Label = "Approval" },
+        new() { Key = "activity", Label = "Activity" },
+        new() { Key = "documents", Label = "Documents" },
+        new() { Key = "outcome", Label = "Outcome" }
+    ];
+
+    private bool CanCancel => visit is not null && visit.ExecutionStatus is not (OutboundVisitExecutionStatus.Completed or OutboundVisitExecutionStatus.Cancelled);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await MockAuth.InitializeAsync();
+
+        if (!string.IsNullOrWhiteSpace(TabParam) && ValidDetailTabKeys.Contains(TabParam))
+        {
+            activeTab = TabParam;
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            visit = await OutboundVisitService.GetVisitAsync(Id);
+        }
+        catch
+        {
+            errorMessage = "Failed to load this outbound visit.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string ScheduleLine()
+    {
+        if (visit is null)
+        {
+            return string.Empty;
+        }
+
+        if (visit.ApprovalStatus == OutboundVisitApprovalStatus.Approved)
+        {
+            var end = visit.EndTime.HasValue ? $"–{visit.EndTime.Value:HH\\:mm}" : string.Empty;
+            return $"Scheduled for {visit.ProposedDate:dd MMM yyyy} · {visit.StartTime:HH\\:mm}{end}";
+        }
+
+        if (visit.ExecutionStatus == OutboundVisitExecutionStatus.Cancelled)
+        {
+            return "This visit was cancelled.";
+        }
+
+        return $"Awaiting approval — proposed {visit.ProposedDate:dd MMM yyyy} · {visit.StartTime:HH\\:mm}";
+    }
+
+    private string ApprovalGateMessage()
+    {
+        if (visit is null)
+        {
+            return string.Empty;
+        }
+
+        return visit.ApprovalStatus switch
+        {
+            OutboundVisitApprovalStatus.Draft => "This visit cannot move past Approval until it is submitted and signed off by an approver.",
+            OutboundVisitApprovalStatus.PendingApproval => "This visit cannot be scheduled until an approver signs it off.",
+            OutboundVisitApprovalStatus.ChangesRequested => "An approver requested changes — revise and resubmit before this can be scheduled.",
+            OutboundVisitApprovalStatus.Rejected => "This request was rejected and cannot be scheduled.",
+            _ => "This visit cannot be scheduled until it is approved."
+        };
+    }
+
+    private record LifecycleStep(string Label, bool IsComplete, bool IsCurrent, bool IsBlocked, DateTime? At);
+
+    private List<LifecycleStep> LifecycleSteps
+    {
+        get
+        {
+            if (visit is null)
+            {
+                return [];
+            }
+
+            var steps = new List<LifecycleStep>
+            {
+                new("Planning", visit.ApprovalStatus != OutboundVisitApprovalStatus.Draft, visit.ApprovalStatus == OutboundVisitApprovalStatus.Draft, false, visit.CreatedAt)
+            };
+
+            var approvalComplete = visit.ApprovalStatus == OutboundVisitApprovalStatus.Approved;
+            var approvalCurrent = visit.ApprovalStatus is OutboundVisitApprovalStatus.PendingApproval or OutboundVisitApprovalStatus.ChangesRequested;
+            var approvalBlocked = visit.ApprovalStatus == OutboundVisitApprovalStatus.Rejected;
+            var approvalAt = visit.ApprovalHistory.LastOrDefault(h => h.Action is ApprovalHistoryAction.Approved or ApprovalHistoryAction.Rejected)?.At;
+            steps.Add(new LifecycleStep("Approval", approvalComplete, approvalCurrent, approvalBlocked, approvalAt));
+
+            var scheduledComplete = approvalComplete && visit.ExecutionStatus is OutboundVisitExecutionStatus.InProgress or OutboundVisitExecutionStatus.Completed;
+            var scheduledCurrent = approvalComplete && visit.ExecutionStatus == OutboundVisitExecutionStatus.Scheduled;
+            steps.Add(new LifecycleStep("Scheduled", scheduledComplete, scheduledCurrent, false, scheduledComplete || scheduledCurrent ? visit.UpdatedAt : null));
+
+            var inProgressComplete = visit.ExecutionStatus == OutboundVisitExecutionStatus.Completed;
+            var inProgressCurrent = visit.ExecutionStatus == OutboundVisitExecutionStatus.InProgress;
+            steps.Add(new LifecycleStep("In Progress", inProgressComplete, inProgressCurrent, false, visit.Outcome?.ActualStart));
+
+            steps.Add(new LifecycleStep("Completed", visit.ExecutionStatus == OutboundVisitExecutionStatus.Completed, false, false, visit.Outcome?.ActualEnd));
+
+            return steps;
+        }
+    }
+
+    private record ActionButton(string Label, string CssClass, Func<Task> OnClick);
+
+    private List<ActionButton> ContextualActions()
+    {
+        if (visit is null)
+        {
+            return [];
+        }
+
+        var actions = new List<ActionButton>();
+
+        if (visit.ApprovalStatus == OutboundVisitApprovalStatus.Draft)
+        {
+            actions.Add(new ActionButton("Edit", "btn-outline-secondary", () => { GoToEdit(); return Task.CompletedTask; }));
+            actions.Add(new ActionButton("Submit for Approval", "btn-primary", SubmitForApprovalAsync));
+        }
+        else if (visit.ApprovalStatus == OutboundVisitApprovalStatus.ChangesRequested)
+        {
+            actions.Add(new ActionButton("Revise & Resubmit", "btn-primary", () => { GoToEdit(); return Task.CompletedTask; }));
+        }
+        else if (visit.ApprovalStatus == OutboundVisitApprovalStatus.PendingApproval)
+        {
+            if (MockAuth.HasPermission(DemoPermissions.OutboundVisitsApprove))
+            {
+                actions.Add(new ActionButton("Review Request", "btn-primary", () => { NavigationManager.NavigateTo($"/visits/outbound/{visit.Id}/review"); return Task.CompletedTask; }));
+            }
+        }
+        else if (visit.ApprovalStatus == OutboundVisitApprovalStatus.Approved && visit.ExecutionStatus == OutboundVisitExecutionStatus.Scheduled)
+        {
+            actions.Add(new ActionButton("Edit", "btn-outline-secondary", () => { GoToEdit(); return Task.CompletedTask; }));
+            actions.Add(new ActionButton("Reschedule", "btn-outline-primary", () => { OpenReschedule(); return Task.CompletedTask; }));
+            actions.Add(new ActionButton("Start Visit", "btn-primary", StartVisitAsync));
+        }
+        else if (visit.ExecutionStatus == OutboundVisitExecutionStatus.InProgress)
+        {
+            actions.Add(new ActionButton("Add Notes", "btn-outline-secondary", () => { showNoteForm = !showNoteForm; return Task.CompletedTask; }));
+            actions.Add(new ActionButton("Complete Visit", "btn-primary", () => { NavigationManager.NavigateTo($"/visits/outbound/{visit.Id}/complete"); return Task.CompletedTask; }));
+        }
+        else if (visit.ExecutionStatus == OutboundVisitExecutionStatus.Completed)
+        {
+            actions.Add(new ActionButton("View Outcome", "btn-outline-secondary", () => { activeTab = "outcome"; return Task.CompletedTask; }));
+            if (visit.FollowUp is null)
+            {
+                actions.Add(new ActionButton("Create Follow-Up", "btn-primary", () => { showFollowUpForm = !showFollowUpForm; return Task.CompletedTask; }));
+            }
+        }
+
+        return actions;
+    }
+
+    private void GoToEdit() => NavigationManager.NavigateTo($"/visits/outbound/plan?id={visit!.Id}");
+
+    private void ShowMockDocumentToast() => Toasts.Show("This is a mock attachment — no file is actually stored yet.", VMS.Web.Services.ToastTone.Info);
+
+    private void OpenReschedule()
+    {
+        if (visit is null) return;
+        rescheduleDate = visit.ProposedDate.ToString("yyyy-MM-dd");
+        rescheduleStart = visit.StartTime.ToString("HH:mm");
+        rescheduleEnd = visit.EndTime?.ToString("HH:mm") ?? string.Empty;
+        showRescheduleForm = true;
+    }
+
+    private async Task SaveRescheduleAsync()
+    {
+        if (visit is null || !DateOnly.TryParse(rescheduleDate, out var date) || !TimeOnly.TryParse(rescheduleStart, out var start))
+        {
+            errorMessage = "Please provide a valid date and start time.";
+            return;
+        }
+
+        TimeOnly? end = TimeOnly.TryParse(rescheduleEnd, out var parsedEnd) ? parsedEnd : null;
+
+        isActing = true;
+        try
+        {
+            visit = await OutboundVisitService.RescheduleAsync(visit.Id, date, start, end);
+            showRescheduleForm = false;
+            Toasts.Show($"{visit.Title} was rescheduled to {date:dd MMM yyyy} at {start:HH:mm}.");
+        }
+        catch
+        {
+            errorMessage = "Failed to reschedule this visit.";
+        }
+        finally
+        {
+            isActing = false;
+        }
+    }
+
+    private async Task SaveNoteAsync()
+    {
+        if (visit is null || string.IsNullOrWhiteSpace(noteText))
+        {
+            return;
+        }
+
+        isActing = true;
+        try
+        {
+            visit = await OutboundVisitService.AddNoteAsync(visit.Id, noteText, MockAuth.CurrentSession?.DisplayName?.Trim() ?? "Unknown");
+            noteText = string.Empty;
+            showNoteForm = false;
+            Toasts.Show("Note added.");
+        }
+        catch
+        {
+            errorMessage = "Failed to save this note.";
+        }
+        finally
+        {
+            isActing = false;
+        }
+    }
+
+    private async Task SaveFollowUpAsync()
+    {
+        if (visit is null || !int.TryParse(followUpEmployeeIdValue, out var employeeId) || employeeId == 0 || !DateOnly.TryParse(followUpDate, out var date) || string.IsNullOrWhiteSpace(followUpTask))
+        {
+            errorMessage = "Please fill in the follow-up date, responsible employee and task.";
+            return;
+        }
+
+        var responsible = employeeId == visit.Owner.Id ? visit.Owner : visit.TeamMembers.FirstOrDefault(m => m.Id == employeeId);
+
+        isActing = true;
+        try
+        {
+            visit = await OutboundVisitService.AddFollowUpAsync(visit.Id, date, employeeId, responsible?.FullName ?? "Unassigned", followUpTask);
+
+            showFollowUpForm = false;
+            activeTab = "outcome";
+            Toasts.Show("Follow-up created.");
+        }
+        catch
+        {
+            errorMessage = "Failed to create the follow-up.";
+        }
+        finally
+        {
+            isActing = false;
+        }
+    }
+
+    private async Task SubmitForApprovalAsync()
+    {
+        if (visit is null)
+        {
+            return;
+        }
+
+        isActing = true;
+        try
+        {
+            visit = await OutboundVisitService.SubmitExistingForApprovalAsync(visit.Id, MockAuth.CurrentSession?.DisplayName?.Trim() ?? "Unknown");
+            Toasts.Show($"{visit.Title} was submitted for approval. It can't be scheduled until an approver signs it off.");
+        }
+        catch
+        {
+            errorMessage = "Failed to submit this visit for approval.";
+        }
+        finally
+        {
+            isActing = false;
+        }
+    }
+
+    private async Task StartVisitAsync()
+    {
+        if (visit is null)
+        {
+            return;
+        }
+
+        isActing = true;
+        try
+        {
+            visit = await OutboundVisitService.StartVisitAsync(visit.Id);
+            Toasts.Show($"{visit.Title} is now in progress.");
+        }
+        catch
+        {
+            errorMessage = "Failed to start this visit.";
+        }
+        finally
+        {
+            isActing = false;
+        }
+    }
+
+    private void OpenCancelDialog()
+    {
+        if (visit is null) return;
+
+        cancelDialog.Open(async reason =>
+        {
+            try
+            {
+                visit = await OutboundVisitService.CancelVisitAsync(visit.Id, reason ?? string.Empty, MockAuth.CurrentSession?.DisplayName?.Trim() ?? "Unknown");
+                Toasts.Show($"{visit.Title} has been cancelled. The visit owner has been notified.", VMS.Web.Services.ToastTone.Warning);
+            }
+            catch
+            {
+                Toasts.Show("Could not cancel this visit.", VMS.Web.Services.ToastTone.Danger);
+            }
+        });
+    }
+
+    private IReadOnlyList<TimelineEntry> ApprovalTimelineEntries
+    {
+        get
+        {
+            if (visit is null)
+            {
+                return [];
+            }
+
+            var entries = visit.ApprovalHistory.Select(h => new TimelineEntry
+            {
+                Title = FormatAction(h.Action),
+                By = h.By,
+                Role = h.Role,
+                At = h.At,
+                Comment = h.Comment,
+                Tone = ToneForAction(h.Action)
+            }).ToList();
+
+            if (visit.ApprovalStatus == OutboundVisitApprovalStatus.PendingApproval)
+            {
+                entries.Add(new TimelineEntry
+                {
+                    Title = "Awaiting decision",
+                    Role = visit.ApprovalStage,
+                    Tone = "gray",
+                    IsPending = true
+                });
+            }
+
+            return entries;
+        }
+    }
+
+    private IReadOnlyList<TimelineEntry> ActivityTimelineEntries => visit is null
+        ? []
+        : visit.ActivityLog
+            .OrderByDescending(a => a.At)
+            .Select(a => new TimelineEntry
+            {
+                Title = FormatAction(a.Action),
+                By = a.By,
+                Role = a.Role,
+                At = a.At,
+                Comment = a.Comment,
+                Tone = ToneForAction(a.Action)
+            })
+            .ToList();
+
+    private static string FormatAction(ApprovalHistoryAction action) => action switch
+    {
+        ApprovalHistoryAction.Created => "Visit created",
+        ApprovalHistoryAction.Submitted => "Submitted for approval",
+        ApprovalHistoryAction.Resubmitted => "Resubmitted for approval",
+        ApprovalHistoryAction.Approved => "Approved",
+        ApprovalHistoryAction.Rejected => "Rejected",
+        ApprovalHistoryAction.ChangesRequested => "Changes requested",
+        ApprovalHistoryAction.Cancelled => "Visit cancelled",
+        ApprovalHistoryAction.Started => "Visit started",
+        ApprovalHistoryAction.Completed => "Visit completed",
+        ApprovalHistoryAction.Rescheduled => "Rescheduled",
+        ApprovalHistoryAction.NoteAdded => "Note added",
+        ApprovalHistoryAction.DetailsUpdated => "Details updated",
+        _ => action.ToString()
+    };
+
+    private static string ToneForAction(ApprovalHistoryAction action) => action switch
+    {
+        ApprovalHistoryAction.Approved or ApprovalHistoryAction.Completed => "green",
+        ApprovalHistoryAction.Rejected or ApprovalHistoryAction.Cancelled => "red",
+        ApprovalHistoryAction.ChangesRequested => "orange",
+        ApprovalHistoryAction.Submitted or ApprovalHistoryAction.Resubmitted or ApprovalHistoryAction.Started => "blue",
+        _ => "gray"
+    };
+
+    private static string FormatPurpose(OutboundVisitPurpose purpose) => purpose switch
+    {
+        OutboundVisitPurpose.CustomerRelationshipVisit => "Customer Relationship",
+        OutboundVisitPurpose.NewBusiness => "New Business",
+        OutboundVisitPurpose.AccountReview => "Account Review",
+        OutboundVisitPurpose.TechnicalSupport => "Technical Support",
+        OutboundVisitPurpose.PartnershipDevelopment => "Partnership Development",
+        OutboundVisitPurpose.AuditInspection => "Audit / Inspection",
+        OutboundVisitPurpose.SiteSurvey => "Site Survey",
+        OutboundVisitPurpose.ContractNegotiation => "Contract Negotiation",
+        _ => purpose.ToString()
+    };
+
+    private static string FormatApprovalStatus(OutboundVisitApprovalStatus status) => status switch
+    {
+        OutboundVisitApprovalStatus.Draft => "Draft",
+        OutboundVisitApprovalStatus.PendingApproval => "Pending Approval",
+        OutboundVisitApprovalStatus.Approved => "Approved",
+        OutboundVisitApprovalStatus.ChangesRequested => "Changes Requested",
+        OutboundVisitApprovalStatus.Rejected => "Rejected",
+        _ => status.ToString()
+    };
+
+    private static string ApprovalTone(OutboundVisitApprovalStatus status) => status switch
+    {
+        OutboundVisitApprovalStatus.Draft => "gray",
+        OutboundVisitApprovalStatus.PendingApproval => "amber",
+        OutboundVisitApprovalStatus.Approved => "green",
+        OutboundVisitApprovalStatus.ChangesRequested => "orange",
+        OutboundVisitApprovalStatus.Rejected => "red",
+        _ => "gray"
+    };
+
+    private static string FormatExecutionStatus(OutboundVisitExecutionStatus status) => status switch
+    {
+        OutboundVisitExecutionStatus.NotScheduled => "Not Scheduled",
+        OutboundVisitExecutionStatus.Scheduled => "Scheduled",
+        OutboundVisitExecutionStatus.InProgress => "In Progress",
+        OutboundVisitExecutionStatus.Completed => "Completed",
+        OutboundVisitExecutionStatus.Cancelled => "Cancelled",
+        _ => status.ToString()
+    };
+
+    private static string ExecutionTone(OutboundVisitExecutionStatus status) => status switch
+    {
+        OutboundVisitExecutionStatus.NotScheduled => "gray",
+        OutboundVisitExecutionStatus.Scheduled => "blue",
+        OutboundVisitExecutionStatus.InProgress => "teal",
+        OutboundVisitExecutionStatus.Completed => "green",
+        OutboundVisitExecutionStatus.Cancelled => "red",
+        _ => "gray"
+    };
+
+    private static string FormatOutcome(OutboundVisitOutcomeResult result) => result switch
+    {
+        OutboundVisitOutcomeResult.Successful => "Successful",
+        OutboundVisitOutcomeResult.PartiallySuccessful => "Partially Successful",
+        OutboundVisitOutcomeResult.Unsuccessful => "Unsuccessful",
+        OutboundVisitOutcomeResult.PostponedByCustomer => "Postponed by Customer",
+        _ => result.ToString()
+    };
+
+    private static string OutcomeTone(OutboundVisitOutcomeResult result) => result switch
+    {
+        OutboundVisitOutcomeResult.Successful => "green",
+        OutboundVisitOutcomeResult.PartiallySuccessful => "amber",
+        OutboundVisitOutcomeResult.Unsuccessful => "red",
+        OutboundVisitOutcomeResult.PostponedByCustomer => "orange",
+        _ => "gray"
+    };
+
+    private static string FormatBytes(long bytes)
+    {
+        double size = bytes;
+        string[] units = ["B", "KB", "MB", "GB"];
+        var unitIndex = 0;
+
+        while (size >= 1024 && unitIndex < units.Length - 1)
+        {
+            size /= 1024;
+            unitIndex++;
+        }
+
+        return $"{size:0.#} {units[unitIndex]}";
+    }
+}

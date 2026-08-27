@@ -1,0 +1,23 @@
+<div class="dropdown">
+    <button class="btn btn-sm btn-outline-secondary overflow-menu-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="More actions">
+        <i class="bi bi-three-dots"></i>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+        @foreach (var item in Items)
+        {
+            <li>
+                <button type="button" class="dropdown-item @(item.IsDestructive ? "text-danger" : "")" @onclick="() => item.OnClick.InvokeAsync()">
+                    @if (!string.IsNullOrWhiteSpace(item.IconClass))
+                    {
+                        <i class="bi @item.IconClass me-2"></i>
+                    }
+                    @item.Label
+                </button>
+            </li>
+        }
+    </ul>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<OverflowMenuItem> Items { get; set; } = [];
+}

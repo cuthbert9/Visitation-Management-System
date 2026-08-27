@@ -1,16 +1,17 @@
 @page "/visits/create"
 @inject VMS.Web.Services.IVisitService VisitService
 @inject VMS.Web.Services.IVisitorService VisitorService
-@inject VMS.Web.Services.IOfficeService OfficeService
+@inject VMS.Web.Services.IEmployeeService EmployeeService
 @inject VMS.Web.Services.IStorageService StorageService
 @inject VMS.Web.Auth.MockAuthService MockAuth
 @inject NavigationManager NavigationManager
 @using Microsoft.AspNetCore.Components.Forms
 @using System.Text.Json
 
-<PageTitle>Schedule Visit</PageTitle>
+<PageTitle>Register Visit</PageTitle>
 
-<h1 class="mb-4">Schedule Visit</h1>
+<h1 class="mb-1">Register Visit</h1>
+<p class="text-muted mb-4">Capture visitor details and notify the host.</p>
 
 @if (isLoading)
 {
@@ -18,85 +19,249 @@
 }
 else if (!MockAuth.HasPermission(DemoPermissions.VisitsCreate))
 {
-    <div class="alert alert-warning">Your current demo role cannot schedule visits.</div>
+    <div class="alert alert-warning">Your current demo role cannot register visits.</div>
 }
 else
 {
-    <div class="card shadow-sm">
-        <div class="card-body">
-            @if (!string.IsNullOrWhiteSpace(errorMessage))
-            {
-                <div class="alert alert-danger">@errorMessage</div>
-            }
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
 
-            <EditForm Model="request" OnValidSubmit="HandleSubmitAsync">
-                <DataAnnotationsValidator />
-                <ValidationSummary />
+    <EditForm Model="request" OnValidSubmit="HandleSubmitAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
 
-                <div class="mb-3">
-                    <label class="form-label">Visitor</label>
-                    <InputSelect class="form-select" @bind-Value="request.VisitorId">
-                        <option value="0">Select visitor</option>
-                        @foreach (var visitor in visitors)
-                        {
-                            <option value="@visitor.Id">@visitor.FullName</option>
-                        }
-                    </InputSelect>
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-person-vcard text-primary"></i>
+                    <span class="form-section-label">Visitor Details</span>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Office</label>
-                    <InputSelect class="form-select" @bind-Value="request.OfficeId">
-                        <option value="0">Select office</option>
-                        @foreach (var office in offices)
-                        {
-                            <option value="@office.Id">@office.Name (@office.OfficeCode)</option>
-                        }
-                    </InputSelect>
-                </div>
+                @if (selectedVisitor is not null)
+                {
+                    <div class="alert alert-info d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>@selectedVisitor.FullName</strong> — @selectedVisitor.PhoneNumber
+                            @if (!string.IsNullOrWhiteSpace(selectedVisitor.IdentificationNumber))
+                            {
+                                <span> · @selectedVisitor.IdentificationType: @selectedVisitor.IdentificationNumber</span>
+                            }
+                            @if (selectedGateVisit is not null)
+                            {
+                                <i class="bi bi-shield-check ms-1" style="font-size:0.75em;color:var(--vms-primary);" title="Registered at the gate — continue their check-in"></i>
+                            }
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="ClearSelectedVisitor">Change</button>
+                    </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Visit Date</label>
-                    <InputDate  class="form-control" @bind-Value="request.VisitDate" />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Expected Arrival</label>
-                    <InputDate class="form-control" @bind-Value="expectedArrivalDate" />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Purpose</label>
-                    <InputTextArea class="form-control" @bind-Value="request.Purpose" />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Attachment</label>
-                    <InputFile class="form-control" OnChange="HandleFileSelected" />
-                    @if (selectedFile is not null)
+                    @if (selectedGateVisit is not null)
                     {
-                        <div class="form-text">Selected file: @selectedFile.Name</div>
+                        <div class="alert alert-light border small mb-0 mt-2">
+                            <strong>Already captured at the gate:</strong>
+                            <ul class="mb-0 mt-1">
+                                @if (!string.IsNullOrWhiteSpace(selectedGateVisit.VehiclePlateNumber))
+                                {
+                                    <li>Vehicle: @selectedGateVisit.VehiclePlateNumber</li>
+                                }
+                                @if (selectedGateVisit.ParkingReservations.Count > 0)
+                                {
+                                    <li>Parking: @selectedGateVisit.ParkingReservations.First().SlotCode</li>
+                                }
+                                @if (selectedGateVisit.Items.Count > 0)
+                                {
+                                    <li>Items: @string.Join(", ", selectedGateVisit.Items.Select(item => item.ItemName))</li>
+                                }
+                                @if (selectedGateVisit.Equipment is { HasLaptop: true } equipment)
+                                {
+                                    <li>Device: @equipment.DeviceType@(string.IsNullOrWhiteSpace(equipment.DeviceBrand) ? "" : $" — {equipment.DeviceBrand}")</li>
+                                }
+                                @if (string.IsNullOrWhiteSpace(selectedGateVisit.VehiclePlateNumber)
+                                    && selectedGateVisit.ParkingReservations.Count == 0
+                                    && selectedGateVisit.Items.Count == 0
+                                    && selectedGateVisit.Equipment is not { HasLaptop: true })
+                                {
+                                    <li class="text-muted">Nothing else declared.</li>
+                                }
+                            </ul>
+                        </div>
                     }
+                }
+                else
+                {
+                    <label class="form-label-sm">Search Existing Visitor</label>
+                    <div class="input-icon-wrapper mb-3">
+                        <i class="bi bi-search"></i>
+                        <input class="form-control" placeholder="Search by name, phone, or ID number" @bind="searchTerm" @bind:event="oninput" @onkeydown="SuppressEnterSubmit" @onkeydown:preventDefault="preventEnterSubmit" />
+
+                        @if (!string.IsNullOrWhiteSpace(searchTerm))
+                        {
+                            var matches = FilteredVisitors.Take(8).ToList();
+
+                            @if (matches.Count > 0)
+                            {
+                                <div class="list-group search-suggestions">
+                                    @foreach (var visitor in matches)
+                                    {
+                                        var gateVisitId = GateVisitIdFor(visitor.Id);
+                                        <button type="button" class="list-group-item list-group-item-action" @onclick="() => SelectVisitor(visitor, gateVisitId)">
+                                            <strong>@visitor.FullName</strong>
+                                            @if (gateVisitId.HasValue)
+                                            {
+                                                <i class="bi bi-shield-check ms-1" style="font-size:0.75em;color:var(--vms-primary);" title="Registered at the gate — continue their check-in"></i>
+                                            }
+                                            — @visitor.PhoneNumber
+                                            @if (!string.IsNullOrWhiteSpace(visitor.IdentificationNumber))
+                                            {
+                                                <span class="text-muted"> · @visitor.IdentificationNumber</span>
+                                            }
+                                        </button>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="search-suggestions p-2 text-muted small">No matching visitor found. Fill in the details below to register a new one.</div>
+                            }
+                        }
+                    </div>
+
+                    <VisitorFieldsEditor Visitor="newVisitorRequest" />
+                }
+
+                <hr class="my-4" />
+
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-clipboard-check text-primary"></i>
+                    <span class="form-section-label">Visit Details</span>
                 </div>
 
-                <button class="btn btn-primary" type="submit" disabled="@isSaving">
-                    @(isSaving ? (isUploadingFile ? "Uploading attachment..." : "Saving...") : "Create Visit")
-                </button>
-            </EditForm>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Purpose</label>
+                        <InputSelect class="form-select" @bind-Value="request.Purpose">
+                            <option value="">Select a purpose...</option>
+                            @foreach (var purpose in EnumLabels.SelectableVisitPurposes)
+                            {
+                                <option value="@purpose">@EnumLabels.Format(purpose)</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Host</label>
+                        @if (SelectedEmployee is not null)
+                        {
+                            <div class="alert alert-info d-flex justify-content-between align-items-center mb-0">
+                                <div>
+                                    <strong>@SelectedEmployee.FullName</strong>@(string.IsNullOrWhiteSpace(SelectedEmployee.Position) ? "" : $" — {SelectedEmployee.Position}")
+                                    <div class="mt-1">
+                                        <span class="text-muted small">Presence:</span>
+                                        <span class="status-pill @(SelectedEmployee.IsActive ? "status-pill-green" : "status-pill-gray")">@(SelectedEmployee.IsActive ? "Active" : "Inactive")</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="ClearSelectedHost">Change</button>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="input-icon-wrapper">
+                                <i class="bi bi-search"></i>
+                                <input class="form-control" placeholder="Search host by name" @bind="hostSearchTerm" @bind:event="oninput" @onkeydown="SuppressEnterSubmit" @onkeydown:preventDefault="preventEnterSubmit" />
+
+                                @if (!string.IsNullOrWhiteSpace(hostSearchTerm))
+                                {
+                                    var hostMatches = FilteredEmployees.Take(8).ToList();
+
+                                    @if (hostMatches.Count > 0)
+                                    {
+                                        <div class="list-group search-suggestions">
+                                            @foreach (var employee in hostMatches)
+                                            {
+                                                <button type="button" class="list-group-item list-group-item-action" @onclick="() => SelectHost(employee)">
+                                                    <strong>@employee.FullName</strong>@(string.IsNullOrWhiteSpace(employee.Position) ? "" : $" — {employee.Position}")
+                                                </button>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="search-suggestions p-2 text-muted small">No matching host found.</div>
+                                    }
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Purpose Details</label>
+                        <InputTextArea class="form-control" placeholder="Optional — additional context" @bind-Value="request.PurposeDescription" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Department</label>
+                        <input class="form-control" value="@selectedHostDepartmentName" readonly placeholder="Select a host to auto-fill" />
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Badge Number</label>
+                        <InputText class="form-control" placeholder="Optional" @bind-Value="request.BadgeNumber" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Attachment</label>
+                        <div class="file-drop">
+                            <InputFile class="form-control" OnChange="HandleFileSelected" />
+                        </div>
+                        @if (selectedFile is not null)
+                        {
+                            <div class="form-text">Selected file: @selectedFile.Name</div>
+                        }
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+
+        <button class="btn btn-primary" type="submit" disabled="@isSaving">
+            @(isSaving ? (isUploadingFile ? "Uploading attachment..." : "Saving...") : "Register Visit")
+        </button>
+    </EditForm>
 }
 
 @code {
-    private VisitCreateDto request = new() { VisitDate = DateTime.Today };
-    private DateTime? expectedArrivalDate = DateTime.Today;
+    private VisitCreateDto request = new();
+    private CreateVisitorDto newVisitorRequest = new();
+    private VisitorDto? selectedVisitor;
+    private VisitDto? selectedGateVisit;
+    private string searchTerm = string.Empty;
+    private string hostSearchTerm = string.Empty;
     private List<VisitorDto> visitors = [];
-    private List<OfficeDto> offices = [];
+    private List<VisitDto> gateRegisteredVisits = [];
+    private List<EmployeeDto> employees = [];
+    private string selectedHostDepartmentName = string.Empty;
     private IBrowserFile? selectedFile;
     private bool isLoading = true;
     private bool isSaving;
     private bool isUploadingFile;
     private string? errorMessage;
+
+    private EmployeeDto? SelectedEmployee => employees.FirstOrDefault(employee => employee.Id == request.HostEmployeeId);
+
+    private IEnumerable<VisitorDto> FilteredVisitors =>
+        visitors.Where(visitor =>
+            visitor.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            visitor.PhoneNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            visitor.IdentificationNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+
+    private int? GateVisitIdFor(int visitorId) =>
+        gateRegisteredVisits.FirstOrDefault(visit => visit.VisitorId == visitorId)?.Id;
+
+    private IEnumerable<EmployeeDto> FilteredEmployees =>
+        employees.Where(employee =>
+            employee.FullName.Contains(hostSearchTerm, StringComparison.OrdinalIgnoreCase) ||
+            (!string.IsNullOrWhiteSpace(employee.Position) && employee.Position.Contains(hostSearchTerm, StringComparison.OrdinalIgnoreCase)));
 
     protected override async Task OnInitializedAsync()
     {
@@ -105,7 +270,8 @@ else
         try
         {
             visitors = (await VisitorService.GetVisitorsAsync()).ToList();
-            offices = (await OfficeService.GetOfficesAsync()).ToList();
+            employees = (await EmployeeService.GetEmployeesAsync()).Where(employee => employee.IsActive).ToList();
+            gateRegisteredVisits = (await VisitService.GetGateRegisteredVisitsAsync()).ToList();
         }
         catch
         {
@@ -117,6 +283,45 @@ else
         }
     }
 
+    private bool preventEnterSubmit;
+
+    private void SuppressEnterSubmit(KeyboardEventArgs e)
+    {
+        preventEnterSubmit = e.Key == "Enter";
+    }
+
+    private void SelectVisitor(VisitorDto visitor, int? gateVisitId)
+    {
+        selectedVisitor = visitor;
+        selectedGateVisit = gateVisitId.HasValue
+            ? gateRegisteredVisits.FirstOrDefault(visit => visit.Id == gateVisitId.Value)
+            : null;
+        searchTerm = string.Empty;
+    }
+
+    private void ClearSelectedVisitor()
+    {
+        selectedVisitor = null;
+        selectedGateVisit = null;
+        searchTerm = string.Empty;
+    }
+
+    private void SelectHost(EmployeeDto employee)
+    {
+        request.HostEmployeeId = employee.Id;
+        request.DepartmentId = employee.DepartmentId;
+        selectedHostDepartmentName = employee.DepartmentName ?? string.Empty;
+        hostSearchTerm = string.Empty;
+    }
+
+    private void ClearSelectedHost()
+    {
+        request.HostEmployeeId = 0;
+        request.DepartmentId = 0;
+        selectedHostDepartmentName = string.Empty;
+        hostSearchTerm = string.Empty;
+    }
+
     private void HandleFileSelected(InputFileChangeEventArgs args)
     {
         selectedFile = args.File;
@@ -124,14 +329,66 @@ else
 
     private async Task HandleSubmitAsync()
     {
+        if (selectedVisitor is null &&
+            (string.IsNullOrWhiteSpace(newVisitorRequest.FullName) ||
+             string.IsNullOrWhiteSpace(newVisitorRequest.PhoneNumber) ||
+             string.IsNullOrWhiteSpace(newVisitorRequest.IdentificationNumber)))
+        {
+            errorMessage = "Full name, phone number, and identification number are required to register a new visitor.";
+            return;
+        }
+
+        if (request.HostEmployeeId is null or 0)
+        {
+            errorMessage = "Select a host.";
+            return;
+        }
+
+        if (request.Purpose is null)
+        {
+            errorMessage = "Select a purpose.";
+            return;
+        }
+
         isSaving = true;
         isUploadingFile = false;
         errorMessage = null;
 
         try
         {
-            request.CreatedById = null;
-            request.ExpectedArrival = expectedArrivalDate;
+            if (selectedGateVisit is not null)
+            {
+                // Completing a gate handover — same VisitId, VisitNumber, and everything
+                // security already captured; this just fills in Host/Purpose/Badge.
+                await VisitService.CompleteHandoverAsync(selectedGateVisit.Id, new CompleteHandoverDto
+                {
+                    HostEmployeeId = request.HostEmployeeId.Value,
+                    DepartmentId = request.DepartmentId!.Value,
+                    Purpose = request.Purpose.Value,
+                    PurposeDescription = request.PurposeDescription,
+                    BadgeNumber = request.BadgeNumber
+                });
+
+                NavigationManager.NavigateTo("/visits");
+                return;
+            }
+
+            if (selectedVisitor is null)
+            {
+                var createdVisitor = await VisitorService.CreateVisitorAsync(newVisitorRequest);
+                if (createdVisitor is null)
+                {
+                    errorMessage = "Failed to create visitor.";
+                    return;
+                }
+
+                // Lock in the newly created visitor immediately so a retry (if the
+                // visit call below fails) does not create a duplicate visitor record.
+                selectedVisitor = createdVisitor;
+            }
+
+            request.VisitorId = selectedVisitor.Id;
+            request.CheckedInById = 1;
 
             if (selectedFile is not null)
             {
@@ -145,7 +402,7 @@ else
         }
         catch (HttpRequestException ex)
         {
-            errorMessage = TryExtractMessage(ex.Message) ?? "Failed to create visit.";
+            errorMessage = TryExtractMessage(ex.Message) ?? "Failed to register visit.";
         }
         catch (Exception ex)
         {

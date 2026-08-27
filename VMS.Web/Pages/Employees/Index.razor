@@ -1,0 +1,92 @@
+@page "/employees"
+@inject VMS.Web.Services.IEmployeeService EmployeeService
+@inject VMS.Web.Auth.MockAuthService MockAuth
+
+<PageTitle>Employees</PageTitle>
+
+<h1 class="mb-4">Employees</h1>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="text-muted mb-0">Staff directory used to host visitors.</p>
+    @if (MockAuth.HasPermission(DemoPermissions.EmployeesManage))
+    {
+        <a class="btn btn-primary" href="/employees/create">New Employee</a>
+    }
+</div>
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (employees.Count == 0)
+{
+    <div class="alert alert-info">No employees found.</div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Employee #</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Position</th>
+                        <th>Active</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var employee in employees)
+                {
+                    <tr>
+                        <td>@employee.EmployeeNumber</td>
+                        <td>@employee.FullName</td>
+                        <td>@employee.DepartmentName</td>
+                        <td>@employee.Position</td>
+                        <td><StatusPill Label="@(employee.IsActive ? "Active" : "Inactive")" Tone="@(employee.IsActive ? "green" : "gray")" IconClass="bi-circle-fill" /></td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a class="btn btn-outline-primary" href="/employees/@employee.Id">View</a>
+                                @if (MockAuth.HasPermission(DemoPermissions.EmployeesManage))
+                                {
+                                    <a class="btn btn-outline-secondary" href="/employees/@employee.Id/edit">Edit</a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    private List<EmployeeDto> employees = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await MockAuth.InitializeAsync();
+
+        try
+        {
+            employees = (await EmployeeService.GetEmployeesAsync()).ToList();
+        }
+        catch
+        {
+            errorMessage = "Failed to load employees.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

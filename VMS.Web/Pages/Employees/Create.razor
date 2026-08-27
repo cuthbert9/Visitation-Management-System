@@ -1,0 +1,123 @@
+@page "/employees/create"
+@inject VMS.Web.Services.IEmployeeService EmployeeService
+@inject VMS.Web.Services.IDepartmentService DepartmentService
+@inject VMS.Web.Auth.MockAuthService MockAuth
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create Employee</PageTitle>
+
+<h1 class="mb-4">Create Employee</h1>
+
+@if (!MockAuth.HasPermission(DemoPermissions.EmployeesManage))
+{
+    <div class="alert alert-warning">Your current demo role cannot create employees.</div>
+}
+else if (isLoading)
+{
+    <LoadingSpinner />
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="alert alert-danger">@errorMessage</div>
+            }
+
+            <EditForm Model="request" OnValidSubmit="HandleSubmitAsync">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label class="form-label">Employee Number</label>
+                    <InputText class="form-control" @bind-Value="request.EmployeeNumber" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <InputText class="form-control" @bind-Value="request.FullName" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <InputText class="form-control" @bind-Value="request.Email" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Phone Number</label>
+                    <InputText class="form-control" @bind-Value="request.PhoneNumber" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Position</label>
+                    <InputText class="form-control" @bind-Value="request.Position" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Department</label>
+                    <InputSelect class="form-select" @bind-Value="request.DepartmentId">
+                        <option value="0">Select department</option>
+                        @foreach (var department in departments)
+                        {
+                            <option value="@department.Id">@department.Name (@department.Code)</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <button class="btn btn-primary" type="submit" disabled="@isSaving">
+                    @(isSaving ? "Saving..." : "Create Employee")
+                </button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    private CreateEmployeeDto request = new();
+    private List<DepartmentDto> departments = [];
+    private bool isLoading = true;
+    private bool isSaving;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await MockAuth.InitializeAsync();
+
+        try
+        {
+            departments = (await DepartmentService.GetDepartmentsAsync()).ToList();
+        }
+        catch
+        {
+            errorMessage = "Failed to load departments.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+
+        try
+        {
+            var created = await EmployeeService.CreateEmployeeAsync(request);
+            if (created is not null)
+            {
+                NavigationManager.NavigateTo($"/employees/{created.Id}");
+            }
+        }
+        catch
+        {
+            errorMessage = "Failed to create employee.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

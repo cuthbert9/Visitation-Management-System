@@ -1,0 +1,225 @@
+@page "/security/visitors"
+@using VMS.Web.Services
+@inject VMS.Web.Services.IVisitService VisitService
+@inject VMS.Web.Services.IGateTrackingService GateTrackingService
+@inject VMS.Web.Auth.MockAuthService MockAuth
+@inject NavigationManager NavigationManager
+
+<PageTitle>Manage Visitors</PageTitle>
+
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+    <div>
+        <h1 class="mb-1">Manage Visitors</h1>
+        <p class="text-muted mb-0">Gate registration and monitoring for every visitor on site.</p>
+    </div>
+    @if (MockAuth.HasPermission(DemoPermissions.GateVisitorsCreate))
+    {
+        <a class="btn btn-primary" href="/security/visitors/register"><i class="bi bi-plus-circle me-1"></i> Register Gate Visitor</a>
+    }
+</div>
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else
+{
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-lg">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">At Gate Now</div>
+                    <div class="stat-value">@AtGateNowCount</div>
+                </div>
+                <div class="stat-icon stat-icon-blue"><i class="bi bi-shield-check"></i></div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Pending Handover</div>
+                    <div class="stat-value">@PendingHandoverCount</div>
+                </div>
+                <div class="stat-icon stat-icon-amber"><i class="bi bi-hourglass-split"></i></div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">PC Mismatch Flags</div>
+                    <div class="stat-value">@PcMismatchCount</div>
+                </div>
+                <div class="stat-icon stat-icon-red"><i class="bi bi-laptop"></i></div>
+            </div>
+        </div>
+    </div>
+
+    @if (visits.Count == 0)
+    {
+        <div class="card">
+            <EmptyState IconClass="bi-inboxes" Message="No visitors registered yet." ActionLabel="@(MockAuth.HasPermission(DemoPermissions.GateVisitorsCreate) ? "Register Gate Visitor" : null)" OnAction="GoToRegister" />
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Visitor</th>
+                            <th>Vehicle / Parking</th>
+                            <th>Items</th>
+                            <th>PC</th>
+                            <th>Host</th>
+                            <th>Arrival</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var visit in visits)
+                    {
+                        var gateInfo = gateInfoByVisitId.GetValueOrDefault(visit.Id);
+                        var mismatch = GateTrackingService.HasPcMismatch(visit.Id, visit.Status);
+                        var presentation = GetStatusPresentation(visit.Status);
+                        var reservation = visit.ParkingReservations.FirstOrDefault();
+
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <Avatar FullName="@visit.Visitor.FullName" Size="sm" />
+                                    <div>
+                                        <div class="fw-semibold">@visit.Visitor.FullName</div>
+                                        <div class="text-muted small">@(string.IsNullOrWhiteSpace(visit.Visitor.Organization) ? "Individual" : visit.Visitor.Organization)</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                @if (string.IsNullOrWhiteSpace(visit.VehiclePlateNumber) && reservation is null)
+                                {
+                                    <span class="text-muted small">None</span>
+                                }
+                                else
+                                {
+                                    @if (!string.IsNullOrWhiteSpace(visit.VehiclePlateNumber))
+                                    {
+                                        <div>@visit.VehiclePlateNumber</div>
+                                    }
+                                    @if (reservation is not null)
+                                    {
+                                        <div class="text-muted small">Slot @reservation.SlotCode</div>
+                                    }
+                                }
+                            </td>
+                            <td>
+                                @if (visit.Items.Count == 0)
+                                {
+                                    <span class="text-muted small">None</span>
+                                }
+                                else
+                                {
+                                    <span class="status-pill status-pill-gray">@visit.Items.Count item@(visit.Items.Count == 1 ? "" : "s")</span>
+                                }
+                            </td>
+                            <td>
+                                @if (gateInfo is { HasLaptop: true })
+                                {
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="status-pill status-pill-blue">@gateInfo.DeviceType</span>
+                                        @if (mismatch)
+                                        {
+                                            <span class="status-pill status-pill-red" title="No confirmation the device was returned">PC Mismatch</span>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">No device</span>
+                                }
+                            </td>
+                            <td>@(visit.HostEmployee?.FullName ?? "Awaiting handover")</td>
+                            <td>
+                                <div>@visit.ArrivalTime.ToLocalTime().ToString("dd MMM yyyy HH:mm")</div>
+                            </td>
+                            <td><span class="status-pill @presentation.CssClass">@presentation.Label</span></td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a class="btn btn-outline-secondary" href="/visits/@visit.Id">Open</a>
+                                    @if (MockAuth.HasPermission(DemoPermissions.GateVisitorsCreate))
+                                    {
+                                        <a class="btn btn-outline-secondary" href="/security/visitors/@visit.Id/edit">Edit</a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private static readonly VisitStatus[] AtGateStatuses =
+    [
+        VisitStatus.Registered,
+        VisitStatus.WaitingForHost,
+        VisitStatus.HostAcknowledged,
+        VisitStatus.Attended,
+        VisitStatus.AwaitingExit
+    ];
+
+    private List<VisitDto> visits = [];
+    private Dictionary<int, GateTrackingInfo?> gateInfoByVisitId = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    private int AtGateNowCount => visits.Count(v => AtGateStatuses.Contains(v.Status));
+    private int PendingHandoverCount => visits.Count(v => v.Status == VisitStatus.Registered);
+    private int PcMismatchCount => visits.Count(v => GateTrackingService.HasPcMismatch(v.Id, v.Status));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await MockAuth.InitializeAsync();
+
+        try
+        {
+            visits = (await VisitService.GetVisitsAsync()).OrderByDescending(v => v.ArrivalTime).ToList();
+
+            foreach (var visit in visits)
+            {
+                gateInfoByVisitId[visit.Id] = await GateTrackingService.GetInfoAsync(visit.Id);
+            }
+        }
+        catch
+        {
+            errorMessage = "Failed to load gate visitors.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void GoToRegister() => NavigationManager.NavigateTo("/security/visitors/register");
+
+    private static (string Label, string CssClass) GetStatusPresentation(VisitStatus status) => status switch
+    {
+        VisitStatus.Registered => ("Registered", "status-pill-amber"),
+        VisitStatus.WaitingForHost => ("Awaiting Host", "status-pill-amber"),
+        VisitStatus.HostAcknowledged => ("Host Acknowledged", "status-pill-blue"),
+        VisitStatus.Attended => ("Attended", "status-pill-green"),
+        VisitStatus.AwaitingExit => ("Departure Pending", "status-pill-blue"),
+        VisitStatus.Completed => ("Completed", "status-pill-teal"),
+        VisitStatus.Closed => ("Closed", "status-pill-gray"),
+        VisitStatus.Cancelled => ("Cancelled", "status-pill-gray"),
+        VisitStatus.Denied => ("Denied", "status-pill-red"),
+        _ => (status.ToString(), "status-pill-gray")
+    };
+}

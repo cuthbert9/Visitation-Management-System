@@ -1,0 +1,325 @@
+@page "/visits/outbound/{Id}/complete"
+@inject VMS.Web.Services.IOutboundVisitService OutboundVisitService
+@inject VMS.Web.Services.ToastService Toasts
+@inject VMS.Web.Auth.MockAuthService MockAuth
+@inject NavigationManager NavigationManager
+
+<PageTitle>Complete Outbound Visit</PageTitle>
+
+<div class="mb-3">
+    <a href="@($"/visits/outbound/{Id}")" class="text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Back to Visit</a>
+</div>
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage) && visit is null)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (visit is null)
+{
+    <div class="alert alert-warning">Outbound visit not found.</div>
+}
+else if (visit.ExecutionStatus != OutboundVisitExecutionStatus.InProgress)
+{
+    <div class="alert alert-warning">Only visits currently in progress can be completed.</div>
+}
+else
+{
+    <h1 class="mb-1">Complete Outbound Visit</h1>
+    <p class="text-muted mb-4">@visit.Title &middot; @visit.Organization</p>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="form-section-label mb-3">Visit Execution</div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label-sm">Actual Start Time</label>
+                    <input type="datetime-local" class="form-control" value="@actualStartValue" @onchange="e => actualStartValue = e.Value?.ToString() ?? string.Empty" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label-sm">Actual End Time</label>
+                    <input type="datetime-local" class="form-control" value="@actualEndValue" @onchange="e => actualEndValue = e.Value?.ToString() ?? string.Empty" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label-sm">Visit Outcome</label>
+                    <select class="form-select" @bind="result">
+                        @foreach (var outcome in Enum.GetValues<OutboundVisitOutcomeResult>())
+                        {
+                            <option value="@outcome">@FormatOutcome(outcome)</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="form-section-label mb-3">Discussion &amp; Feedback</div>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label-sm">Discussion Summary</label>
+                    <textarea class="form-control" rows="3" @bind="discussionSummary" @bind:event="oninput"></textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label-sm">Customer / Stakeholder Feedback</label>
+                    <textarea class="form-control" rows="2" @bind="customerFeedback"></textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label-sm">Agreements Reached</label>
+                    <textarea class="form-control" rows="2" @bind="agreementsReached"></textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label-sm">Actions Required</label>
+                    <textarea class="form-control" rows="2" @bind="actionsRequired"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="form-section-label mb-3">Follow-Up</div>
+
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="followUpRequired" @bind="followUpRequired" />
+                <label class="form-check-label" for="followUpRequired">Follow-up required</label>
+            </div>
+
+            @if (followUpRequired)
+            {
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label-sm">Follow-up Date</label>
+                        <input type="date" class="form-control" value="@followUpDate" @onchange="e => followUpDate = e.Value?.ToString() ?? string.Empty" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label-sm">Responsible Employee</label>
+                        <select class="form-select" @bind="followUpEmployeeIdValue">
+                            <option value="0">Select...</option>
+                            <option value="@visit.Owner.Id">@visit.Owner.FullName</option>
+                            @foreach (var member in visit.TeamMembers)
+                            {
+                                <option value="@member.Id">@member.FullName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label-sm">Follow-up Task</label>
+                        <input class="form-control" @bind="followUpTask" @bind:event="oninput" />
+                    </div>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted small mb-0">No follow-up will be created for this visit.</p>
+            }
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="form-section-label mb-3">Attachments &amp; Remarks</div>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label-sm">Remarks</label>
+                    <textarea class="form-control" rows="2" @bind="remarks"></textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label-sm">Attach Photos or Documents</label>
+                    <div class="file-drop">
+                        <InputFile class="form-control" multiple OnChange="HandleFilesSelected" />
+                    </div>
+                    @if (attachedFileNames.Count > 0)
+                    {
+                        <ul class="list-unstyled mt-2 mb-0">
+                            @foreach (var fileName in attachedFileNames)
+                            {
+                                <li class="small text-muted"><i class="bi bi-paperclip me-1"></i>@fileName</li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-sticky-footer">
+        <div class="small text-muted">@MissingFieldsMessage</div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary" @onclick="GoBack" disabled="@isSaving">Cancel</button>
+            <button type="button" class="btn btn-primary" @onclick="SubmitAsync" disabled="@(isSaving || !CanSubmit)">@(isSaving ? "Saving..." : "Complete Visit")</button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string Id { get; set; } = string.Empty;
+
+    private OutboundVisitDto? visit;
+    private bool isLoading = true;
+    private bool isSaving;
+    private string? errorMessage;
+
+    private string actualStartValue = DateTime.Now.AddHours(-1).ToString("yyyy-MM-ddTHH:mm");
+    private string actualEndValue = DateTime.Now.ToString("yyyy-MM-ddTHH:mm");
+    private OutboundVisitOutcomeResult result = OutboundVisitOutcomeResult.Successful;
+    private string discussionSummary = string.Empty;
+    private string customerFeedback = string.Empty;
+    private string agreementsReached = string.Empty;
+    private string actionsRequired = string.Empty;
+    private string remarks = string.Empty;
+    private List<string> attachedFileNames = [];
+
+    private bool followUpRequired;
+    private string followUpDate = string.Empty;
+    private string followUpEmployeeIdValue = "0";
+    private string followUpTask = string.Empty;
+
+    private bool CanSubmit
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(discussionSummary))
+            {
+                return false;
+            }
+
+            if (!followUpRequired)
+            {
+                return true;
+            }
+
+            return !string.IsNullOrWhiteSpace(followUpDate) &&
+                   followUpEmployeeIdValue != "0" &&
+                   !string.IsNullOrWhiteSpace(followUpTask);
+        }
+    }
+
+    private string MissingFieldsMessage
+    {
+        get
+        {
+            if (CanSubmit)
+            {
+                return string.Empty;
+            }
+
+            List<string> missing = [];
+            if (string.IsNullOrWhiteSpace(discussionSummary)) missing.Add("Discussion Summary");
+            if (followUpRequired)
+            {
+                if (string.IsNullOrWhiteSpace(followUpDate)) missing.Add("Follow-up Date");
+                if (followUpEmployeeIdValue == "0") missing.Add("Responsible Employee");
+                if (string.IsNullOrWhiteSpace(followUpTask)) missing.Add("Follow-up Task");
+            }
+
+            return missing.Count == 0 ? string.Empty : $"Still needed: {string.Join(", ", missing)}.";
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await MockAuth.InitializeAsync();
+
+        isLoading = true;
+        try
+        {
+            visit = await OutboundVisitService.GetVisitAsync(Id);
+        }
+        catch
+        {
+            errorMessage = "Failed to load this outbound visit.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private Task HandleFilesSelected(InputFileChangeEventArgs e)
+    {
+        foreach (var file in e.GetMultipleFiles(10))
+        {
+            attachedFileNames.Add(file.Name);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private void GoBack() => NavigationManager.NavigateTo($"/visits/outbound/{Id}");
+
+    private async Task SubmitAsync()
+    {
+        if (visit is null || !CanSubmit || isSaving)
+        {
+            return;
+        }
+
+        if (!DateTime.TryParse(actualStartValue, out var actualStart) || !DateTime.TryParse(actualEndValue, out var actualEnd))
+        {
+            errorMessage = "Please provide valid start and end times.";
+            return;
+        }
+
+        int? followUpEmployeeId = followUpRequired && int.TryParse(followUpEmployeeIdValue, out var empId) ? empId : null;
+        var responsibleName = followUpEmployeeId is null
+            ? null
+            : (followUpEmployeeId == visit.Owner.Id ? visit.Owner.FullName : visit.TeamMembers.FirstOrDefault(m => m.Id == followUpEmployeeId)?.FullName);
+
+        isSaving = true;
+        try
+        {
+            var request = new CompleteOutboundVisitRequest
+            {
+                ActualStart = actualStart,
+                ActualEnd = actualEnd,
+                Result = result,
+                DiscussionSummary = discussionSummary,
+                CustomerFeedback = string.IsNullOrWhiteSpace(customerFeedback) ? null : customerFeedback,
+                AgreementsReached = string.IsNullOrWhiteSpace(agreementsReached) ? null : agreementsReached,
+                ActionsRequired = string.IsNullOrWhiteSpace(actionsRequired) ? null : actionsRequired,
+                Remarks = string.IsNullOrWhiteSpace(remarks) ? null : remarks,
+                FollowUpRequired = followUpRequired,
+                FollowUpDate = followUpRequired && DateOnly.TryParse(followUpDate, out var parsedDate) ? parsedDate : null,
+                FollowUpResponsibleEmployeeId = followUpEmployeeId,
+                FollowUpResponsibleEmployeeName = responsibleName,
+                FollowUpTask = followUpRequired ? followUpTask : null
+            };
+
+            var updated = await OutboundVisitService.CompleteVisitAsync(visit.Id, request);
+
+            var message = followUpRequired
+                ? $"{updated.Title} marked complete. A follow-up task was created for {responsibleName}."
+                : $"{updated.Title} marked complete.";
+            Toasts.Show(message);
+
+            NavigationManager.NavigateTo($"/visits/outbound/{updated.Id}?tab=outcome");
+        }
+        catch
+        {
+            errorMessage = "Failed to complete this visit.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private static string FormatOutcome(OutboundVisitOutcomeResult outcome) => outcome switch
+    {
+        OutboundVisitOutcomeResult.Successful => "Successful",
+        OutboundVisitOutcomeResult.PartiallySuccessful => "Partially Successful",
+        OutboundVisitOutcomeResult.Unsuccessful => "Unsuccessful",
+        OutboundVisitOutcomeResult.PostponedByCustomer => "Postponed by Customer",
+        _ => outcome.ToString()
+    };
+}

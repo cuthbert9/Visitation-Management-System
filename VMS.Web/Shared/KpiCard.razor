@@ -1,0 +1,18 @@
+<div class="stat-card @(OnClick.HasDelegate ? "stat-card-clickable" : "") @(IsActive ? "stat-card-active" : "")" @onclick="HandleClick">
+    <div>
+        <div class="stat-label">@Label</div>
+        <div class="stat-value">@Value</div>
+    </div>
+    <div class="stat-icon stat-icon-@Tone"><i class="bi @IconClass"></i></div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = string.Empty;
+    [Parameter] public string Value { get; set; } = "0";
+    [Parameter] public string IconClass { get; set; } = "bi-circle";
+    [Parameter] public string Tone { get; set; } = "blue";
+    [Parameter] public bool IsActive { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    private Task HandleClick() => OnClick.HasDelegate ? OnClick.InvokeAsync() : Task.CompletedTask;
+}

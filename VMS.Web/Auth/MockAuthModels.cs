@@ -4,7 +4,8 @@ public enum DemoRole
 {
     Security,
     Receptionist,
-    Admin
+    Admin,
+    SalesPersonnel
 }
 
 public static class DemoPermissions
@@ -12,20 +13,30 @@ public static class DemoPermissions
     public const string VisitorsRead = "visitors.read";
     public const string VisitorsCreate = "visitors.create";
     public const string VisitorsEdit = "visitors.edit";
-    public const string OfficesRead = "offices.read";
-    public const string OfficesManage = "offices.manage";
+    public const string EmployeesRead = "employees.read";
+    public const string EmployeesManage = "employees.manage";
     public const string VisitsRead = "visits.read";
     public const string VisitsCreate = "visits.create";
-    public const string VisitsApprove = "visits.approve";
-    public const string VisitsReject = "visits.reject";
-    public const string VisitsCheckIn = "visits.checkin";
+    public const string VisitsNotifyHost = "visits.notify_host";
+    public const string VisitsHostAcknowledge = "visits.host_acknowledge";
+    public const string VisitsMarkAttended = "visits.mark_attended";
+    public const string VisitsHostComplete = "visits.host_complete";
     public const string VisitsCheckOut = "visits.checkout";
+    public const string VisitsClose = "visits.close";
+    public const string VisitsCancel = "visits.cancel";
     public const string DepartmentsRead = "departments.read";
     public const string DepartmentsManage = "departments.manage";
     public const string ParkingRead = "parking.read";
     public const string ParkingManageSlots = "parking.manage_slots";
     public const string ParkingReserve = "parking.reserve";
     public const string ParkingRelease = "parking.release";
+    public const string OutboundVisitsRead = "outbound_visits.read";
+    public const string OutboundVisitsCreate = "outbound_visits.create";
+    public const string OutboundVisitsApprove = "outbound_visits.approve";
+    public const string SecurityDashboardRead = "security.dashboard.read";
+    public const string GateVisitorsRead = "security.gate_visitors.read";
+    public const string GateVisitorsCreate = "security.gate_visitors.create";
+    public const string SecurityReportsRead = "security.reports.read";
 }
 
 public sealed class MockSession
@@ -49,11 +60,14 @@ public static class MockRoleCatalog
                 ActorId = 2,
                 Permissions =
                 [
-                    DemoPermissions.VisitsRead,
-                    DemoPermissions.VisitsCheckIn,
-                    DemoPermissions.VisitsCheckOut,
+                    DemoPermissions.SecurityDashboardRead,
+                    DemoPermissions.GateVisitorsRead,
+                    DemoPermissions.GateVisitorsCreate,
+                    DemoPermissions.SecurityReportsRead,
                     DemoPermissions.ParkingRead,
-                    DemoPermissions.ParkingRelease
+                    DemoPermissions.ParkingReserve,
+                    DemoPermissions.ParkingRelease,
+                    DemoPermissions.VisitsCheckOut
                 ]
             },
             DemoRole.Receptionist => new MockSession
@@ -66,17 +80,31 @@ public static class MockRoleCatalog
                     DemoPermissions.VisitorsRead,
                     DemoPermissions.VisitorsCreate,
                     DemoPermissions.VisitorsEdit,
-                    DemoPermissions.OfficesRead,
+                    DemoPermissions.EmployeesRead,
                     DemoPermissions.VisitsRead,
                     DemoPermissions.VisitsCreate,
-                    DemoPermissions.VisitsApprove,
-                    DemoPermissions.VisitsReject,
-                    DemoPermissions.VisitsCheckIn,
+                    DemoPermissions.VisitsNotifyHost,
+                    DemoPermissions.VisitsMarkAttended,
                     DemoPermissions.VisitsCheckOut,
+                    DemoPermissions.VisitsClose,
+                    DemoPermissions.VisitsCancel,
                     DemoPermissions.DepartmentsRead,
                     DemoPermissions.ParkingRead,
                     DemoPermissions.ParkingReserve,
-                    DemoPermissions.ParkingRelease
+                    DemoPermissions.ParkingRelease,
+                   
+                ]
+            },
+            DemoRole.SalesPersonnel => new MockSession
+            {
+                Role = role,
+                DisplayName = " Sales Personnel",
+                ActorId = 4,
+                Permissions =
+                [
+                    DemoPermissions.OutboundVisitsRead,
+                    DemoPermissions.OutboundVisitsCreate,
+                    DemoPermissions.OutboundVisitsApprove
                 ]
             },
             _ => new MockSession
@@ -86,23 +114,21 @@ public static class MockRoleCatalog
                 ActorId = 3,
                 Permissions =
                 [
-                    DemoPermissions.VisitorsRead,
+                    
                     DemoPermissions.VisitorsCreate,
-                    DemoPermissions.VisitorsEdit,
-                    DemoPermissions.OfficesRead,
-                    DemoPermissions.OfficesManage,
+                    DemoPermissions.VisitorsEdit,                    
+                    DemoPermissions.EmployeesManage,
                     DemoPermissions.VisitsRead,
-                    DemoPermissions.VisitsCreate,
-                    DemoPermissions.VisitsApprove,
-                    DemoPermissions.VisitsReject,
-                    DemoPermissions.VisitsCheckIn,
-                    DemoPermissions.VisitsCheckOut,
+                    DemoPermissions.VisitsHostAcknowledge,
+                    DemoPermissions.VisitsHostComplete,
+                    DemoPermissions.VisitsCancel,
                     DemoPermissions.DepartmentsRead,
                     DemoPermissions.DepartmentsManage,
                     DemoPermissions.ParkingRead,
                     DemoPermissions.ParkingManageSlots,
                     DemoPermissions.ParkingReserve,
-                    DemoPermissions.ParkingRelease
+                    DemoPermissions.ParkingRelease,
+                   
                 ]
             }
         };

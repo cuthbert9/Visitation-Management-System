@@ -1,0 +1,90 @@
+@if (isOpen)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(15, 23, 42, 0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@Title</h5>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="Close" disabled="@isBusy"></button>
+                </div>
+                <div class="modal-body">
+                    @if (!string.IsNullOrWhiteSpace(Description))
+                    {
+                        <p>@Description</p>
+                    }
+                    @if (RequireReason || AllowOptionalReason)
+                    {
+                        <label class="form-label-sm">@ReasonLabel (@(RequireReason ? "required" : "optional"))</label>
+                        <textarea class="form-control" rows="3" @bind="reasonText" @bind:event="oninput" placeholder="@ReasonPlaceholder"></textarea>
+                        @if (!string.IsNullOrWhiteSpace(ReasonHint))
+                        {
+                            <div class="form-text">@ReasonHint</div>
+                        }
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" @onclick="Close" disabled="@isBusy">Cancel</button>
+                    <button type="button" class="btn @ConfirmButtonClass" @onclick="ConfirmAsync" disabled="@(isBusy || (RequireReason && string.IsNullOrWhiteSpace(reasonText)))">
+                        @(isBusy ? "Working..." : ConfirmLabel)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string reasonText = string.Empty;
+    private bool isOpen;
+    private bool isBusy;
+    private Func<string?, Task>? onConfirm;
+
+    [Parameter] public string Title { get; set; } = "Are you sure?";
+    [Parameter] public string? Description { get; set; }
+    [Parameter] public string ConfirmLabel { get; set; } = "Confirm";
+    [Parameter] public string ConfirmButtonClass { get; set; } = "btn-primary";
+    [Parameter] public bool RequireReason { get; set; }
+    [Parameter] public bool AllowOptionalReason { get; set; }
+    [Parameter] public string ReasonLabel { get; set; } = "Reason";
+    [Parameter] public string? ReasonHint { get; set; }
+    [Parameter] public string ReasonPlaceholder { get; set; } = "Add a note...";
+
+    public void Open(Func<string?, Task> confirmCallback)
+    {
+        reasonText = string.Empty;
+        onConfirm = confirmCallback;
+        isOpen = true;
+        StateHasChanged();
+    }
+
+    private void Close()
+    {
+        if (isBusy)
+        {
+            return;
+        }
+
+        isOpen = false;
+        onConfirm = null;
+    }
+
+    private async Task ConfirmAsync()
+    {
+        if (onConfirm is null)
+        {
+            return;
+        }
+
+        isBusy = true;
+        try
+        {
+            await onConfirm(string.IsNullOrWhiteSpace(reasonText) ? null : reasonText);
+        }
+        finally
+        {
+            isBusy = false;
+            isOpen = false;
+            onConfirm = null;
+        }
+    }
+}

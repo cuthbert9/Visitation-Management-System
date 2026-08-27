@@ -1,0 +1,152 @@
+@page "/employees/{Id:int}/edit"
+@inject VMS.Web.Services.IEmployeeService EmployeeService
+@inject VMS.Web.Services.IDepartmentService DepartmentService
+@inject VMS.Web.Auth.MockAuthService MockAuth
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit Employee</PageTitle>
+
+<h1 class="mb-4">Edit Employee</h1>
+
+@if (!MockAuth.HasPermission(DemoPermissions.EmployeesManage))
+{
+    <div class="alert alert-warning">Your current demo role cannot edit employees.</div>
+}
+else if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (request is null)
+{
+    <div class="alert alert-warning">Employee not found.</div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="alert alert-danger">@errorMessage</div>
+            }
+
+            <EditForm Model="request" OnValidSubmit="HandleSubmitAsync">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label class="form-label">Employee Number</label>
+                    <InputText class="form-control" @bind-Value="request.EmployeeNumber" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <InputText class="form-control" @bind-Value="request.FullName" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <InputText class="form-control" @bind-Value="request.Email" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Phone Number</label>
+                    <InputText class="form-control" @bind-Value="request.PhoneNumber" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Position</label>
+                    <InputText class="form-control" @bind-Value="request.Position" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Department</label>
+                    <InputSelect class="form-select" @bind-Value="request.DepartmentId">
+                        <option value="0">Select department</option>
+                        @foreach (var department in departments)
+                        {
+                            <option value="@department.Id">@department.Name (@department.Code)</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <InputCheckbox class="form-check-input" id="isActive" @bind-Value="request.IsActive" />
+                    <label class="form-check-label" for="isActive">Active</label>
+                </div>
+
+                <button class="btn btn-primary" type="submit" disabled="@isSaving">
+                    @(isSaving ? "Saving..." : "Save Changes")
+                </button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private UpdateEmployeeDto? request;
+    private List<DepartmentDto> departments = [];
+    private bool isLoading = true;
+    private bool isSaving;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await MockAuth.InitializeAsync();
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            departments = (await DepartmentService.GetDepartmentsAsync()).ToList();
+
+            var employee = await EmployeeService.GetEmployeeByIdAsync(Id);
+            request = employee is null
+                ? null
+                : new UpdateEmployeeDto
+                {
+                    EmployeeNumber = employee.EmployeeNumber,
+                    FullName = employee.FullName,
+                    Email = employee.Email,
+                    PhoneNumber = employee.PhoneNumber,
+                    Position = employee.Position,
+                    DepartmentId = employee.DepartmentId,
+                    IsActive = employee.IsActive
+                };
+        }
+        catch
+        {
+            errorMessage = "Failed to load employee.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        if (request is null)
+        {
+            return;
+        }
+
+        isSaving = true;
+        errorMessage = null;
+
+        try
+        {
+            await EmployeeService.UpdateEmployeeAsync(Id, request);
+            NavigationManager.NavigateTo($"/employees/{Id}");
+        }
+        catch
+        {
+            errorMessage = "Failed to update employee.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

@@ -1,0 +1,415 @@
+@page "/visits/outbound/{Id}/review"
+@inject VMS.Web.Services.IOutboundVisitService OutboundVisitService
+@inject VMS.Web.Services.ToastService Toasts
+@inject VMS.Web.Auth.MockAuthService MockAuth
+@inject NavigationManager NavigationManager
+
+<PageTitle>Outbound Visit Approval</PageTitle>
+
+<div class="mb-3">
+    <a href="/visits/outbound/approvals" class="text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Back to Approvals</a>
+</div>
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (visit is null)
+{
+    <div class="alert alert-warning">Outbound visit not found.</div>
+}
+else
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    <h1 class="h3 mb-2">Outbound Visit Approval</h1>
+                    <div class="fw-semibold mb-2">@visit.Title</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <StatusPill Label="@FormatApprovalStatus(visit.ApprovalStatus)" Tone="@ApprovalTone(visit.ApprovalStatus)" />
+                        <span class="status-pill status-pill-gray">@visit.Category</span>
+                        <span class="status-pill status-pill-gray">@visit.Priority priority</span>
+                    </div>
+                </div>
+                <dl class="row text-end mb-0" style="min-width: 220px;">
+                    <dt class="col-6 text-muted small fw-normal">Request No.</dt>
+                    <dd class="col-6">@visit.RequestNo</dd>
+                    <dt class="col-6 text-muted small fw-normal">Requester</dt>
+                    <dd class="col-6">@visit.SubmittedBy</dd>
+                    <dt class="col-6 text-muted small fw-normal">Department</dt>
+                    <dd class="col-6">@visit.DepartmentName</dd>
+                    <dt class="col-6 text-muted small fw-normal">Submitted</dt>
+                    <dd class="col-6 mb-0">@(visit.SubmittedAt?.ToLocalTime().ToString("dd MMM yyyy") ?? "-")</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    @if (IsUrgent(visit))
+    {
+        <div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div>This request is flagged <strong>@visit.Priority</strong> priority — please review promptly.</div>
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="form-section-label mb-3">Visit</div>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Purpose</dt>
+                        <dd class="col-sm-8">@FormatPurpose(visit.Purpose)</dd>
+
+                        <dt class="col-sm-4">Proposed Date</dt>
+                        <dd class="col-sm-8">@visit.ProposedDate.ToString("dd MMM yyyy")</dd>
+
+                        <dt class="col-sm-4">Time</dt>
+                        <dd class="col-sm-8">@visit.StartTime.ToString("HH:mm")@(visit.EndTime.HasValue ? $" – {visit.EndTime.Value:HH\\:mm}" : "")</dd>
+
+                        <dt class="col-sm-4">Duration</dt>
+                        <dd class="col-sm-8">@FormatDuration(visit)</dd>
+
+                        <dt class="col-sm-4">Agenda</dt>
+                        <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(visit.Agenda) ? "Not provided" : visit.Agenda)</dd>
+
+                        <dt class="col-sm-4">Meeting Location</dt>
+                        <dd class="col-sm-8 mb-0">@(visit.MeetingLocation ?? "Not provided")</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="form-section-label mb-3">Customer / Stakeholder</div>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Organization</dt>
+                        <dd class="col-sm-8">@visit.Organization</dd>
+
+                        <dt class="col-sm-4">Relationship</dt>
+                        <dd class="col-sm-8">@visit.StakeholderType</dd>
+
+                        <dt class="col-sm-4">Contact</dt>
+                        <dd class="col-sm-8">@(visit.ContactPerson ?? "Not provided")</dd>
+
+                        <dt class="col-sm-4">Contact Number</dt>
+                        <dd class="col-sm-8 mb-0">@(visit.ContactNumber ?? "Not provided")</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="form-section-label mb-3">Business Justification</div>
+                    <p class="mb-2"><strong>Objective:</strong> @(visit.BusinessObjective ?? "Not provided")</p>
+                    <p class="mb-3"><strong>Expected Outcome:</strong> @(visit.ExpectedOutcome ?? "Not provided")</p>
+                    <blockquote class="timeline-quote">@(visit.Justification ?? "No justification provided.")</blockquote>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="form-section-label mb-3">Supporting Documents</div>
+                    @if (visit.Documents.Count == 0)
+                    {
+                        <p class="text-muted small mb-0">No documents attached.</p>
+                    }
+                    else
+                    {
+                        <ul class="list-group">
+                            @foreach (var document in visit.Documents)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="bi bi-file-earmark-text text-primary"></i>
+                                        <span>@document.FileName</span>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="ShowMockDocumentToast">View</button>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="form-section-label mb-3">Team</div>
+                    <div class="team-chip mb-2">
+                        <Avatar FullName="@visit.Owner.FullName" Size="sm" />
+                        <div>
+                            <div class="fw-semibold small">@visit.Owner.FullName <span class="text-muted">(Owner)</span></div>
+                            <div class="text-muted small">@visit.Owner.Position &middot; @visit.DepartmentName</div>
+                        </div>
+                    </div>
+                    @foreach (var member in visit.TeamMembers)
+                    {
+                        <div class="team-chip mb-2">
+                            <Avatar FullName="@member.FullName" Size="sm" />
+                            <div>
+                                <div class="fw-semibold small">@member.FullName</div>
+                                <div class="text-muted small">@member.Position &middot; @member.DepartmentName</div>
+                            </div>
+                        </div>
+                    }
+                    <div class="text-muted small mt-2">Total employees away: <strong>@(1 + visit.TeamMembers.Count)</strong></div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="form-section-label mb-3">Approval History</div>
+                    <Timeline Entries="ApprovalTimelineEntries" EmptyMessage="No approval activity yet." />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (visit.ApprovalStatus != OutboundVisitApprovalStatus.PendingApproval)
+    {
+        <div class="alert alert-info">This request has already been decided and no further action is needed.</div>
+    }
+    else if (!MockAuth.HasPermission(DemoPermissions.OutboundVisitsApprove))
+    {
+        <div class="alert alert-warning">You don't have approval rights — this request is shown to you as read-only.</div>
+    }
+    else
+    {
+        <div class="form-sticky-footer">
+            <div class="small text-muted">Rejecting or returning a request requires a reason, which is shared with the requester.</div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-danger" @onclick="OpenRejectDialog" disabled="@isActing">Reject</button>
+                <button type="button" class="btn btn-outline-warning" @onclick="OpenChangesDialog" disabled="@isActing">Request Changes</button>
+                <button type="button" class="btn btn-success" @onclick="OpenApproveDialog" disabled="@isActing">Approve</button>
+            </div>
+        </div>
+    }
+}
+
+<ConfirmDialog @ref="approveDialog"
+               Title="Approve this visit request?"
+               Description="Approving will schedule the visit for the proposed date and notify the requester and customer contact."
+               ConfirmLabel="Approve"
+               ConfirmButtonClass="btn-success"
+               AllowOptionalReason="true"
+               ReasonLabel="Comment"
+               ReasonPlaceholder="Optional comment for the requester..." />
+
+<ConfirmDialog @ref="changesDialog"
+               Title="Return this request for changes?"
+               Description="The requester will be notified and can revise and resubmit the request."
+               ConfirmLabel="Request Changes"
+               ConfirmButtonClass="btn-warning"
+               RequireReason="true"
+               ReasonLabel="What needs to change"
+               ReasonPlaceholder="Explain what the requester needs to update..." />
+
+<ConfirmDialog @ref="rejectDialog"
+               Title="Reject this visit request?"
+               Description="The requester will be notified that this request was rejected."
+               ConfirmLabel="Reject"
+               ConfirmButtonClass="btn-danger"
+               RequireReason="true"
+               ReasonLabel="Rejection reason"
+               ReasonPlaceholder="Explain why this request is being rejected..." />
+
+@code {
+    [Parameter] public string Id { get; set; } = string.Empty;
+
+    private OutboundVisitDto? visit;
+    private bool isLoading = true;
+    private bool isActing;
+    private string? errorMessage;
+
+    private ConfirmDialog approveDialog = null!;
+    private ConfirmDialog changesDialog = null!;
+    private ConfirmDialog rejectDialog = null!;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await MockAuth.InitializeAsync();
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            visit = await OutboundVisitService.GetVisitAsync(Id);
+        }
+        catch
+        {
+            errorMessage = "Failed to load this request.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private static bool IsUrgent(OutboundVisitDto v) =>
+        v.Category == OutboundVisitCategory.Urgent || v.Priority is OutboundVisitPriority.High or OutboundVisitPriority.Critical;
+
+    private void ShowMockDocumentToast() => Toasts.Show("This is a mock attachment — no file is actually stored yet.", VMS.Web.Services.ToastTone.Info);
+
+    private void OpenApproveDialog()
+    {
+        approveDialog.Open(comment => DecideAsync(ApprovalHistoryAction.Approved, comment));
+    }
+
+    private void OpenChangesDialog()
+    {
+        changesDialog.Open(reason => DecideAsync(ApprovalHistoryAction.ChangesRequested, reason));
+    }
+
+    private void OpenRejectDialog()
+    {
+        rejectDialog.Open(reason => DecideAsync(ApprovalHistoryAction.Rejected, reason));
+    }
+
+    private async Task DecideAsync(ApprovalHistoryAction decision, string? reasonOrComment)
+    {
+        if (visit is null)
+        {
+            return;
+        }
+
+        isActing = true;
+        try
+        {
+            var request = new ApprovalDecisionRequest
+            {
+                Decision = decision,
+                Comment = reasonOrComment,
+                DecidedBy = MockAuth.CurrentSession?.DisplayName?.Trim() ?? "Unknown",
+                DecidedByRole = MockAuth.CurrentSession?.Role.ToString() ?? "Approver"
+            };
+
+            var updated = await OutboundVisitService.DecideApprovalAsync(visit.Id, request);
+
+            var message = decision switch
+            {
+                ApprovalHistoryAction.Approved => $"{updated.Title} was approved and scheduled for {updated.ProposedDate:dd MMM yyyy}. The requester and customer contact have been notified.",
+                ApprovalHistoryAction.ChangesRequested => $"{updated.Title} was returned to the requester for changes.",
+                ApprovalHistoryAction.Rejected => $"{updated.Title} was rejected. The requester has been notified.",
+                _ => "Decision recorded."
+            };
+
+            var tone = decision == ApprovalHistoryAction.Approved ? VMS.Web.Services.ToastTone.Success : VMS.Web.Services.ToastTone.Warning;
+            Toasts.Show(message, tone);
+            NavigationManager.NavigateTo("/visits/outbound/approvals");
+        }
+        catch
+        {
+            errorMessage = "Failed to record this decision.";
+        }
+        finally
+        {
+            isActing = false;
+        }
+    }
+
+    private IReadOnlyList<TimelineEntry> ApprovalTimelineEntries
+    {
+        get
+        {
+            if (visit is null)
+            {
+                return [];
+            }
+
+            var entries = visit.ApprovalHistory.Select(h => new TimelineEntry
+            {
+                Title = FormatAction(h.Action),
+                By = h.By,
+                Role = h.Role,
+                At = h.At,
+                Comment = h.Comment,
+                Tone = ToneForAction(h.Action)
+            }).ToList();
+
+            if (visit.ApprovalStatus == OutboundVisitApprovalStatus.PendingApproval)
+            {
+                entries.Add(new TimelineEntry { Title = "Awaiting decision", Role = visit.ApprovalStage, Tone = "gray", IsPending = true });
+            }
+
+            return entries;
+        }
+    }
+
+    private static string FormatAction(ApprovalHistoryAction action) => action switch
+    {
+        ApprovalHistoryAction.Created => "Visit created",
+        ApprovalHistoryAction.Submitted => "Submitted for approval",
+        ApprovalHistoryAction.Resubmitted => "Resubmitted for approval",
+        ApprovalHistoryAction.Approved => "Approved",
+        ApprovalHistoryAction.Rejected => "Rejected",
+        ApprovalHistoryAction.ChangesRequested => "Changes requested",
+        ApprovalHistoryAction.Cancelled => "Visit cancelled",
+        _ => action.ToString()
+    };
+
+    private static string ToneForAction(ApprovalHistoryAction action) => action switch
+    {
+        ApprovalHistoryAction.Approved => "green",
+        ApprovalHistoryAction.Rejected or ApprovalHistoryAction.Cancelled => "red",
+        ApprovalHistoryAction.ChangesRequested => "orange",
+        ApprovalHistoryAction.Submitted or ApprovalHistoryAction.Resubmitted => "blue",
+        _ => "gray"
+    };
+
+    private static string FormatPurpose(OutboundVisitPurpose purpose) => purpose switch
+    {
+        OutboundVisitPurpose.CustomerRelationshipVisit => "Customer Relationship",
+        OutboundVisitPurpose.NewBusiness => "New Business",
+        OutboundVisitPurpose.AccountReview => "Account Review",
+        OutboundVisitPurpose.TechnicalSupport => "Technical Support",
+        OutboundVisitPurpose.PartnershipDevelopment => "Partnership Development",
+        OutboundVisitPurpose.AuditInspection => "Audit / Inspection",
+        OutboundVisitPurpose.SiteSurvey => "Site Survey",
+        OutboundVisitPurpose.ContractNegotiation => "Contract Negotiation",
+        _ => purpose.ToString()
+    };
+
+    private static string FormatDuration(OutboundVisitDto v)
+    {
+        if (!v.EndTime.HasValue)
+        {
+            return "-";
+        }
+
+        var span = v.EndTime.Value - v.StartTime;
+        return span.TotalMinutes <= 0 ? "-" : $"{(int)span.TotalHours}h {span.Minutes:D2}m";
+    }
+
+    private static string FormatApprovalStatus(OutboundVisitApprovalStatus status) => status switch
+    {
+        OutboundVisitApprovalStatus.Draft => "Draft",
+        OutboundVisitApprovalStatus.PendingApproval => "Pending Approval",
+        OutboundVisitApprovalStatus.Approved => "Approved",
+        OutboundVisitApprovalStatus.ChangesRequested => "Changes Requested",
+        OutboundVisitApprovalStatus.Rejected => "Rejected",
+        _ => status.ToString()
+    };
+
+    private static string ApprovalTone(OutboundVisitApprovalStatus status) => status switch
+    {
+        OutboundVisitApprovalStatus.Draft => "gray",
+        OutboundVisitApprovalStatus.PendingApproval => "amber",
+        OutboundVisitApprovalStatus.Approved => "green",
+        OutboundVisitApprovalStatus.ChangesRequested => "orange",
+        OutboundVisitApprovalStatus.Rejected => "red",
+        _ => "gray"
+    };
+}

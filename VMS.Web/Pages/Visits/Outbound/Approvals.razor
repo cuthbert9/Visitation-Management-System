@@ -1,0 +1,234 @@
+@page "/visits/outbound/approvals"
+@inject VMS.Web.Services.IOutboundVisitService OutboundVisitService
+@inject VMS.Web.Auth.MockAuthService MockAuth
+@inject NavigationManager NavigationManager
+
+<PageTitle>Outbound Visit Approvals</PageTitle>
+
+<div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+    <div>
+        <h1 class="mb-1">Outbound Visit Approvals</h1>
+        <p class="text-muted mb-0">Review and decide on outbound visit requests awaiting sign-off.</p>
+    </div>
+    <a class="btn btn-primary" href="/visits/outbound/plan"><i class="bi bi-plus-circle me-1"></i> Plan Outbound Visit</a>
+</div>
+
+<div class="btn-group mb-4" role="group" aria-label="Outbound view">
+    <a class="btn btn-sm btn-outline-primary" href="/visits/outbound">Visits list</a>
+    <a class="btn btn-sm btn-primary" href="/visits/outbound/approvals">Approvals</a>
+</div>
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (!MockAuth.HasPermission(DemoPermissions.OutboundVisitsApprove))
+{
+    <div class="alert alert-warning">You don't have approval rights for outbound visits. Contact a Sales Manager or Director for access.</div>
+}
+else
+{
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-lg-3">
+            <KpiCard Label="Pending My Approval" Value="@pendingCount.ToString()" IconClass="bi-hourglass-split" Tone="amber" IsActive="@(activeTab == "pending" && !urgentOnly)" OnClick="SelectPendingTab" />
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <KpiCard Label="Urgent Requests" Value="@urgentCount.ToString()" IconClass="bi-exclamation-triangle" Tone="red" IsActive="@(activeTab == "pending" && urgentOnly)" OnClick="SelectUrgentTab" />
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <KpiCard Label="Approved This Month" Value="@approvedThisMonthCount.ToString()" IconClass="bi-check-circle" Tone="green" IsActive="@(activeTab == "approved")" OnClick="SelectApprovedTab" />
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <KpiCard Label="Rejected / Returned" Value="@rejectedCount.ToString()" IconClass="bi-x-circle" Tone="gray" IsActive="@(activeTab == "rejected")" OnClick="SelectRejectedTab" />
+        </div>
+    </div>
+
+    <TabStrip Tabs="tabs" ActiveKey="activeTab" ActiveKeyChanged="key => SelectTab(key, false)" />
+
+    <div class="mb-3">
+        <div class="input-group" style="max-width: 420px;">
+            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+            <input class="form-control" placeholder="Search visit title, organization, requester, request #..." @bind="searchTerm" @bind:event="oninput" />
+        </div>
+    </div>
+
+    @if (FilteredVisits.Count == 0)
+    {
+        <div class="card">
+            <EmptyState IconClass="bi-inbox" Message="@EmptyMessage" />
+        </div>
+    }
+    else
+    {
+        <div class="d-flex flex-column gap-3">
+            @foreach (var visit in FilteredVisits)
+            {
+                var accent = IsUrgent(visit) && visit.ApprovalStatus == OutboundVisitApprovalStatus.PendingApproval ? "review-row-urgent" : "";
+                <div class="card review-row @accent">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                            <div>
+                                <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                    <span class="fw-semibold">@visit.Title</span>
+                                    <span class="status-pill status-pill-gray">@visit.Category</span>
+                                    <span class="status-pill status-pill-gray">@visit.Priority</span>
+                                    <StatusPill Label="@FormatApprovalStatus(visit.ApprovalStatus)" Tone="@ApprovalTone(visit.ApprovalStatus)" />
+                                </div>
+                                <div class="text-muted small mb-1">@visit.RequestNo &middot; @visit.Organization &middot; @visit.StakeholderType</div>
+                                <div class="small mb-1">@FormatPurpose(visit.Purpose) &middot; proposed @visit.ProposedDate.ToString("dd MMM yyyy") at @visit.StartTime.ToString("HH:mm")</div>
+                                <div class="text-muted small mb-2">Requested by @visit.SubmittedBy (@visit.DepartmentName) &middot; submitted @(visit.SubmittedAt?.ToLocalTime().ToString("dd MMM yyyy") ?? "-")</div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <AvatarStack Names="TravelerNames(visit)" />
+                                    <span class="text-muted small">@TravelerNames(visit).Count travelling</span>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(visit.ApprovalStage))
+                                {
+                                    <div class="text-muted small mt-2"><i class="bi bi-signpost-split me-1"></i>@visit.ApprovalStage</div>
+                                }
+                            </div>
+                            <div>
+                                @if (visit.ApprovalStatus == OutboundVisitApprovalStatus.PendingApproval)
+                                {
+                                    <a class="btn btn-primary" href="@($"/visits/outbound/{visit.Id}/review")">Review</a>
+                                }
+                                else
+                                {
+                                    <a class="btn btn-outline-secondary" href="@($"/visits/outbound/{visit.Id}")">View</a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}
+
+@code {
+    private List<OutboundVisitDto> visits = [];
+    private string activeTab = "pending";
+    private bool urgentOnly;
+    private string searchTerm = string.Empty;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    private IReadOnlyList<TabStripItem> tabs = [];
+
+    private int pendingCount => visits.Count(v => v.ApprovalStatus == OutboundVisitApprovalStatus.PendingApproval);
+    private int urgentCount => visits.Count(v => v.ApprovalStatus == OutboundVisitApprovalStatus.PendingApproval && IsUrgent(v));
+    private int approvedThisMonthCount => visits.Count(v =>
+        v.ApprovalStatus == OutboundVisitApprovalStatus.Approved &&
+        v.ApprovalHistory.Any(h => h.Action == ApprovalHistoryAction.Approved && h.At.Month == DateTime.UtcNow.Month && h.At.Year == DateTime.UtcNow.Year));
+    private int rejectedCount => visits.Count(v => v.ApprovalStatus is OutboundVisitApprovalStatus.Rejected or OutboundVisitApprovalStatus.ChangesRequested);
+
+    private string EmptyMessage => activeTab switch
+    {
+        "pending" => "Nothing waiting on you right now.",
+        "approved" => "No approved requests found.",
+        "rejected" => "No rejected or returned requests found.",
+        _ => "No outbound visit requests match your search."
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await MockAuth.InitializeAsync();
+
+        try
+        {
+            visits = (await OutboundVisitService.GetVisitsAsync()).ToList();
+            RebuildTabs();
+        }
+        catch
+        {
+            errorMessage = "Failed to load approval requests.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void RebuildTabs()
+    {
+        tabs =
+        [
+            new TabStripItem { Key = "pending", Label = "Pending", Count = pendingCount },
+            new TabStripItem { Key = "approved", Label = "Approved", Count = visits.Count(v => v.ApprovalStatus == OutboundVisitApprovalStatus.Approved) },
+            new TabStripItem { Key = "rejected", Label = "Rejected / Returned", Count = rejectedCount },
+            new TabStripItem { Key = "all", Label = "All", Count = visits.Count }
+        ];
+    }
+
+    private void SelectTab(string key, bool urgent)
+    {
+        activeTab = key;
+        urgentOnly = urgent;
+    }
+
+    private void SelectPendingTab() => SelectTab("pending", false);
+    private void SelectUrgentTab() => SelectTab("pending", true);
+    private void SelectApprovedTab() => SelectTab("approved", false);
+    private void SelectRejectedTab() => SelectTab("rejected", false);
+
+    private static bool IsUrgent(OutboundVisitDto visit) =>
+        visit.Category == OutboundVisitCategory.Urgent || visit.Priority is OutboundVisitPriority.High or OutboundVisitPriority.Critical;
+
+    private List<OutboundVisitDto> FilteredVisits => visits
+        .Where(MatchesTab)
+        .Where(v => !urgentOnly || IsUrgent(v))
+        .Where(v => string.IsNullOrWhiteSpace(searchTerm) ||
+            v.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            v.Organization.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            v.SubmittedBy.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            v.RequestNo.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+        .OrderByDescending(v => v.SubmittedAt ?? v.UpdatedAt)
+        .ToList();
+
+    private bool MatchesTab(OutboundVisitDto visit) => activeTab switch
+    {
+        "pending" => visit.ApprovalStatus == OutboundVisitApprovalStatus.PendingApproval,
+        "approved" => visit.ApprovalStatus == OutboundVisitApprovalStatus.Approved,
+        "rejected" => visit.ApprovalStatus is OutboundVisitApprovalStatus.Rejected or OutboundVisitApprovalStatus.ChangesRequested,
+        _ => true
+    };
+
+    private static List<string> TravelerNames(OutboundVisitDto visit) =>
+        new[] { visit.Owner.FullName }.Concat(visit.TeamMembers.Select(m => m.FullName)).ToList();
+
+    private static string FormatPurpose(OutboundVisitPurpose purpose) => purpose switch
+    {
+        OutboundVisitPurpose.CustomerRelationshipVisit => "Customer Relationship",
+        OutboundVisitPurpose.NewBusiness => "New Business",
+        OutboundVisitPurpose.AccountReview => "Account Review",
+        OutboundVisitPurpose.TechnicalSupport => "Technical Support",
+        OutboundVisitPurpose.PartnershipDevelopment => "Partnership Development",
+        OutboundVisitPurpose.AuditInspection => "Audit / Inspection",
+        OutboundVisitPurpose.SiteSurvey => "Site Survey",
+        OutboundVisitPurpose.ContractNegotiation => "Contract Negotiation",
+        _ => purpose.ToString()
+    };
+
+    private static string FormatApprovalStatus(OutboundVisitApprovalStatus status) => status switch
+    {
+        OutboundVisitApprovalStatus.Draft => "Draft",
+        OutboundVisitApprovalStatus.PendingApproval => "Pending Approval",
+        OutboundVisitApprovalStatus.Approved => "Approved",
+        OutboundVisitApprovalStatus.ChangesRequested => "Changes Requested",
+        OutboundVisitApprovalStatus.Rejected => "Rejected",
+        _ => status.ToString()
+    };
+
+    private static string ApprovalTone(OutboundVisitApprovalStatus status) => status switch
+    {
+        OutboundVisitApprovalStatus.Draft => "gray",
+        OutboundVisitApprovalStatus.PendingApproval => "amber",
+        OutboundVisitApprovalStatus.Approved => "green",
+        OutboundVisitApprovalStatus.ChangesRequested => "orange",
+        OutboundVisitApprovalStatus.Rejected => "red",
+        _ => "gray"
+    };
+}
