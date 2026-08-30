@@ -1,0 +1,24 @@
+# Build output
+bin/
+obj/
+
+# SQLite database files (legacy - being retired as part of the MSSQL migration)
+*.db
+*.db-shm
+*.db-wal
+
+# Temporary data-migration snapshot (produced by VMS.DataMigration -- export)
+VMS.Infrastructure/DataMigration/Snapshot/
+VMS.DataMigration/
+
+
+# User-specific / IDE
+.vs/
+.vscode/*
+!.vscode/extensions.json
+*.user
+*.suo
+
+# OS
+.DS_Store
+Thumbs.db

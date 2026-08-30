@@ -39,7 +39,48 @@ else
                     <span class="form-section-label">Visitor Details</span>
                 </div>
 
-                @if (selectedVisitor is not null)
+                @if (selectedVisitor is not null && selectedGateVisit is not null)
+                {
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="small text-muted">
+                            <i class="bi bi-shield-check me-1" style="color:var(--vms-primary);"></i>
+                            Registered at the gate — review and complete their details below.
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="ClearSelectedVisitor">Change</button>
+                    </div>
+
+                    <VisitorFieldsEditor Visitor="gateVisitorEditRequest" ShowAttachment="false" />
+
+                    <div class="alert alert-light border small mb-0 mt-2">
+                        <strong>Already captured at the gate:</strong>
+                        <ul class="mb-0 mt-1">
+                            @if (!string.IsNullOrWhiteSpace(selectedGateVisit.VehiclePlateNumber))
+                            {
+                                <li>Vehicle: @selectedGateVisit.VehiclePlateNumber</li>
+                            }
+                            @if (selectedGateVisit.ParkingReservations.Count > 0)
+                            {
+                                <li>Parking: @selectedGateVisit.ParkingReservations.First().SlotCode</li>
+                            }
+                            @if (selectedGateVisit.Items.Count > 0)
+                            {
+                                <li>Items: @string.Join(", ", selectedGateVisit.Items.Select(item => item.ItemName))</li>
+                            }
+                            @if (selectedGateVisit.Equipment is { HasLaptop: true } equipment)
+                            {
+                                <li>Device: @equipment.DeviceType@(string.IsNullOrWhiteSpace(equipment.DeviceBrand) ? "" : $" — {equipment.DeviceBrand}")</li>
+                            }
+                            @if (string.IsNullOrWhiteSpace(selectedGateVisit.VehiclePlateNumber)
+                                && selectedGateVisit.ParkingReservations.Count == 0
+                                && selectedGateVisit.Items.Count == 0
+                                && selectedGateVisit.Equipment is not { HasLaptop: true })
+                            {
+                                <li class="text-muted">Nothing else declared.</li>
+                            }
+                        </ul>
+                    </div>
+                }
+                else if (selectedVisitor is not null)
                 {
                     <div class="alert alert-info d-flex justify-content-between align-items-center">
                         <div>
@@ -48,45 +89,9 @@ else
                             {
                                 <span> · @selectedVisitor.IdentificationType: @selectedVisitor.IdentificationNumber</span>
                             }
-                            @if (selectedGateVisit is not null)
-                            {
-                                <i class="bi bi-shield-check ms-1" style="font-size:0.75em;color:var(--vms-primary);" title="Registered at the gate — continue their check-in"></i>
-                            }
                         </div>
                         <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="ClearSelectedVisitor">Change</button>
                     </div>
-
-                    @if (selectedGateVisit is not null)
-                    {
-                        <div class="alert alert-light border small mb-0 mt-2">
-                            <strong>Already captured at the gate:</strong>
-                            <ul class="mb-0 mt-1">
-                                @if (!string.IsNullOrWhiteSpace(selectedGateVisit.VehiclePlateNumber))
-                                {
-                                    <li>Vehicle: @selectedGateVisit.VehiclePlateNumber</li>
-                                }
-                                @if (selectedGateVisit.ParkingReservations.Count > 0)
-                                {
-                                    <li>Parking: @selectedGateVisit.ParkingReservations.First().SlotCode</li>
-                                }
-                                @if (selectedGateVisit.Items.Count > 0)
-                                {
-                                    <li>Items: @string.Join(", ", selectedGateVisit.Items.Select(item => item.ItemName))</li>
-                                }
-                                @if (selectedGateVisit.Equipment is { HasLaptop: true } equipment)
-                                {
-                                    <li>Device: @equipment.DeviceType@(string.IsNullOrWhiteSpace(equipment.DeviceBrand) ? "" : $" — {equipment.DeviceBrand}")</li>
-                                }
-                                @if (string.IsNullOrWhiteSpace(selectedGateVisit.VehiclePlateNumber)
-                                    && selectedGateVisit.ParkingReservations.Count == 0
-                                    && selectedGateVisit.Items.Count == 0
-                                    && selectedGateVisit.Equipment is not { HasLaptop: true })
-                                {
-                                    <li class="text-muted">Nothing else declared.</li>
-                                }
-                            </ul>
-                        </div>
-                    }
                 }
                 else
                 {
@@ -235,6 +240,7 @@ else
     private CreateVisitorDto newVisitorRequest = new();
     private VisitorDto? selectedVisitor;
     private VisitDto? selectedGateVisit;
+    private CreateVisitorDto gateVisitorEditRequest = new();
     private string searchTerm = string.Empty;
     private string hostSearchTerm = string.Empty;
     private List<VisitorDto> visitors = [];
@@ -297,14 +303,37 @@ else
             ? gateRegisteredVisits.FirstOrDefault(visit => visit.Id == gateVisitId.Value)
             : null;
         searchTerm = string.Empty;
+
+        gateVisitorEditRequest = selectedGateVisit is not null
+            ? new CreateVisitorDto
+            {
+                FullName = visitor.FullName,
+                PhoneNumber = visitor.PhoneNumber,
+                Email = visitor.Email,
+                IdentificationType = visitor.IdentificationType,
+                IdentificationNumber = visitor.IdentificationNumber,
+                Organization = visitor.Organization,
+                PhotoUrl = visitor.PhotoUrl
+            }
+            : new CreateVisitorDto();
     }
 
     private void ClearSelectedVisitor()
     {
         selectedVisitor = null;
         selectedGateVisit = null;
+        gateVisitorEditRequest = new();
         searchTerm = string.Empty;
     }
+
+    private bool GateVisitorFieldsChanged() =>
+        selectedVisitor is not null &&
+        (gateVisitorEditRequest.FullName != selectedVisitor.FullName ||
+         gateVisitorEditRequest.PhoneNumber != selectedVisitor.PhoneNumber ||
+         gateVisitorEditRequest.Email != selectedVisitor.Email ||
+         gateVisitorEditRequest.IdentificationType != selectedVisitor.IdentificationType ||
+         gateVisitorEditRequest.IdentificationNumber != selectedVisitor.IdentificationNumber ||
+         gateVisitorEditRequest.Organization != selectedVisitor.Organization);
 
     private void SelectHost(EmployeeDto employee)
     {
@@ -356,8 +385,32 @@ else
 
         try
         {
+            if (selectedFile is not null)
+            {
+                isUploadingFile = true;
+                request.AttachmentUrl = await StorageService.UploadAsync(selectedFile);
+                isUploadingFile = false;
+            }
+
             if (selectedGateVisit is not null)
             {
+                // Reception can correct/complete the visitor's own record (name, ID,
+                // phone, email, organization) while finishing the handover — only
+                // written back if something actually changed.
+                if (GateVisitorFieldsChanged())
+                {
+                    await VisitorService.UpdateVisitorAsync(selectedVisitor!.Id, new UpdateVisitorDto
+                    {
+                        FullName = gateVisitorEditRequest.FullName,
+                        PhoneNumber = gateVisitorEditRequest.PhoneNumber,
+                        Email = gateVisitorEditRequest.Email,
+                        IdentificationType = gateVisitorEditRequest.IdentificationType,
+                        IdentificationNumber = gateVisitorEditRequest.IdentificationNumber,
+                        Organization = gateVisitorEditRequest.Organization,
+                        PhotoUrl = gateVisitorEditRequest.PhotoUrl
+                    });
+                }
+
                 // Completing a gate handover — same VisitId, VisitNumber, and everything
                 // security already captured; this just fills in Host/Purpose/Badge.
                 await VisitService.CompleteHandoverAsync(selectedGateVisit.Id, new CompleteHandoverDto
@@ -366,7 +419,8 @@ else
                     DepartmentId = request.DepartmentId!.Value,
                     Purpose = request.Purpose.Value,
                     PurposeDescription = request.PurposeDescription,
-                    BadgeNumber = request.BadgeNumber
+                    BadgeNumber = request.BadgeNumber,
+                    AttachmentUrl = request.AttachmentUrl
                 });
 
                 NavigationManager.NavigateTo("/visits");
@@ -389,13 +443,6 @@ else
 
             request.VisitorId = selectedVisitor.Id;
             request.CheckedInById = 1;
-
-            if (selectedFile is not null)
-            {
-                isUploadingFile = true;
-                request.AttachmentUrl = await StorageService.UploadAsync(selectedFile);
-                isUploadingFile = false;
-            }
 
             await VisitService.CreateVisitAsync(request);
             NavigationManager.NavigateTo("/visits");

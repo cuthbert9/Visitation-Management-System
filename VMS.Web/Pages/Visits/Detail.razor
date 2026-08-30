@@ -72,7 +72,17 @@ else
                     <div class="detail-row">
                         <span class="detail-row-label">Purpose</span>
                         <span class="detail-row-value">
-                            <span class="status-pill status-pill-gray">@EnumLabels.Format(visit.Purpose)@(string.IsNullOrWhiteSpace(visit.PurposeDescription) ? "" : $" · {visit.PurposeDescription}")</span>
+                            @if (string.IsNullOrWhiteSpace(visit.PurposeDescription))
+                            {
+                                <span class="status-pill status-pill-gray">@EnumLabels.Format(visit.Purpose)</span>
+                            }
+                            else
+                            {
+                                <details class="purpose-disclosure">
+                                    <summary class="status-pill status-pill-gray purpose-summary">@EnumLabels.Format(visit.Purpose) &middot; @visit.PurposeDescription</summary>
+                                    <div class="purpose-full-text">@EnumLabels.Format(visit.Purpose) &middot; @visit.PurposeDescription</div>
+                                </details>
+                            }
                         </span>
                     </div>
                     <div class="detail-row">

@@ -1,4 +1,3 @@
-using System.IO;
 using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Configuration;
 using VisitorManagementSystem.Api.Services;
@@ -22,35 +21,17 @@ builder.Services.AddCors(options =>
 });
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-var builderRoot = builder.Environment.ContentRootPath;
 
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException("Connection string 'DefaultConnection' was not found.");
 }
 
-var dataSourcePrefix = "Data Source=";
-if (connectionString.StartsWith(dataSourcePrefix, StringComparison.OrdinalIgnoreCase))
-{
-    var configuredPath = connectionString[dataSourcePrefix.Length..].Trim();
-
-    if (!Path.IsPathRooted(configuredPath))
-    {
-        var fullPath = Path.GetFullPath(Path.Combine(builderRoot, configuredPath));
-        Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
-        connectionString = $"{dataSourcePrefix}{fullPath}";
-    }
-}
-
-Console.WriteLine($"Using SQLite database: {connectionString}");
-
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(connectionString)
+    options.UseSqlServer(connectionString)
 );
 
 var app = builder.Build();
-
-
 
 // using (var scope = app.Services.CreateScope())
 // {

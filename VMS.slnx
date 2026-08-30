@@ -1,6 +1,7 @@
 <Solution>
   <Project Path="VMS.Api/VMS.Api.csproj" />
   <Project Path="VMS.Application/VMS.Application.csproj" />
+  <Project Path="VMS.DataMigration/VMS.DataMigration.csproj" />
   <Project Path="VMS.Domain/VMS.Domain.csproj" />
   <Project Path="VMS.Infrastructure/VMS.Infrastructure.csproj" />
   <Project Path="VMS.Shared/VMS.Shared.csproj" />

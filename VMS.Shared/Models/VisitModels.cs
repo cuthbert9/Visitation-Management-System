@@ -215,6 +215,7 @@ public class CompleteHandoverDto
 
     public string? PurposeDescription { get; set; }
     public string? BadgeNumber { get; set; }
+    public string? AttachmentUrl { get; set; }
 }
 
 public class UpdateGateDetailsDto

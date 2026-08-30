@@ -10,10 +10,11 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("d2857644-85b3-456f-b353-756c6d87511c")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("VMS.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+be26ccb082cb62e9ba0cf5975b435782570213d2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+232d1d037f66ed959a4ff7be32fff5d41a580f3d")]
 [assembly: System.Reflection.AssemblyProductAttribute("VMS.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("VMS.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
