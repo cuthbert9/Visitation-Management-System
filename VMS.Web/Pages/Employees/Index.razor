@@ -6,11 +6,11 @@
 
 <h1 class="mb-4">Employees</h1>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <p class="text-muted mb-0">Staff directory used to host visitors.</p>
     @if (MockAuth.HasPermission(DemoPermissions.EmployeesManage))
     {
-        <a class="btn btn-primary" href="/employees/create">New Employee</a>
+        <a class="btn btn-primary btn-mobile-full" href="/employees/create">New Employee</a>
     }
 </div>
 
@@ -28,7 +28,7 @@ else if (employees.Count == 0)
 }
 else
 {
-    <div class="card shadow-sm">
+    <div class="card shadow-sm desktop-table">
         <div class="table-responsive">
             <table class="table table-striped mb-0">
                 <thead>
@@ -64,6 +64,32 @@ else
                 </tbody>
             </table>
         </div>
+    </div>
+
+    <div class="mobile-cards">
+        @foreach (var employee in employees)
+        {
+            <div class="record-card">
+                <div class="record-card-title">@employee.FullName</div>
+                <div class="record-card-subtitle mb-2">@employee.DepartmentName</div>
+                <div class="record-card-row">
+                    <span class="record-card-row-label">Employee #</span>
+                    <span class="record-card-row-value">@employee.EmployeeNumber</span>
+                </div>
+                <div class="record-card-row">
+                    <span class="record-card-row-label">Department</span>
+                    <span class="record-card-row-value">@employee.DepartmentName</span>
+                </div>
+                <div class="record-card-row">
+                    <span class="record-card-row-label">Position</span>
+                    <span class="record-card-row-value">@employee.Position</span>
+                </div>
+                <div class="record-card-footer align-items-center">
+                    <StatusPill Label="@(employee.IsActive ? "Active" : "Inactive")" Tone="@(employee.IsActive ? "green" : "gray")" IconClass="bi-circle-fill" />
+                    <a class="btn btn-sm btn-outline-primary" href="/employees/@employee.Id">View</a>
+                </div>
+            </div>
+        }
     </div>
 }
 

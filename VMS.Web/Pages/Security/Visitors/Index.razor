@@ -14,7 +14,7 @@
     </div>
     @if (MockAuth.HasPermission(DemoPermissions.GateVisitorsCreate))
     {
-        <a class="btn btn-primary" href="/security/visitors/register"><i class="bi bi-plus-circle me-1"></i> Register Gate Visitor</a>
+        <a class="btn btn-primary btn-mobile-full" href="/security/visitors/register"><i class="bi bi-plus-circle me-1"></i> Register Gate Visitor</a>
     }
 </div>
 
@@ -63,7 +63,7 @@ else
     }
     else
     {
-        <div class="card">
+        <div class="card desktop-table">
             <div class="table-responsive">
                 <table class="table mb-0">
                     <thead>
@@ -158,6 +158,90 @@ else
                     </tbody>
                 </table>
             </div>
+        </div>
+
+        <div class="mobile-cards">
+            @foreach (var visit in visits)
+            {
+                var gateInfo = gateInfoByVisitId.GetValueOrDefault(visit.Id);
+                var mismatch = GateTrackingService.HasPcMismatch(visit.Id, visit.Status);
+                var presentation = GetStatusPresentation(visit.Status);
+                var reservation = visit.ParkingReservations.FirstOrDefault();
+
+                <div class="record-card">
+                    <div class="record-card-title">@visit.Visitor.FullName</div>
+                    <div class="record-card-subtitle mb-2">@(string.IsNullOrWhiteSpace(visit.Visitor.Organization) ? "Individual" : visit.Visitor.Organization)</div>
+                    <div class="record-card-row">
+                        <span class="record-card-row-label">Vehicle</span>
+                        <span class="record-card-row-value">
+                            @if (string.IsNullOrWhiteSpace(visit.VehiclePlateNumber) && reservation is null)
+                            {
+                                <text>None</text>
+                            }
+                            else
+                            {
+                                @if (!string.IsNullOrWhiteSpace(visit.VehiclePlateNumber))
+                                {
+                                    <div>@visit.VehiclePlateNumber</div>
+                                }
+                                @if (reservation is not null)
+                                {
+                                    <div class="text-muted small">Slot @reservation.SlotCode</div>
+                                }
+                            }
+                        </span>
+                    </div>
+                    <div class="record-card-row">
+                        <span class="record-card-row-label">Items</span>
+                        <span class="record-card-row-value">
+                            @if (visit.Items.Count == 0)
+                            {
+                                <text>None</text>
+                            }
+                            else
+                            {
+                                <span class="status-pill status-pill-gray">@visit.Items.Count item@(visit.Items.Count == 1 ? "" : "s")</span>
+                            }
+                        </span>
+                    </div>
+                    <div class="record-card-row">
+                        <span class="record-card-row-label">PC</span>
+                        <span class="record-card-row-value">
+                            @if (gateInfo is { HasLaptop: true })
+                            {
+                                <span class="status-pill status-pill-blue">@gateInfo.DeviceType</span>
+                                @if (mismatch)
+                                {
+                                    <span class="status-pill status-pill-red ms-1">PC Mismatch</span>
+                                }
+                            }
+                            else
+                            {
+                                <text>No device</text>
+                            }
+                        </span>
+                    </div>
+                    <div class="record-card-row">
+                        <span class="record-card-row-label">Host</span>
+                        <span class="record-card-row-value">@(visit.HostEmployee?.FullName ?? "Awaiting handover")</span>
+                    </div>
+                    <div class="record-card-row">
+                        <span class="record-card-row-label">Arrival</span>
+                        <span class="record-card-row-value">@visit.ArrivalTime.ToLocalTime().ToString("dd MMM yyyy HH:mm")</span>
+                    </div>
+                    <div class="record-card-row">
+                        <span class="record-card-row-label">Status</span>
+                        <span class="record-card-row-value"><span class="status-pill @presentation.CssClass">@presentation.Label</span></span>
+                    </div>
+                    <div class="record-card-footer">
+                        <a class="btn btn-sm btn-outline-secondary" href="/visits/@visit.Id">Open</a>
+                        @if (MockAuth.HasPermission(DemoPermissions.GateVisitorsCreate))
+                        {
+                            <a class="btn btn-sm btn-outline-secondary" href="/security/visitors/@visit.Id/edit">Edit</a>
+                        }
+                    </div>
+                </div>
+            }
         </div>
     }
 }

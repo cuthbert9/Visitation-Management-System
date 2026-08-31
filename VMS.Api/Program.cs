@@ -9,16 +9,6 @@ builder.Services.AddControllers();
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("WebClient", policy =>
-    {
-        policy
-            .AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
-});
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -40,8 +30,16 @@ var app = builder.Build();
 //     Console.WriteLine("Demo user seed complete.");
 // }
 
-app.UseCors("WebClient");
+if (app.Environment.IsDevelopment())
+{
+    app.UseWebAssemblyDebugging();
+}
+
+app.UseBlazorFrameworkFiles();
+app.UseStaticFiles();
+
 app.UseAuthorization();
 app.MapControllers();
+app.MapFallbackToFile("index.html");
 
 app.Run();

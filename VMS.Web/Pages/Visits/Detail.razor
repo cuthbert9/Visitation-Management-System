@@ -69,22 +69,28 @@ else
                         <span class="detail-row-label">Department</span>
                         <span class="detail-row-value">@(visit.Department?.Name ?? "Awaiting handover")</span>
                     </div>
-                    <div class="detail-row">
-                        <span class="detail-row-label">Purpose</span>
-                        <span class="detail-row-value">
-                            @if (string.IsNullOrWhiteSpace(visit.PurposeDescription))
-                            {
+                    @if (string.IsNullOrWhiteSpace(visit.PurposeDescription))
+                    {
+                        <div class="detail-row">
+                            <span class="detail-row-label">Purpose</span>
+                            <span class="detail-row-value">
                                 <span class="status-pill status-pill-gray">@EnumLabels.Format(visit.Purpose)</span>
-                            }
-                            else
-                            {
-                                <details class="purpose-disclosure">
-                                    <summary class="status-pill status-pill-gray purpose-summary">@EnumLabels.Format(visit.Purpose) &middot; @visit.PurposeDescription</summary>
-                                    <div class="purpose-full-text">@EnumLabels.Format(visit.Purpose) &middot; @visit.PurposeDescription</div>
-                                </details>
-                            }
-                        </span>
-                    </div>
+                            </span>
+                        </div>
+                    }
+                    else
+                    {
+                        <details class="purpose-disclosure">
+                            <summary class="detail-row purpose-toggle">
+                                <span class="detail-row-label">Purpose</span>
+                                <span class="detail-row-value d-flex align-items-center justify-content-end gap-2">
+                                    <span class="text-truncate purpose-value-text">@EnumLabels.Format(visit.Purpose)</span>
+                                    <i class="bi bi-chevron-down purpose-chevron"></i>
+                                </span>
+                            </summary>
+                            <div class="purpose-expand-box">@visit.PurposeDescription</div>
+                        </details>
+                    }
                     <div class="detail-row">
                         <span class="detail-row-label">Staff Availability</span>
                         <span class="detail-row-value @(visit.StaffAvailabilityStatus is null ? "text-muted" : "")">@(visit.StaffAvailabilityStatus?.ToString() ?? "Not specified")</span>

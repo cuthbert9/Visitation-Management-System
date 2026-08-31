@@ -80,6 +80,47 @@
           }
         }
       },
+      "Microsoft.AspNetCore.Components.WebAssembly/10.0.11": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.JSInterop.WebAssembly": "10.0.11"
+        },
+        "compile": {
+          "lib/net10.0/Microsoft.AspNetCore.Components.WebAssembly.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.AspNetCore.Components.WebAssembly.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "build/net10.0/_._": {}
+        }
+      },
+      "Microsoft.AspNetCore.Components.WebAssembly.Server/10.0.11": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.AspNetCore.Components.WebAssembly": "10.0.11"
+        },
+        "compile": {
+          "lib/net10.0/Microsoft.AspNetCore.Components.WebAssembly.Server.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.AspNetCore.Components.WebAssembly.Server.dll": {
+            "related": ".xml"
+          }
+        },
+        "frameworkReferences": [
+          "Microsoft.AspNetCore.App"
+        ],
+        "build": {
+          "build/Microsoft.AspNetCore.Components.WebAssembly.Server.targets": {}
+        }
+      },
       "Microsoft.Bcl.AsyncInterfaces/8.0.0": {
         "type": "package",
         "compile": {
@@ -816,6 +857,32 @@
           }
         }
       },
+      "Microsoft.IO.RecyclableMemoryStream/3.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/Microsoft.IO.RecyclableMemoryStream.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/Microsoft.IO.RecyclableMemoryStream.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Microsoft.JSInterop.WebAssembly/10.0.11": {
+        "type": "package",
+        "compile": {
+          "lib/net10.0/Microsoft.JSInterop.WebAssembly.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.JSInterop.WebAssembly.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.SqlServer.Server/1.0.0": {
         "type": "package",
         "compile": {
@@ -859,6 +926,19 @@
           }
         }
       },
+      "MimeMapping/3.0.1": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/MimeMapping.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/MimeMapping.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Mono.TextTemplating/3.0.0": {
         "type": "package",
         "dependencies": {
@@ -877,7 +957,7 @@
       "Newtonsoft.Json/13.0.3": {
         "type": "package",
         "compile": {
-          "lib/net6.0/_._": {
+          "lib/net6.0/Newtonsoft.Json.dll": {
             "related": ".xml"
           }
         },
@@ -1025,6 +1105,130 @@
         },
         "runtime": {
           "lib/net6.0/SQLitePCLRaw.provider.e_sqlite3.dll": {}
+        }
+      },
+      "Supabase/1.1.1": {
+        "type": "package",
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.3",
+          "Supabase.Core": "1.0.0",
+          "Supabase.Functions": "2.0.0",
+          "Supabase.Gotrue": "6.0.3",
+          "Supabase.Postgrest": "4.0.3",
+          "Supabase.Realtime": "7.0.2",
+          "Supabase.Storage": "2.0.2"
+        },
+        "compile": {
+          "lib/netstandard2.1/Supabase.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.1/Supabase.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Supabase.Core/1.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/Supabase.Core.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Supabase.Core.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Supabase.Functions/2.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.3",
+          "Supabase.Core": "1.0.0"
+        },
+        "compile": {
+          "lib/netstandard2.0/Supabase.Functions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Supabase.Functions.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Supabase.Gotrue/6.0.3": {
+        "type": "package",
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.3",
+          "Supabase.Core": "1.0.0",
+          "System.IdentityModel.Tokens.Jwt": "7.5.1"
+        },
+        "compile": {
+          "lib/netstandard2.1/Supabase.Gotrue.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.1/Supabase.Gotrue.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Supabase.Postgrest/4.0.3": {
+        "type": "package",
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.3",
+          "Supabase.Core": "1.0.0"
+        },
+        "compile": {
+          "lib/netstandard2.0/Supabase.Postgrest.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Supabase.Postgrest.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Supabase.Realtime/7.0.2": {
+        "type": "package",
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.3",
+          "Supabase.Core": "1.0.0",
+          "Supabase.Postgrest": "4.0.3",
+          "Websocket.Client": "5.1.1"
+        },
+        "compile": {
+          "lib/netstandard2.1/Supabase.Realtime.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.1/Supabase.Realtime.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Supabase.Storage/2.0.2": {
+        "type": "package",
+        "dependencies": {
+          "MimeMapping": "3.0.1",
+          "Newtonsoft.Json": "13.0.3",
+          "Supabase.Core": "1.0.0"
+        },
+        "compile": {
+          "lib/netstandard2.0/Supabase.Storage.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Supabase.Storage.dll": {
+            "related": ".xml"
+          }
         }
       },
       "System.ClientModel/1.5.1": {
@@ -1221,6 +1425,22 @@
           "buildTransitive/net6.0/_._": {}
         }
       },
+      "System.Reactive/6.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/System.Reactive.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/System.Reactive.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net6.0/_._": {}
+        }
+      },
       "System.Security.Cryptography.Pkcs/10.0.0": {
         "type": "package",
         "compile": {
@@ -1257,6 +1477,23 @@
         },
         "build": {
           "buildTransitive/net8.0/_._": {}
+        }
+      },
+      "Websocket.Client/5.1.1": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.IO.RecyclableMemoryStream": "3.0.0",
+          "System.Reactive": "6.0.0"
+        },
+        "compile": {
+          "lib/net8.0/Websocket.Client.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Websocket.Client.dll": {
+            "related": ".xml"
+          }
         }
       },
       "VMS.Application/1.0.0": {
@@ -1297,6 +1534,31 @@
         },
         "runtime": {
           "bin/placeholder/VMS.Infrastructure.dll": {}
+        }
+      },
+      "VMS.Shared/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/VMS.Shared.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/VMS.Shared.dll": {}
+        }
+      },
+      "VMS.Web/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "dependencies": {
+          "Microsoft.AspNetCore.Components.WebAssembly": "10.0.11",
+          "Supabase": "1.1.1",
+          "VMS.Shared": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/VMS.Web.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/VMS.Web.dll": {}
         }
       }
     }
@@ -1422,6 +1684,53 @@
         "lib/netstandard2.1/MailKit.xml",
         "mailkit.4.17.0.nupkg.sha512",
         "mailkit.nuspec"
+      ]
+    },
+    "Microsoft.AspNetCore.Components.WebAssembly/10.0.11": {
+      "sha512": "OaZ+pEJzfejOtCkmepeJYYItNu3PA6Y2EajBwS8vr30mUjCOZWjVCr2sCqUOVw7D6+wmJwpNKtHqyzbtX/F7qQ==",
+      "type": "package",
+      "path": "microsoft.aspnetcore.components.webassembly/10.0.11",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.txt",
+        "build/net10.0/Microsoft.AspNetCore.Components.WebAssembly.props",
+        "build/net10.0/blazor.webassembly.js",
+        "lib/net10.0/Microsoft.AspNetCore.Components.WebAssembly.dll",
+        "lib/net10.0/Microsoft.AspNetCore.Components.WebAssembly.xml",
+        "microsoft.aspnetcore.components.webassembly.10.0.11.nupkg.sha512",
+        "microsoft.aspnetcore.components.webassembly.nuspec"
+      ]
+    },
+    "Microsoft.AspNetCore.Components.WebAssembly.Server/10.0.11": {
+      "sha512": "El0lkzjqwWVKmFC4tS0orMxysMNwElGNM1lLNYyqBh8SLsP5c+EDDrZS4FAv0bcqc+t1nxosnzqrd0ob+XASPQ==",
+      "type": "package",
+      "path": "microsoft.aspnetcore.components.webassembly.server/10.0.11",
+      "hasTools": true,
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.txt",
+        "build/Microsoft.AspNetCore.Components.WebAssembly.Server.targets",
+        "lib/net10.0/Microsoft.AspNetCore.Components.WebAssembly.Server.dll",
+        "lib/net10.0/Microsoft.AspNetCore.Components.WebAssembly.Server.xml",
+        "microsoft.aspnetcore.components.webassembly.server.10.0.11.nupkg.sha512",
+        "microsoft.aspnetcore.components.webassembly.server.nuspec",
+        "tools/BlazorDebugProxy/BrowserDebugHost.dll",
+        "tools/BlazorDebugProxy/BrowserDebugHost.runtimeconfig.json",
+        "tools/BlazorDebugProxy/BrowserDebugProxy.dll",
+        "tools/BlazorDebugProxy/Microsoft.CodeAnalysis.CSharp.Scripting.dll",
+        "tools/BlazorDebugProxy/Microsoft.CodeAnalysis.CSharp.dll",
+        "tools/BlazorDebugProxy/Microsoft.CodeAnalysis.Scripting.dll",
+        "tools/BlazorDebugProxy/Microsoft.CodeAnalysis.dll",
+        "tools/BlazorDebugProxy/Microsoft.FileFormats.dll",
+        "tools/BlazorDebugProxy/Microsoft.NET.WebAssembly.Webcil.dll",
+        "tools/BlazorDebugProxy/Microsoft.SymbolStore.dll",
+        "tools/BlazorDebugProxy/Newtonsoft.Json.dll"
       ]
     },
     "Microsoft.Bcl.AsyncInterfaces/8.0.0": {
@@ -2991,6 +3300,39 @@
         "microsoft.identitymodel.tokens.nuspec"
       ]
     },
+    "Microsoft.IO.RecyclableMemoryStream/3.0.0": {
+      "sha512": "irv0HuqoH8Ig5i2fO+8dmDNdFdsrO+DoQcedwIlb810qpZHBNQHZLW7C/AHBQDgLLpw2T96vmMAy/aE4Yj55Sg==",
+      "type": "package",
+      "path": "microsoft.io.recyclablememorystream/3.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "lib/net6.0/Microsoft.IO.RecyclableMemoryStream.dll",
+        "lib/net6.0/Microsoft.IO.RecyclableMemoryStream.xml",
+        "lib/netstandard2.0/Microsoft.IO.RecyclableMemoryStream.dll",
+        "lib/netstandard2.0/Microsoft.IO.RecyclableMemoryStream.xml",
+        "lib/netstandard2.1/Microsoft.IO.RecyclableMemoryStream.dll",
+        "lib/netstandard2.1/Microsoft.IO.RecyclableMemoryStream.xml",
+        "microsoft.io.recyclablememorystream.3.0.0.nupkg.sha512",
+        "microsoft.io.recyclablememorystream.nuspec"
+      ]
+    },
+    "Microsoft.JSInterop.WebAssembly/10.0.11": {
+      "sha512": "WtlvldXFOdft4tFW4Y3lTnRqZfGYebOBPMXZAy9Yp3gv0A88rNbDtXcuoppvqsVWe4cIG95iEXFmXB+nvuEN3Q==",
+      "type": "package",
+      "path": "microsoft.jsinterop.webassembly/10.0.11",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "THIRD-PARTY-NOTICES.txt",
+        "lib/net10.0/Microsoft.JSInterop.WebAssembly.dll",
+        "lib/net10.0/Microsoft.JSInterop.WebAssembly.xml",
+        "microsoft.jsinterop.webassembly.10.0.11.nupkg.sha512",
+        "microsoft.jsinterop.webassembly.nuspec"
+      ]
+    },
     "Microsoft.SqlServer.Server/1.0.0": {
       "sha512": "N4KeF3cpcm1PUHym1RmakkzfkEv3GRMyofVv40uXsQhCQeglr2OHNcUk2WOG51AKpGO8ynGpo9M/kFXSzghwug==",
       "type": "package",
@@ -3064,6 +3406,22 @@
         "lib/netstandard2.1/MimeKit.xml",
         "mimekit.4.17.0.nupkg.sha512",
         "mimekit.nuspec"
+      ]
+    },
+    "MimeMapping/3.0.1": {
+      "sha512": "lhYcUVnWKaqrboAwi05YLCx3wdluM9Sr1Mv5Emhgc8c8yNVvdiSEnQJMdDvgb4grlYTaOmbnhYaezoeateX95w==",
+      "type": "package",
+      "path": "mimemapping/3.0.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "lib/net462/MimeMapping.dll",
+        "lib/net462/MimeMapping.xml",
+        "lib/netstandard2.0/MimeMapping.dll",
+        "lib/netstandard2.0/MimeMapping.xml",
+        "mimemapping.3.0.1.nupkg.sha512",
+        "mimemapping.nuspec"
       ]
     },
     "Mono.TextTemplating/3.0.0": {
@@ -3205,6 +3563,113 @@
         "lib/netstandard2.0/SQLitePCLRaw.provider.e_sqlite3.dll",
         "sqlitepclraw.provider.e_sqlite3.2.1.11.nupkg.sha512",
         "sqlitepclraw.provider.e_sqlite3.nuspec"
+      ]
+    },
+    "Supabase/1.1.1": {
+      "sha512": "LW9O05IiZBW3YUDT/gndPKvzT3I7PVgx0j87+AdJu7mT42m7oh2nOnjuDR9pU0E9FE2Ke/QGovrH/u5OjGn7lg==",
+      "type": "package",
+      "path": "supabase/1.1.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "icon.png",
+        "lib/netstandard2.1/Supabase.dll",
+        "lib/netstandard2.1/Supabase.xml",
+        "supabase.1.1.1.nupkg.sha512",
+        "supabase.nuspec"
+      ]
+    },
+    "Supabase.Core/1.0.0": {
+      "sha512": "fJK3Kfq1alw53AGWHBr+dhPu+BUR5dKuBjGhcxrFRVdsFFFWSD5iPIdTYi0CUQDA2b1OjGudYL1xd51yp4hU9Q==",
+      "type": "package",
+      "path": "supabase.core/1.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "icon.png",
+        "lib/netstandard2.0/Supabase.Core.dll",
+        "lib/netstandard2.0/Supabase.Core.xml",
+        "supabase.core.1.0.0.nupkg.sha512",
+        "supabase.core.nuspec"
+      ]
+    },
+    "Supabase.Functions/2.0.0": {
+      "sha512": "rc6zlo6XFkQw/B9fEgwpXHtmNPrnnHmtc96PTbviBJ9lzqPT/Un/G3V9MltlORtnG2RLkLvvS/t2AXAO8m2SCQ==",
+      "type": "package",
+      "path": "supabase.functions/2.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "icon.png",
+        "lib/netstandard2.0/Supabase.Functions.dll",
+        "lib/netstandard2.0/Supabase.Functions.xml",
+        "supabase.functions.2.0.0.nupkg.sha512",
+        "supabase.functions.nuspec"
+      ]
+    },
+    "Supabase.Gotrue/6.0.3": {
+      "sha512": "8dkg000ib95bJm0ffDPUrALrefBHrkiqcolNjuUEStF2TeytPbV+OtOUJAMBOqZ2f1nsCY61Ck/7NOmOyGteDw==",
+      "type": "package",
+      "path": "supabase.gotrue/6.0.3",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "icon.png",
+        "lib/netstandard2.1/Supabase.Gotrue.dll",
+        "lib/netstandard2.1/Supabase.Gotrue.xml",
+        "supabase.gotrue.6.0.3.nupkg.sha512",
+        "supabase.gotrue.nuspec"
+      ]
+    },
+    "Supabase.Postgrest/4.0.3": {
+      "sha512": "hpDIh+E5bDgZiHMuM6l+RDm9WWlt/T3fXXFQoqzlsrJFesFMNzkK9feVBG5egJyL/OlwmxuLsnPkR7O+bV3Vcw==",
+      "type": "package",
+      "path": "supabase.postgrest/4.0.3",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "icon.png",
+        "lib/netstandard2.0/Supabase.Postgrest.dll",
+        "lib/netstandard2.0/Supabase.Postgrest.xml",
+        "supabase.postgrest.4.0.3.nupkg.sha512",
+        "supabase.postgrest.nuspec"
+      ]
+    },
+    "Supabase.Realtime/7.0.2": {
+      "sha512": "9nwlR9RR+uyD63VUaiqAPsd76NaeM6ORAHq7otc4G34RzBtf6aqjPg9IF6d1DGIk78/lJP31+D4NJmQhl3PkJQ==",
+      "type": "package",
+      "path": "supabase.realtime/7.0.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "icon.png",
+        "lib/netstandard2.0/Supabase.Realtime.dll",
+        "lib/netstandard2.0/Supabase.Realtime.xml",
+        "lib/netstandard2.1/Supabase.Realtime.dll",
+        "lib/netstandard2.1/Supabase.Realtime.xml",
+        "supabase.realtime.7.0.2.nupkg.sha512",
+        "supabase.realtime.nuspec"
+      ]
+    },
+    "Supabase.Storage/2.0.2": {
+      "sha512": "YKxgwVgLjxi32ze29FT8aSLifiTVSZSxSyI9taOewp6wuxh+aMIPLKWtGEhFhegLv2iFwGcZ3ybMDkCi6RB7Rw==",
+      "type": "package",
+      "path": "supabase.storage/2.0.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "icon.png",
+        "lib/netstandard2.0/Supabase.Storage.dll",
+        "lib/netstandard2.0/Supabase.Storage.xml",
+        "supabase.storage.2.0.2.nupkg.sha512",
+        "supabase.storage.nuspec"
       ]
     },
     "System.ClientModel/1.5.1": {
@@ -3493,6 +3958,34 @@
         "useSharedDesignerContext.txt"
       ]
     },
+    "System.Reactive/6.0.0": {
+      "sha512": "31kfaW4ZupZzPsI5PVe77VhnvFF55qgma7KZr/E0iFTs6fmdhhG8j0mgEx620iLTey1EynOkEfnyTjtNEpJzGw==",
+      "type": "package",
+      "path": "system.reactive/6.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "build/net6.0-windows10.0.19041/_._",
+        "build/net6.0/_._",
+        "buildTransitive/net6.0-windows10.0.19041/_._",
+        "buildTransitive/net6.0/_._",
+        "icon.png",
+        "lib/net472/System.Reactive.dll",
+        "lib/net472/System.Reactive.xml",
+        "lib/net6.0-windows10.0.19041/System.Reactive.dll",
+        "lib/net6.0-windows10.0.19041/System.Reactive.xml",
+        "lib/net6.0/System.Reactive.dll",
+        "lib/net6.0/System.Reactive.xml",
+        "lib/netstandard2.0/System.Reactive.dll",
+        "lib/netstandard2.0/System.Reactive.xml",
+        "lib/uap10.0.18362/System.Reactive.dll",
+        "lib/uap10.0.18362/System.Reactive.pri",
+        "lib/uap10.0.18362/System.Reactive.xml",
+        "readme.md",
+        "system.reactive.6.0.0.nupkg.sha512",
+        "system.reactive.nuspec"
+      ]
+    },
     "System.Security.Cryptography.Pkcs/10.0.0": {
       "sha512": "UPWqLSygJlFerRi9XNIuM0a1VC8gHUIufyP24xQ0sc+XimqUAEcjpOz9DhKpyDjH+5B/wO3RpC0KpkEeDj/ddg==",
       "type": "package",
@@ -3563,6 +4056,28 @@
         "useSharedDesignerContext.txt"
       ]
     },
+    "Websocket.Client/5.1.1": {
+      "sha512": "VpQV6b8HRnw6bFFIPTOOMtOxba3/viH9K2U2LdOYNjQ2b2HrLHxjodmJr3nPwyNSrtrRPr1RDwOMJ5qqlPnCVg==",
+      "type": "package",
+      "path": "websocket.client/5.1.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "icon-modern.png",
+        "icon.png",
+        "lib/net6.0/Websocket.Client.dll",
+        "lib/net6.0/Websocket.Client.xml",
+        "lib/net7.0/Websocket.Client.dll",
+        "lib/net7.0/Websocket.Client.xml",
+        "lib/net8.0/Websocket.Client.dll",
+        "lib/net8.0/Websocket.Client.xml",
+        "lib/netstandard2.1/Websocket.Client.dll",
+        "lib/netstandard2.1/Websocket.Client.xml",
+        "websocket.client.5.1.1.nupkg.sha512",
+        "websocket.client.nuspec"
+      ]
+    },
     "VMS.Application/1.0.0": {
       "type": "project",
       "path": "../VMS.Application/VMS.Application.csproj",
@@ -3577,15 +4092,27 @@
       "type": "project",
       "path": "../VMS.Infrastructure/VMS.Infrastructure.csproj",
       "msbuildProject": "../VMS.Infrastructure/VMS.Infrastructure.csproj"
+    },
+    "VMS.Shared/1.0.0": {
+      "type": "project",
+      "path": "../VMS.Shared/VMS.Shared.csproj",
+      "msbuildProject": "../VMS.Shared/VMS.Shared.csproj"
+    },
+    "VMS.Web/1.0.0": {
+      "type": "project",
+      "path": "../VMS.Web/VMS.Web.csproj",
+      "msbuildProject": "../VMS.Web/VMS.Web.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net10.0": [
       "MailKit >= 4.17.0",
+      "Microsoft.AspNetCore.Components.WebAssembly.Server >= 10.0.11",
       "Microsoft.EntityFrameworkCore.Design >= 10.0.9",
       "VMS.Application >= 1.0.0",
       "VMS.Domain >= 1.0.0",
-      "VMS.Infrastructure >= 1.0.0"
+      "VMS.Infrastructure >= 1.0.0",
+      "VMS.Web >= 1.0.0"
     ]
   },
   "packageFolders": {
@@ -3622,6 +4149,9 @@
             },
             "/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Infrastructure/VMS.Infrastructure.csproj": {
               "projectPath": "/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Infrastructure/VMS.Infrastructure.csproj"
+            },
+            "/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/VMS.Web.csproj": {
+              "projectPath": "/Users/cuthbertjohnson/Desktop/Visitation/Visitation-Management-System/VMS.Web/VMS.Web.csproj"
             }
           }
         }
@@ -3646,6 +4176,10 @@
           "MailKit": {
             "target": "Package",
             "version": "[4.17.0, )"
+          },
+          "Microsoft.AspNetCore.Components.WebAssembly.Server": {
+            "target": "Package",
+            "version": "[10.0.11, )"
           },
           "Microsoft.EntityFrameworkCore.Design": {
             "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",

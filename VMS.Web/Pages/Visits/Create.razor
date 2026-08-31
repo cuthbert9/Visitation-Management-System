@@ -32,7 +32,7 @@ else
         <DataAnnotationsValidator />
         <ValidationSummary />
 
-        <div class="card mb-4">
+        <div class="card form-section-card mb-4">
             <div class="card-body">
                 <div class="d-flex align-items-center gap-2 mb-3">
                     <i class="bi bi-person-vcard text-primary"></i>
@@ -41,7 +41,7 @@ else
 
                 @if (selectedVisitor is not null && selectedGateVisit is not null)
                 {
-                    <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                         <div class="small text-muted">
                             <i class="bi bi-shield-check me-1" style="color:var(--vms-primary);"></i>
                             Registered at the gate — review and complete their details below.
@@ -82,7 +82,7 @@ else
                 }
                 else if (selectedVisitor is not null)
                 {
-                    <div class="alert alert-info d-flex justify-content-between align-items-center">
+                    <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <div>
                             <strong>@selectedVisitor.FullName</strong> — @selectedVisitor.PhoneNumber
                             @if (!string.IsNullOrWhiteSpace(selectedVisitor.IdentificationNumber))
@@ -134,9 +134,11 @@ else
 
                     <VisitorFieldsEditor Visitor="newVisitorRequest" />
                 }
+            </div>
+        </div>
 
-                <hr class="my-4" />
-
+        <div class="card form-section-card mb-4">
+            <div class="card-body">
                 <div class="d-flex align-items-center gap-2 mb-3">
                     <i class="bi bi-clipboard-check text-primary"></i>
                     <span class="form-section-label">Visit Details</span>
@@ -157,7 +159,7 @@ else
                         <label class="form-label-sm">Host</label>
                         @if (SelectedEmployee is not null)
                         {
-                            <div class="alert alert-info d-flex justify-content-between align-items-center mb-0">
+                            <div class="alert alert-info d-flex justify-content-between align-items-center mb-0 flex-wrap gap-2">
                                 <div>
                                     <strong>@SelectedEmployee.FullName</strong>@(string.IsNullOrWhiteSpace(SelectedEmployee.Position) ? "" : $" — {SelectedEmployee.Position}")
                                     <div class="mt-1">
@@ -229,7 +231,7 @@ else
             </div>
         </div>
 
-        <button class="btn btn-primary" type="submit" disabled="@isSaving">
+        <button class="btn btn-primary btn-mobile-full" type="submit" disabled="@isSaving">
             @(isSaving ? (isUploadingFile ? "Uploading attachment..." : "Saving...") : "Register Visit")
         </button>
     </EditForm>

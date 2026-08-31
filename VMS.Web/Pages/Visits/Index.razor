@@ -13,7 +13,7 @@
     </div>
     @if (MockAuth.HasPermission(DemoPermissions.VisitsCreate))
     {
-        <a class="btn btn-primary" href="/visits/create"><i class="bi bi-plus-circle me-1"></i> Register Visit</a>
+        <a class="btn btn-primary btn-mobile-full" href="/visits/create"><i class="bi bi-plus-circle me-1"></i> Register Visit</a>
     }
 </div>
 
@@ -108,7 +108,7 @@ else
     }
     else
     {
-        <div class="card">
+        <div class="card desktop-table">
             <div class="table-responsive">
                 <table class="table mb-0">
                     <thead>
@@ -173,6 +173,56 @@ else
                     </tbody>
                 </table>
             </div>
+        </div>
+
+        <div class="mobile-cards">
+            @foreach (var visit in FilteredVisits)
+            {
+                var presentation = GetStatusPresentation(visit.Status);
+                var overdue = IsOverdue(visit);
+                var nextAction = GetNextAction(visit);
+                var busy = busyVisitIds.Contains(visit.Id);
+
+                <div class="record-card">
+                    <div class="record-card-title">
+                        @visit.Visitor.FullName
+                        @if (overdue)
+                        {
+                            <span class="overdue-tag">Overdue</span>
+                        }
+                    </div>
+                    <div class="record-card-subtitle mb-2">@(string.IsNullOrWhiteSpace(visit.Visitor.Organization) ? "Individual" : visit.Visitor.Organization)</div>
+                    <div class="record-card-row">
+                        <span class="record-card-row-label">Visit #</span>
+                        <span class="record-card-row-value">@visit.VisitNumber</span>
+                    </div>
+                    <div class="record-card-row">
+                        <span class="record-card-row-label">Host</span>
+                        <span class="record-card-row-value">@(visit.HostEmployee?.FullName ?? "Awaiting handover")</span>
+                    </div>
+                    <div class="record-card-row">
+                        <span class="record-card-row-label">Arrival</span>
+                        <span class="record-card-row-value">@visit.ArrivalTime.ToLocalTime().ToString("dd MMM yyyy HH:mm") (@FormatElapsed(visit.ArrivalTime))</span>
+                    </div>
+                    <div class="record-card-row">
+                        <span class="record-card-row-label">Purpose</span>
+                        <span class="record-card-row-value">@visit.Purpose</span>
+                    </div>
+                    <div class="record-card-row">
+                        <span class="record-card-row-label">Status</span>
+                        <span class="record-card-row-value"><span class="status-pill @presentation.CssClass">@presentation.Label</span></span>
+                    </div>
+                    <div class="record-card-footer">
+                        @if (nextAction is not null)
+                        {
+                            <button class="btn btn-sm @nextAction.Value.CssClass" disabled="@busy" @onclick="() => nextAction.Value.Action(visit)">
+                                @(busy ? "Saving..." : nextAction.Value.Label)
+                            </button>
+                        }
+                        <a class="btn btn-sm btn-outline-secondary" href="/visits/@visit.Id">View</a>
+                    </div>
+                </div>
+            }
         </div>
     }
 }

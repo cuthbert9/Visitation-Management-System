@@ -69,11 +69,11 @@ else
     }
     else
     {
-        <div class="d-flex justify-content-end gap-2 mb-3 no-print">
-            <a class="btn btn-outline-secondary" href="@csvHref" download="security-visit-report.csv">
+        <div class="d-flex justify-content-end gap-2 mb-3 no-print flex-wrap">
+            <a class="btn btn-outline-secondary btn-mobile-full" href="@csvHref" download="security-visit-report.csv">
                 <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV
             </a>
-            <button class="btn btn-outline-secondary" @onclick="PrintAsync">
+            <button class="btn btn-outline-secondary btn-mobile-full" @onclick="PrintAsync">
                 <i class="bi bi-printer me-1"></i>Print / Save as PDF
             </button>
         </div>
@@ -87,7 +87,7 @@ else
         </div>
 
         <div class="row g-3 mb-4">
-            <div class="col-12 col-sm-6 col-lg-3">
+            <div class="col-6 col-sm-3">
                 <div class="stat-card stat-border-navy">
                     <div>
                         <div class="stat-label">Total Visits</div>
@@ -95,7 +95,7 @@ else
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-lg-3">
+            <div class="col-6 col-sm-3">
                 <div class="stat-card stat-border-blue">
                     <div>
                         <div class="stat-label">Unique Visitors</div>
@@ -103,7 +103,7 @@ else
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-lg-3">
+            <div class="col-6 col-sm-3">
                 <div class="stat-card stat-border-gray">
                     <div>
                         <div class="stat-label">Vehicles Logged</div>
@@ -111,7 +111,7 @@ else
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-lg-3">
+            <div class="col-6 col-sm-3">
                 <div class="stat-card stat-border-red">
                     <div>
                         <div class="stat-label">PC Mismatch Flags</div>
@@ -127,7 +127,7 @@ else
         }
         else
         {
-            <div class="card">
+            <div class="card desktop-table">
                 <div class="table-responsive">
                     <table class="table mb-0">
                         <thead>
@@ -162,6 +162,43 @@ else
                         </tbody>
                     </table>
                 </div>
+            </div>
+
+            <div class="mobile-cards">
+                @foreach (var visit in reportVisits)
+                {
+                    var gateInfo = gateInfoByVisitId.GetValueOrDefault(visit.Id);
+                    var presentation = GetStatusPresentation(visit.Status);
+
+                    <div class="record-card">
+                        <div class="record-card-title">@visit.Visitor.FullName</div>
+                        <div class="record-card-subtitle mb-2">@EnumLabels.Format(visit.Purpose)</div>
+                        <div class="record-card-row">
+                            <span class="record-card-row-label">Host</span>
+                            <span class="record-card-row-value">@(visit.HostEmployee?.FullName ?? "Awaiting handover")</span>
+                        </div>
+                        <div class="record-card-row">
+                            <span class="record-card-row-label">Arrival</span>
+                            <span class="record-card-row-value">@visit.ArrivalTime.ToLocalTime().ToString("dd MMM yyyy HH:mm")</span>
+                        </div>
+                        <div class="record-card-row">
+                            <span class="record-card-row-label">Departure</span>
+                            <span class="record-card-row-value">@(visit.DepartureTime.HasValue ? visit.DepartureTime.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm") : "-")</span>
+                        </div>
+                        <div class="record-card-row">
+                            <span class="record-card-row-label">Status</span>
+                            <span class="record-card-row-value"><span class="status-pill @presentation.CssClass">@presentation.Label</span></span>
+                        </div>
+                        <div class="record-card-row">
+                            <span class="record-card-row-label">Vehicle</span>
+                            <span class="record-card-row-value">@(string.IsNullOrWhiteSpace(visit.VehiclePlateNumber) ? "-" : visit.VehiclePlateNumber)</span>
+                        </div>
+                        <div class="record-card-row">
+                            <span class="record-card-row-label">PC</span>
+                            <span class="record-card-row-value">@(gateInfo is { HasLaptop: true } ? gateInfo.DeviceType : "-")</span>
+                        </div>
+                    </div>
+                }
             </div>
         }
     }
