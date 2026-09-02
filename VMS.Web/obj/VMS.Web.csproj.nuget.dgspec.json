@@ -393,12 +393,12 @@
             },
             "Microsoft.AspNetCore.Components.WebAssembly": {
               "target": "Package",
-              "version": "[10.0.0-preview.7.25380.108, )"
+              "version": "[10.0.11, )"
             },
             "Microsoft.AspNetCore.Components.WebAssembly.DevServer": {
               "suppressParent": "All",
               "target": "Package",
-              "version": "[10.0.0-preview.7.25380.108, )"
+              "version": "[10.0.11, )"
             },
             "Microsoft.NET.ILLink.Tasks": {
               "suppressParent": "All",

@@ -8,7 +8,7 @@
         <NavMenu />
     }
 
-    <main class="flex-grow-1 bg-light">
+    <main class="flex-grow-1 bg-light @(MockAuth.IsAuthenticated ? "has-app-nav" : "")">
         <div class="container py-4">
             @Body
         </div>

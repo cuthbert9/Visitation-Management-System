@@ -13,7 +13,7 @@
     </div>
     @if (MockAuth.HasPermission(DemoPermissions.VisitsCreate))
     {
-        <a class="btn btn-primary" href="/visits/create"><i class="bi bi-plus-circle me-1"></i> Register Visit</a>
+        <a class="btn btn-primary btn-mobile-full" href="/visits/create"><i class="bi bi-plus-circle me-1"></i> Register Visit</a>
     }
 </div>
 
@@ -29,21 +29,19 @@ else
 {
     <div class="row g-3 mb-4">
         <div class="col-12 col-sm-6 col-lg">
-            <div class="stat-card">
+            <div class="stat-card stat-border-navy">
                 <div>
                     <div class="stat-label">Total Visitors Today</div>
                     <div class="stat-value">@(dashboard?.TotalVisitsToday ?? 0)</div>
                 </div>
-                <div class="stat-icon stat-icon-blue"><i class="bi bi-calendar-check"></i></div>
             </div>
         </div>
         <div class="col-12 col-sm-6 col-lg">
-            <div class="stat-card">
+            <div class="stat-card stat-border-blue">
                 <div>
                     <div class="stat-label">Host Attending Guests</div>
                     <div class="stat-value">@(dashboard?.AwaitingHost ?? 0)</div>
                 </div>
-                <div class="stat-icon stat-icon-amber"><i class="bi bi-hourglass-split"></i></div>
             </div>
         </div>
         @* <div class="col-12 col-sm-6 col-lg">
@@ -56,12 +54,11 @@ else
             </div>
         </div> *@
         <div class="col-12 col-sm-6 col-lg">
-            <div class="stat-card">
+            <div class="stat-card stat-border-red">
                 <div>
                     <div class="stat-label">Over Stay</div>
                     <div class="stat-value">@(dashboard?.Overdue ?? 0)</div>
                 </div>
-                <div class="stat-icon stat-icon-red"><i class="bi bi-exclamation-triangle"></i></div>
             </div>
         </div>
         @* <div class="col-12 col-sm-6 col-lg">
@@ -111,7 +108,7 @@ else
     }
     else
     {
-        <div class="card">
+        <div class="card desktop-table">
             <div class="table-responsive">
                 <table class="table mb-0">
                     <thead>
@@ -177,6 +174,56 @@ else
                 </table>
             </div>
         </div>
+
+        <div class="mobile-cards">
+            @foreach (var visit in FilteredVisits)
+            {
+                var presentation = GetStatusPresentation(visit.Status);
+                var overdue = IsOverdue(visit);
+                var nextAction = GetNextAction(visit);
+                var busy = busyVisitIds.Contains(visit.Id);
+
+                <div class="record-card">
+                    <div class="record-card-title">
+                        @visit.Visitor.FullName
+                        @if (overdue)
+                        {
+                            <span class="overdue-tag">Overdue</span>
+                        }
+                    </div>
+                    <div class="record-card-subtitle mb-2">@(string.IsNullOrWhiteSpace(visit.Visitor.Organization) ? "Individual" : visit.Visitor.Organization)</div>
+                    <div class="record-card-row">
+                        <span class="record-card-row-label">Visit #</span>
+                        <span class="record-card-row-value">@visit.VisitNumber</span>
+                    </div>
+                    <div class="record-card-row">
+                        <span class="record-card-row-label">Host</span>
+                        <span class="record-card-row-value">@(visit.HostEmployee?.FullName ?? "Awaiting handover")</span>
+                    </div>
+                    <div class="record-card-row">
+                        <span class="record-card-row-label">Arrival</span>
+                        <span class="record-card-row-value">@visit.ArrivalTime.ToLocalTime().ToString("dd MMM yyyy HH:mm") (@FormatElapsed(visit.ArrivalTime))</span>
+                    </div>
+                    <div class="record-card-row">
+                        <span class="record-card-row-label">Purpose</span>
+                        <span class="record-card-row-value">@visit.Purpose</span>
+                    </div>
+                    <div class="record-card-row">
+                        <span class="record-card-row-label">Status</span>
+                        <span class="record-card-row-value"><span class="status-pill @presentation.CssClass">@presentation.Label</span></span>
+                    </div>
+                    <div class="record-card-footer">
+                        @if (nextAction is not null)
+                        {
+                            <button class="btn btn-sm @nextAction.Value.CssClass" disabled="@busy" @onclick="() => nextAction.Value.Action(visit)">
+                                @(busy ? "Saving..." : nextAction.Value.Label)
+                            </button>
+                        }
+                        <a class="btn btn-sm btn-outline-secondary" href="/visits/@visit.Id">View</a>
+                    </div>
+                </div>
+            }
+        </div>
     }
 }
 
@@ -193,8 +240,8 @@ else
     private VisitsDashboardDto? dashboard;
     private HashSet<int> busyVisitIds = [];
     private string searchTerm = string.Empty;
-    @* private string statusFilterValue = string.Empty; *@
-    private string statusFilterValue = nameof(VisitStatus.Registered); // Default to showing only registered visits
+    private string statusFilterValue = string.Empty;
+    @* private string statusFilterValue = nameof(VisitStatus.Registered); // Default to showing only registered visits *@
 
 
     
@@ -296,12 +343,12 @@ else
 
     private (string Label, string CssClass, Func<VisitDto, Task> Action)? GetNextAction(VisitDto visit) => visit.Status switch
     {
-        VisitStatus.Registered when MockAuth.HasPermission(DemoPermissions.VisitsNotifyHost) => ("Notify Host", "btn-outline-primary", NotifyHostAsync),
-        VisitStatus.WaitingForHost when MockAuth.HasPermission(DemoPermissions.VisitsHostAcknowledge) => ("Host Acknowledge", "btn-outline-primary", HostAcknowledgeAsync),
+        VisitStatus.Registered when MockAuth.HasPermission(DemoPermissions.VisitsNotifyHost) => ("Notify Host", "btn-vms-navy", NotifyHostAsync),
+        VisitStatus.WaitingForHost when MockAuth.HasPermission(DemoPermissions.VisitsHostAcknowledge) => ("Host Acknowledge", "btn-vms-navy", HostAcknowledgeAsync),
         VisitStatus.HostAcknowledged when MockAuth.HasPermission(DemoPermissions.VisitsMarkAttended) => ("Mark Attended", "btn-success", MarkAttendedAsync),
-        VisitStatus.Attended when MockAuth.HasPermission(DemoPermissions.VisitsHostComplete) => ("Host Complete", "btn-primary", HostCompleteAsync),
-        VisitStatus.AwaitingExit when MockAuth.HasPermission(DemoPermissions.VisitsCheckOut) => ("Confirm Departure", "btn-primary", CheckOutAsync),
-        VisitStatus.Completed when MockAuth.HasPermission(DemoPermissions.VisitsClose) => ("Close Visit", "btn-primary", CloseVisitAsync),
+        VisitStatus.Attended when MockAuth.HasPermission(DemoPermissions.VisitsHostComplete) => ("Host Complete", "btn-vms-navy", HostCompleteAsync),
+        VisitStatus.AwaitingExit when MockAuth.HasPermission(DemoPermissions.VisitsCheckOut) => ("Confirm Departure", "btn-vms-navy", CheckOutAsync),
+        VisitStatus.Completed when MockAuth.HasPermission(DemoPermissions.VisitsClose) => ("Close Visit", "btn-vms-navy", CloseVisitAsync),
         _ => null
     };
 

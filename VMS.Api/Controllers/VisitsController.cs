@@ -240,6 +240,10 @@ public class VisitsController : ControllerBase
         visit.Purpose = request.Purpose;
         visit.PurposeDescription = request.PurposeDescription;
         visit.BadgeNumber = request.BadgeNumber;
+        if (!string.IsNullOrWhiteSpace(request.AttachmentUrl))
+        {
+            visit.AttachmentUrl = request.AttachmentUrl;
+        }
         visit.ExpectedDepartureTime ??= proposedDuration.HasValue ? visit.ArrivalTime.Add(proposedDuration.Value) : null;
         if (hasBadge)
         {

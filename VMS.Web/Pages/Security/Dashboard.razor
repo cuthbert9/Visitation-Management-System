@@ -24,39 +24,35 @@ else
 {
     <div class="row g-3 mb-4">
         <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card">
+            <div class="stat-card stat-border-navy">
                 <div>
                     <div class="stat-label">Total Visitors Today</div>
                     <div class="stat-value">@(dashboard?.TotalVisitsToday ?? 0)</div>
                 </div>
-                <div class="stat-icon stat-icon-blue"><i class="bi bi-calendar-check"></i></div>
             </div>
         </div>
         <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card">
+            <div class="stat-card stat-border-blue">
                 <div>
                     <div class="stat-label">Currently On Site</div>
                     <div class="stat-value">@(dashboard?.OnSiteNow ?? 0)</div>
                 </div>
-                <div class="stat-icon stat-icon-green"><i class="bi bi-person-check"></i></div>
             </div>
         </div>
         <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card">
+            <div class="stat-card stat-border-red">
                 <div>
                     <div class="stat-label">Overstaying</div>
                     <div class="stat-value">@(dashboard?.Overdue ?? 0)</div>
                 </div>
-                <div class="stat-icon stat-icon-red"><i class="bi bi-exclamation-triangle"></i></div>
             </div>
         </div>
         <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card">
+            <div class="stat-card stat-border-gray">
                 <div>
                     <div class="stat-label">Visitors With PC On Site</div>
                     <div class="stat-value">@VisitorsWithPcOnSite</div>
                 </div>
-                <div class="stat-icon stat-icon-gray"><i class="bi bi-laptop"></i></div>
             </div>
         </div>
     </div>
@@ -132,7 +128,7 @@ else
         }
         else
         {
-            <div class="table-responsive">
+            <div class="table-responsive desktop-table">
                 <table class="table mb-0">
                     <thead>
                         <tr>
@@ -161,6 +157,38 @@ else
                     }
                     </tbody>
                 </table>
+            </div>
+
+            <div class="mobile-cards px-3 pb-3">
+                @foreach (var visit in recentVisits)
+                {
+                    var gateInfo = gateInfoByVisitId.GetValueOrDefault(visit.Id);
+                    var presentation = GetStatusPresentation(visit.Status);
+
+                    <div class="record-card">
+                        <div class="record-card-title">@visit.Visitor.FullName</div>
+                        <div class="record-card-row">
+                            <span class="record-card-row-label">Vehicle</span>
+                            <span class="record-card-row-value">@(string.IsNullOrWhiteSpace(visit.VehiclePlateNumber) ? "-" : visit.VehiclePlateNumber)</span>
+                        </div>
+                        <div class="record-card-row">
+                            <span class="record-card-row-label">PC</span>
+                            <span class="record-card-row-value">@(gateInfo is { HasLaptop: true } ? gateInfo.DeviceType : "No device")</span>
+                        </div>
+                        <div class="record-card-row">
+                            <span class="record-card-row-label">Host</span>
+                            <span class="record-card-row-value">@(visit.HostEmployee?.FullName ?? "Awaiting handover")</span>
+                        </div>
+                        <div class="record-card-row">
+                            <span class="record-card-row-label">Time</span>
+                            <span class="record-card-row-value">@visit.ArrivalTime.ToLocalTime().ToString("dd MMM, HH:mm")</span>
+                        </div>
+                        <div class="record-card-row">
+                            <span class="record-card-row-label">Status</span>
+                            <span class="record-card-row-value"><span class="status-pill @presentation.CssClass">@presentation.Label</span></span>
+                        </div>
+                    </div>
+                }
             </div>
         }
     </div>

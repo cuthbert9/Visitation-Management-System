@@ -1,70 +1,95 @@
 @implements IDisposable
+@using Microsoft.JSInterop
 @inject NavigationManager NavigationManager
 @inject VMS.Web.Auth.MockAuthService MockAuth
+@inject IJSRuntime JS
 
-<div class="sidebar bg-dark text-white p-3  " style="width: var(--vms-sidebar-width);">
-    <h4 class="mb-1 fw-bold">VMS</h4>
-    <p class="small text-white-50 mb-4">@MockAuth.CurrentSession?.DisplayName</p>
+<div class="mobile-topbar">
+    <button class="mobile-topbar-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#vmsNavDrawer" aria-controls="vmsNavDrawer" aria-label="Open navigation">
+        <i class="bi bi-list"></i>
+    </button>
+    <span class="mobile-topbar-brand">vms</span>
+    <span class="mobile-topbar-current"><i class="bi @CurrentPage.Icon"></i> @CurrentPage.Label</span>
+</div>
 
-    <nav class="nav flex-column gap-1">
-        @if (CanAccess(DemoPermissions.VisitsRead))
-        {
-            <NavLink class="nav-link" href="/visits" Match="NavLinkMatch.All"><i class="bi bi-calendar-check"></i> Visits</NavLink>
-        }
+<div class="sidebar text-white p-3">
+    @NavBody
+</div>
 
-        @if (CanAccess(DemoPermissions.VisitsCreate))
-        {
-            <NavLink class="nav-link" href="/visits/create"><i class="bi bi-plus-circle"></i> Register Visit</NavLink>
-        }
-
-        @if (CanAccess(DemoPermissions.OutboundVisitsCreate))
-        {
-            <NavLink class="nav-link" href="/visits/outbound/plan"><i class="bi bi-plus-circle"></i> Plan Outbound Visit</NavLink>
-        }
-
-        @if (CanAccess(DemoPermissions.OutboundVisitsRead))
-        {
-            <NavLink class="nav-link" href="/visits/outbound" Match="NavLinkMatch.All"><i class="bi bi-box-arrow-up-right"></i> Outbound Visits</NavLink>
-        }
-
-        @if (CanAccess(DemoPermissions.OutboundVisitsApprove))
-        {
-            <NavLink class="nav-link" href="/visits/outbound/approvals" Match="NavLinkMatch.All"><i class="bi bi-check2-square"></i> Approvals</NavLink>
-        }
-
-        @if (CanAccess(DemoPermissions.SecurityDashboardRead))
-        {
-            <NavLink class="nav-link" href="/security/dashboard" Match="NavLinkMatch.All"><i class="bi bi-speedometer2"></i> Dashboard</NavLink>
-        }
-
-        @if (CanAccess(DemoPermissions.GateVisitorsRead))
-        {
-            <NavLink class="nav-link" href="/security/visitors"><i class="bi bi-shield-check"></i> Manage Visitors</NavLink>
-        }
-
-        @if (CanAccess(DemoPermissions.SecurityReportsRead))
-        {
-            <NavLink class="nav-link" href="/security/reports" Match="NavLinkMatch.All"><i class="bi bi-file-earmark-bar-graph"></i> Reports</NavLink>
-        }
-
-        @if (CanAccess(DemoPermissions.VisitorsRead))
-        {
-            <NavLink class="nav-link" href="/visitors" Match="NavLinkMatch.All"><i class="bi bi-people"></i> Visitors</NavLink>
-        }
-
-        @if (CanAccess(DemoPermissions.EmployeesRead))
-        {
-            <NavLink class="nav-link" href="/employees" Match="NavLinkMatch.All"><i class="bi bi-briefcase"></i> Hosts</NavLink>
-        }
-
-    </nav>
-
-    <div class="mt-auto pt-3 border-top border-secondary d-grid gap-2">
-        <button class="btn btn-danger btn-sm" @onclick="LogoutAsync"><i class="bi bi-box-arrow-right"></i> Exit</button>
+<div class="offcanvas offcanvas-start sidebar-drawer text-white" tabindex="-1" id="vmsNavDrawer" aria-label="Navigation">
+    <div class="offcanvas-header pb-0">
+        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body d-flex flex-column pt-0">
+        @NavBody
     </div>
 </div>
 
 @code {
+    private RenderFragment NavBody =>
+        @<text>
+            <div class="logo-brand fw-bold">vms</div>
+            <div class="logo-role mb-3">@(string.IsNullOrWhiteSpace(MockAuth.CurrentSession?.DisplayName) ? string.Empty : $"{MockAuth.CurrentSession!.DisplayName.Trim()} Portal")</div>
+            <hr class="sidebar-divider mb-3" />
+
+            <nav class="nav flex-column gap-1">
+                @if (CanAccess(DemoPermissions.VisitsRead))
+                {
+                    <NavLink class="nav-link" href="/visits" Match="NavLinkMatch.All"><i class="bi bi-calendar-check"></i><span class="nav-link-label">Visits</span></NavLink>
+                }
+
+                @if (CanAccess(DemoPermissions.VisitsCreate))
+                {
+                    <NavLink class="nav-link" href="/visits/create"><i class="bi bi-plus-circle"></i><span class="nav-link-label">Register Visit</span></NavLink>
+                }
+
+                @if (CanAccess(DemoPermissions.OutboundVisitsCreate))
+                {
+                    <NavLink class="nav-link" href="/visits/outbound/plan"><i class="bi bi-plus-circle"></i><span class="nav-link-label">Plan Outbound Visit</span></NavLink>
+                }
+
+                @if (CanAccess(DemoPermissions.OutboundVisitsRead))
+                {
+                    <NavLink class="nav-link" href="/visits/outbound" Match="NavLinkMatch.All"><i class="bi bi-box-arrow-up-right"></i><span class="nav-link-label">Outbound Visits</span></NavLink>
+                }
+
+                @if (CanAccess(DemoPermissions.OutboundVisitsApprove))
+                {
+                    <NavLink class="nav-link" href="/visits/outbound/approvals" Match="NavLinkMatch.All"><i class="bi bi-check2-square"></i><span class="nav-link-label">Approvals</span></NavLink>
+                }
+
+                @if (CanAccess(DemoPermissions.SecurityDashboardRead))
+                {
+                    <NavLink class="nav-link" href="/security/dashboard" Match="NavLinkMatch.All"><i class="bi bi-shield-check"></i><span class="nav-link-label">Dashboard</span></NavLink>
+                }
+
+                @if (CanAccess(DemoPermissions.GateVisitorsRead))
+                {
+                    <NavLink class="nav-link" href="/security/visitors"><i class="bi bi-people"></i><span class="nav-link-label">Manage Visitors</span></NavLink>
+                }
+
+                @if (CanAccess(DemoPermissions.SecurityReportsRead))
+                {
+                    <NavLink class="nav-link" href="/security/reports" Match="NavLinkMatch.All"><i class="bi bi-file-earmark-bar-graph"></i><span class="nav-link-label">Reports</span></NavLink>
+                }
+
+                @if (CanAccess(DemoPermissions.VisitorsRead))
+                {
+                    <NavLink class="nav-link" href="/visitors" Match="NavLinkMatch.All"><i class="bi bi-people"></i><span class="nav-link-label">Visitors</span></NavLink>
+                }
+
+                @if (CanAccess(DemoPermissions.EmployeesRead))
+                {
+                    <NavLink class="nav-link" href="/employees" Match="NavLinkMatch.All"><i class="bi bi-house"></i><span class="nav-link-label">Hosts</span></NavLink>
+                }
+
+            </nav>
+
+            <div class="mt-auto pt-3 d-grid">
+                <button class="btn btn-danger" @onclick="LogoutAsync"><i class="bi bi-box-arrow-right me-1"></i><span class="btn-label">Exit</span></button>
+            </div>
+        </text>;
+
     protected override void OnInitialized()
     {
         NavigationManager.LocationChanged += OnLocationChanged;
@@ -72,14 +97,35 @@
 
     private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
-        InvokeAsync(StateHasChanged);
+        InvokeAsync(async () =>
+        {
+            await JS.InvokeVoidAsync("vmsCloseNavDrawer");
+            StateHasChanged();
+        });
     }
 
     private bool CanAccess(string permission) => MockAuth.HasPermission(permission);
 
-    private void SwitchRole()
+    private (string Icon, string Label) CurrentPage
     {
-        NavigationManager.NavigateTo("/");
+        get
+        {
+            var relativePath = "/" + NavigationManager.ToBaseRelativePath(NavigationManager.Uri).Split('?')[0];
+            return relativePath switch
+            {
+                "/visits" => ("bi-calendar-check", "Visits"),
+                "/visits/create" => ("bi-plus-circle", "Register Visit"),
+                var p when p.StartsWith("/visits/outbound/plan") => ("bi-plus-circle", "Plan Outbound Visit"),
+                var p when p.StartsWith("/visits/outbound/approvals") => ("bi-check2-square", "Approvals"),
+                var p when p.StartsWith("/visits/outbound") => ("bi-box-arrow-up-right", "Outbound Visits"),
+                "/security/dashboard" => ("bi-shield-check", "Dashboard"),
+                var p when p.StartsWith("/security/visitors") => ("bi-people", "Manage Visitors"),
+                "/security/reports" => ("bi-file-earmark-bar-graph", "Reports"),
+                "/visitors" => ("bi-people", "Visitors"),
+                var p when p.StartsWith("/employees") => ("bi-house", "Hosts"),
+                _ => ("bi-app-indicator", "vms"),
+            };
+        }
     }
 
     private async Task LogoutAsync()

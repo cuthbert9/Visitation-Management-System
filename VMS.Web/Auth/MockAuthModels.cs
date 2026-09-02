@@ -128,6 +128,7 @@ public static class MockRoleCatalog
                     DemoPermissions.ParkingManageSlots,
                     DemoPermissions.ParkingReserve,
                     DemoPermissions.ParkingRelease,
+                    DemoPermissions.VisitsMarkAttended
                    
                 ]
             }
